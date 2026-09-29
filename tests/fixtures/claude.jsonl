@@ -1,0 +1,2 @@
+{"type": "user", "sessionId": "11111111-1111-1111-1111-111111111111", "cwd": "/tmp/playground", "message": {"role": "user", "content": "hello"}}
+{"type": "assistant", "sessionId": "11111111-1111-1111-1111-111111111111", "message": {"role": "assistant", "content": [{"type": "text", "text": "ok"}, {"type": "tool_use", "name": "attach", "input": {"session": "acm_s_example0001", "repo_path": "/tmp/playground", "label": "claude"}}]}}
