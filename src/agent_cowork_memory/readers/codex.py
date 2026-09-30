@@ -1,12 +1,42 @@
+import os
+from pathlib import Path
+
+from agent_cowork_memory.readers import first_objects, related
+
 _SKIP_TYPES = {"session_meta", "event_msg", "token_usage_record", "turn_context", "world_state"}
 _SKIP_PAYLOAD = {"reasoning", "function_call", "function_call_output", "custom_tool_call", "custom_tool_call_output"}
+# ponytail: only the newest 200 rollouts are checked. Raise it if older chats need resuming.
+_RECENT = 200
 
 
-def native_id(obj, path):
-    payload = obj.get("payload") or {}
-    if obj.get("type") == "session_meta" and payload.get("session_id"):
-        return payload["session_id"]
-    return None
+def root():
+    return Path(os.environ.get("CODEX_HOME", Path.home() / ".codex")) / "sessions"
+
+
+def _meta(path):
+    obj = next(first_objects(path, 1), {})
+    return (obj.get("payload") or {}) if obj.get("type") == "session_meta" else {}
+
+
+def latest(base, repo_root):
+    files = sorted(base.rglob("rollout-*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)
+    for path in files[:_RECENT]:
+        cwd = _meta(path).get("cwd")
+        if cwd and related(Path(cwd), repo_root):
+            return path, Path(cwd)
+    return None, None
+
+
+def find(base, native):
+    return next((p for p in base.rglob(f"rollout-*{native}.jsonl") if p.is_file()), None)
+
+
+def turn_ended(obj):
+    return obj.get("type") == "event_msg" and (obj.get("payload") or {}).get("type") == "task_complete"
+
+
+def native_id(path):
+    return _meta(path).get("session_id") or path.stem
 
 
 def visible(obj):

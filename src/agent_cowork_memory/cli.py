@@ -15,7 +15,7 @@ from agent_cowork_memory.ledger import AcmError, attach, checkpoint, claim, cont
 from agent_cowork_memory.memory import note_add, note_forget, note_promote, note_search
 from agent_cowork_memory.transcript import resume, transcript_read
 
-EXIT = {"invalid": 2, "conflict": 3, "not_owner": 3, "unavailable": 4, "not_found": 4}
+EXIT = {"invalid": 2, "conflict": 3, "not_owner": 3, "not_allowed": 3, "unavailable": 4, "not_found": 4}
 PACKAGE_SOURCE = "git+https://github.com/rxthlessbeats/agent-cowork-memory.git"
 
 
@@ -97,6 +97,27 @@ def setup_clients():
             if os.path.exists(temporary):
                 os.unlink(temporary)
         result["cursor"] = "configured"
+
+    opencode = shutil.which("opencode")
+    opencode_file = Path(os.environ.get("OPENCODE_CONFIG", home / ".config" / "opencode" / "opencode.json"))
+    if not opencode:
+        result["opencode"] = "not installed"
+        return result
+    config = json.loads(opencode_file.read_text()) if opencode_file.exists() else {}
+    if not isinstance(config, dict) or not isinstance(config.get("mcp", {}), dict):
+        raise ValueError(f"Invalid MCP config: {opencode_file}")
+    servers = config.setdefault("mcp", {})
+    if "acm" in servers:
+        result["opencode"] = "already configured (left unchanged)"
+    else:
+        servers["acm"] = {
+            "type": "local",
+            "command": [uvx, "--from", PACKAGE_SOURCE, "acm", "mcp", "--harness", "opencode"],
+            "enabled": True,
+        }
+        opencode_file.parent.mkdir(parents=True, exist_ok=True)
+        opencode_file.write_text(json.dumps(config, indent=2) + "\n")
+        result["opencode"] = "configured"
     return result
 
 
@@ -140,6 +161,14 @@ def main(argv=None):
     r.add_argument("--target", required=True)
     r.add_argument("--since-cursor", type=int)
     r.add_argument("--limit", type=int, default=20)
+
+    d = sub.add_parser("delegate")
+    d.add_argument("--repo", required=True)
+    d.add_argument("--harness", required=True)
+    d.add_argument("--summary", required=True)
+    d.add_argument("--to", nargs=2, action="append", required=True, metavar=("AGENT", "TASK"))
+    d.add_argument("--session")
+    sub.add_parser("delegate-wait").add_argument("--session", required=True)
 
     r = sub.add_parser("resume")
     r.add_argument("--repo", required=True)
@@ -229,6 +258,15 @@ def main(argv=None):
                 conn, session=args.session, target=args.target,
                 since_cursor=args.since_cursor, limit=args.limit,
             )
+        if args.cmd == "delegate":
+            from agent_cowork_memory.delegate import delegate
+            return delegate(
+                conn, harness=args.harness, repo_path=args.repo, summary=args.summary,
+                tasks=[{"to": to, "task": task} for to, task in args.to], session=args.session,
+            )
+        if args.cmd == "delegate-wait":
+            from agent_cowork_memory.delegate import delegate_wait
+            return delegate_wait(conn, session=args.session)
         if args.cmd == "resume":
             return resume(conn, harness=args.harness, repo_path=args.repo, source=args.source, limit=args.limit)
         if args.cmd == "note" and args.note_cmd == "add":

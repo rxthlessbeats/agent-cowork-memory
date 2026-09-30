@@ -3,7 +3,7 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-HARNESSES = ("codex", "cursor", "claude")
+HARNESSES = ("codex", "cursor", "claude", "opencode")
 
 
 class AcmError(Exception):
@@ -97,7 +97,7 @@ def _public_task(row, session_id):
 
 def attach(conn, *, repo_path, harness, label, task=None, title=None, goal=None, native_id=None):
     if harness not in HARNESSES:
-        raise AcmError("invalid", message="harness must be codex, cursor, or claude")
+        raise AcmError("invalid", message=f"harness must be one of {', '.join(HARNESSES)}")
     if bool(task) == bool(title):
         raise AcmError("invalid", message="pass a task to join or a title to create, not both")
     root, common_dir, _branch = git_identity(repo_path)
@@ -244,18 +244,27 @@ def checkpoint(conn, *, session, task, expect_version, summary, next_action=None
     return _public_task(_task_row(conn, task), session)
 
 
-def context(conn, *, session):
+def context(conn, *, session, hold=None):
     row = _session_row(conn, session)
     if not row["active_task_id"]:
         raise AcmError("invalid", message="session has no task", hint="attach", session=session)
-    conn.execute(
-        "UPDATE sessions SET last_seen_at = ? WHERE id = ?", (now(), session)
-    )
+    conn.execute("UPDATE sessions SET last_seen_at = ? WHERE id = ?", (now(), session))
     conn.commit()
-    from agent_cowork_memory.memory import fit_notes, visible_notes
+    from agent_cowork_memory.memory import activity, claim, fit_notes, sweep, visible_notes
+    sweep(conn, row["project_id"])
+    busy = claim(conn, row, hold) if hold is not None else []
     task = _task_row(conn, row["active_task_id"])
     short, long = visible_notes(conn, task["project_id"], task["id"])
-    return fit_notes(_public_task(task, session), short, long)
+    head = _public_task(task, session)
+    if task["version"] == 1:
+        for key in ("owner", "summary", "next_action", "blockers", "version"):
+            head.pop(key)
+    body = fit_notes(head, short, long)
+    body["working"], body["held"] = activity(conn, row)
+    if busy:
+        owners = {item["path"]: item["agent"] for item in body["held"]}
+        body["busy"] = [{"path": path, "agent": owners.get(path)} for path in busy]
+    return body
 
 
 def task_list(conn, *, repo_path):

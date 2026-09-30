@@ -30,11 +30,14 @@ class SetupTest(unittest.TestCase):
                  patch("agent_cowork_memory.cli.shutil.which", side_effect=which), \
                  patch("agent_cowork_memory.cli.subprocess.run", side_effect=run), \
                  patch.dict("agent_cowork_memory.cli.os.environ", {"CODEX_HOME": str(home / ".codex")}, clear=True):
-                self.assertEqual(setup_clients(), {"codex": "configured", "cursor": "configured"})
+                self.assertEqual(setup_clients(), {"codex": "configured", "cursor": "configured", "opencode": "configured"})
                 self.assertEqual(setup_clients(), {
                     "codex": "already configured (left unchanged)",
                     "cursor": "already configured (left unchanged)",
+                    "opencode": "already configured (left unchanged)",
                 })
+            opencode = json.loads((home / ".config" / "opencode" / "opencode.json").read_text())
+            self.assertEqual(opencode["mcp"]["acm"]["command"][-1], "opencode")
 
             self.assertEqual(len(calls), 1)
             self.assertEqual(calls[0], [

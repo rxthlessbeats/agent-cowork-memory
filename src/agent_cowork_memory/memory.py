@@ -6,8 +6,16 @@ from pathlib import Path
 from agent_cowork_memory.ledger import AcmError, new_id, now
 
 _BUDGET = 12_000
+_KEEP_RESULTS = 20  # ponytail: one log cap, raise it if a project outgrows the job history
 _VISIBLE = """forgotten_at IS NULL AND superseded_at IS NULL AND promoted_at IS NULL
     AND (expires_at IS NULL OR expires_at > ?)"""
+OPEN = ("starting", "running", "blocked")
+OPEN_SQL = ", ".join(f"'{state}'" for state in OPEN)
+
+
+def one_line(text, width=200):
+    flat = " ".join((text or "").split())
+    return flat if len(flat) <= width else flat[: width - 1] + "…"
 
 
 def short_note_days(conn):
@@ -58,6 +66,7 @@ def note_add(conn, *, session, text, tier="short", kind=None, days=None, superse
     if tier not in ("short", "long"):
         raise AcmError("invalid", message="tier must be short or long", session=session)
     owner = _session(conn, session)
+    sweep(conn, owner["project_id"])
     if not text:
         raise AcmError("invalid", message="text is required", session=session)
     task_id = task or owner["active_task_id"]
@@ -94,6 +103,7 @@ def note_add(conn, *, session, text, tier="short", kind=None, days=None, superse
 
 def note_search(conn, *, session, query, task=None):
     owner = _session(conn, session)
+    sweep(conn, owner["project_id"])
     words = re.findall(r"\w+", query or "")
     if not words:
         raise AcmError("invalid", message="empty search", session=session)
@@ -148,12 +158,95 @@ def note_forget(conn, *, session, note):
     return {"session": session, "id": note, "forgotten": True}
 
 
+def _rel(path):
+    text = (path or "").replace("\\", "/").strip()
+    if not text or text.startswith("/") or ".." in Path(text).parts:
+        raise AcmError("invalid", message="hold paths must be relative to the project, such as src/app.py")
+    return text
+
+
+def sweep(conn, project_id):
+    """Delete notes nobody can see, and job results past the cap."""
+    dead = [row["id"] for row in conn.execute(
+        """SELECT id FROM memories WHERE project_id = ? AND (
+             (expires_at IS NOT NULL AND expires_at <= ?)
+             OR forgotten_at IS NOT NULL OR superseded_at IS NOT NULL OR promoted_at IS NOT NULL)""",
+        (project_id, now()),
+    )]
+    extra = [row["id"] for row in conn.execute(
+        f"""SELECT id FROM memories WHERE project_id = ? AND kind = 'result' AND {_VISIBLE}
+            ORDER BY created_at DESC, rowid DESC LIMIT -1 OFFSET ?""",
+        (project_id, now(), _KEEP_RESULTS),
+    )]
+    ids = dead + extra
+    if ids:
+        marks = ",".join("?" * len(ids))
+        conn.execute(f"DELETE FROM memories_fts WHERE memory_id IN ({marks})", ids)
+        conn.execute(f"DELETE FROM memories WHERE id IN ({marks})", ids)
+    conn.commit()
+
+
+def release(conn, folder, label):
+    conn.execute(
+        """DELETE FROM holds WHERE session_id IN (
+            SELECT id FROM sessions WHERE working_directory = ? AND label = ?)""",
+        (folder, label),
+    )
+    conn.commit()
+
+
+def claim(conn, session_row, paths):
+    """Replace this session's file holds. Returns paths held by someone else, changing nothing then."""
+    paths = list(dict.fromkeys(_rel(path) for path in paths))
+    project, session = session_row["project_id"], session_row["id"]
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        taken = {row["path"] for row in conn.execute(
+            "SELECT path FROM holds WHERE project_id = ? AND session_id != ?", (project, session),
+        )}
+        busy = [path for path in paths if path in taken]
+        if not busy:
+            conn.execute("DELETE FROM holds WHERE session_id = ?", (session,))
+            conn.executemany(
+                "INSERT INTO holds (project_id, path, session_id, created_at) VALUES (?, ?, ?, ?)",
+                [(project, path, session, now()) for path in paths],
+            )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    return busy
+
+
+def activity(conn, session_row):
+    """Who is working in this folder, and which files are held. This session is left out of working."""
+    working = [
+        {"agent": row["agent_name"], "state": row["state"], "task": one_line(row["task"])}
+        for row in conn.execute(
+            f"""SELECT agent_name, task, state FROM delegations
+                WHERE folder = ? AND state IN ({OPEN_SQL}) ORDER BY started_at, rowid""",
+            (session_row["working_directory"],),
+        )
+        if row["agent_name"] != session_row["label"]
+    ]
+    held = [
+        {"path": row["path"], "agent": row["label"] or row["harness"]}
+        for row in conn.execute(
+            """SELECT h.path, s.label, s.harness FROM holds h
+               JOIN sessions s ON s.id = h.session_id
+               WHERE h.project_id = ? ORDER BY h.path""",
+            (session_row["project_id"],),
+        )
+    ]
+    return working, held
+
+
 def visible_notes(conn, project_id, task_id):
+    """Every live note in the project: this task's first, then the rest, newest first in each."""
     rows = conn.execute(
         f"""SELECT * FROM memories
             WHERE project_id = ? AND {_VISIBLE}
-              AND (task_id = ? OR task_id IS NULL)
-            ORDER BY created_at""",
+            ORDER BY task_id IS NOT ?, created_at DESC, rowid DESC""",
         (project_id, now(), task_id),
     ).fetchall()
     short = [_public(row) for row in rows if row["tier"] == "short"]

@@ -1,8 +1,33 @@
+import os
+from pathlib import Path
+
+from agent_cowork_memory.readers import first_objects, newest, slug
+
 _SKIP = {"queue-operation", "attachment", "atis-latch", "last-prompt", "cost-state", "system", "summary"}
 
 
-def native_id(obj, path):
-    return obj.get("sessionId") or path.stem
+def root():
+    return Path(os.environ.get("CLAUDE_CONFIG_DIR", Path.home() / ".claude")) / "projects"
+
+
+def latest(base, repo_root):
+    found = []
+    for workspace in (repo_root, *repo_root.parents):
+        files = (base / ("-" + slug(workspace))).glob("*.jsonl")
+        found += [(p, workspace) for p in files if p.is_file()]
+    return newest(found)
+
+
+def find(base, native):
+    return next((p for p in base.glob(f"*/{native}.jsonl") if p.is_file()), None)
+
+
+def turn_ended(obj):
+    return obj.get("type") == "system" and obj.get("subtype") == "turn_duration"
+
+
+def native_id(path):
+    return next((o["sessionId"] for o in first_objects(path) if o.get("sessionId")), path.stem)
 
 
 def visible(obj):

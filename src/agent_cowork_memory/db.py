@@ -107,20 +107,49 @@ CREATE VIRTUAL TABLE memories_fts USING fts5(memory_id UNINDEXED, body);
 """
 
 
+V4 = """
+CREATE TABLE delegations (
+  id TEXT PRIMARY KEY,
+  caller_session_id TEXT NOT NULL REFERENCES sessions(id),
+  folder TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  agent_name TEXT NOT NULL,
+  pane_id TEXT,
+  summary TEXT NOT NULL,
+  task TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  transcript_path TEXT,
+  state TEXT NOT NULL,
+  result TEXT,
+  reported INTEGER NOT NULL DEFAULT 0,
+  started_at TEXT NOT NULL,
+  finished_at TEXT
+);
+CREATE INDEX delegations_caller ON delegations(caller_session_id, kind, started_at);
+"""
+
+V5 = """
+CREATE TABLE holds (
+  project_id TEXT NOT NULL REFERENCES projects(id),
+  path TEXT NOT NULL,
+  session_id TEXT NOT NULL REFERENCES sessions(id),
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (project_id, path)
+);
+"""
+
+
+V6 = """
+ALTER TABLE delegations ADD COLUMN resent INTEGER NOT NULL DEFAULT 0;
+"""
+
+MIGRATIONS = [SCHEMA, V2, V3, V4, V5, V6]
+
+
 def migrate(conn):
     version = conn.execute("PRAGMA user_version").fetchone()[0]
-    if version < 1:
-        conn.executescript(SCHEMA)
-        conn.execute("PRAGMA user_version=1")
-        version = 1
-    if version < 2:
-        conn.executescript(V2)
-        conn.execute("PRAGMA user_version=2")
-        version = 2
-    if version < 3:
-        conn.executescript(V3)
-        conn.execute("PRAGMA user_version=3")
-    conn.commit()
+    for number, sql in enumerate(MIGRATIONS[version:], start=version + 1):
+        conn.executescript(f"BEGIN; {sql} PRAGMA user_version={number}; COMMIT;")
 
 
 def connect(home):

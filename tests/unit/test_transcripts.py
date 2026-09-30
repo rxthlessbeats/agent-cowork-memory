@@ -1,4 +1,5 @@
 import json
+import sqlite3
 import subprocess
 import tempfile
 import unittest
@@ -6,6 +7,7 @@ from pathlib import Path
 
 from agent_cowork_memory.db import connect
 from agent_cowork_memory.ledger import AcmError, attach, checkpoint
+from agent_cowork_memory.readers import opencode
 from agent_cowork_memory.transcript import cursor_for, resume, transcript_read
 
 
@@ -145,6 +147,55 @@ class TranscriptTest(unittest.TestCase):
         with self.assertRaises(AcmError) as caught:
             resume(self.conn, harness="cursor", repo_path=self.repo, source="cursor", root=self.root)
         self.assertEqual(caught.exception.code, "invalid")
+
+    def test_resume_reads_opencode_files_and_sqlite(self):
+        repo = self.repo.resolve()
+        storage = self.root / "storage"
+        session = storage / "session" / "proj" / "ses_old.json"
+        session.parent.mkdir(parents=True)
+        session.write_text(json.dumps({"id": "ses_old", "directory": str(repo)}))
+        msg = storage / "message" / "ses_old" / "m1.json"
+        msg.parent.mkdir(parents=True)
+        msg.write_text(json.dumps({"id": "m1", "role": "user"}))
+        part = storage / "part" / "m1" / "p1.json"
+        part.parent.mkdir(parents=True)
+        part.write_text(json.dumps({"type": "text", "text": "from files"}))
+        os_utime = session.stat().st_mtime
+
+        db = self.root / "opencode.db"
+        conn = sqlite3.connect(db)
+        conn.executescript(
+            """CREATE TABLE session (id TEXT, directory TEXT, time_updated INTEGER, parent_id TEXT);
+               CREATE TABLE message (id TEXT, session_id TEXT, time_created INTEGER, data TEXT);
+               CREATE TABLE part (id TEXT, message_id TEXT, time_created INTEGER, data TEXT);"""
+        )
+        conn.execute("INSERT INTO session VALUES ('ses_new', ?, ?, NULL)", (str(repo), int((os_utime + 10) * 1000)))
+        conn.execute("INSERT INTO message VALUES ('m2', 'ses_new', 2, ?)", (json.dumps({"role": "user"}),))
+        conn.execute("INSERT INTO part VALUES ('p2', 'm2', 2, ?)", (json.dumps({"type": "text", "text": "from sqlite"}),))
+        conn.commit()
+        conn.close()
+        got = resume(self.conn, harness="cursor", repo_path=self.repo, source="opencode", root=self.root)
+        self.assertEqual([m["text"] for m in got["messages"]], ["from sqlite"])
+        self.assertEqual(got["native_id"], "ses_new")
+
+    def test_opencode_turn_ends_only_after_a_finished_reply(self):
+        session = self.root / "session" / "ses_1.json"
+        session.parent.mkdir(parents=True)
+        session.write_text(json.dumps({"id": "ses_1", "directory": "/w"}))
+        messages = [
+            ("m1", {"role": "user", "time": {"created": 1}}, "go"),
+            ("m2", {"role": "assistant", "finish": "tool-calls", "time": {"created": 2, "completed": 3}}, "reading"),
+            ("m3", {"role": "assistant", "finish": "stop", "time": {"created": 4}}, "still writing"),
+        ]
+        for mid, msg, text in messages:
+            (self.root / "message" / "ses_1").mkdir(parents=True, exist_ok=True)
+            (self.root / "message" / "ses_1" / f"{mid}.json").write_text(json.dumps({"id": mid, **msg}))
+            (self.root / "part" / mid).mkdir(parents=True)
+            (self.root / "part" / mid / "p.json").write_text(json.dumps({"type": "text", "text": text}))
+        self.assertNotIn(b"turn_ended", opencode.read(session))
+        done = {"id": "m3", "role": "assistant", "finish": "stop", "time": {"created": 4, "completed": 5}}
+        (self.root / "message" / "ses_1" / "m3.json").write_text(json.dumps(done))
+        self.assertEqual(opencode.read(session).count(b"turn_ended"), 1)
 
     def test_plain_folder_is_a_project(self):
         plain = Path(self.tmp.name) / "plain" / "sub"
