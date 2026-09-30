@@ -11,7 +11,7 @@ from pathlib import Path
 
 from agent_cowork_memory.data import backup
 from agent_cowork_memory.db import connect, fts5_ok, home_dir
-from agent_cowork_memory.ledger import AcmError, attach, checkpoint, claim, context, session_list, task_history, task_list
+from agent_cowork_memory.ledger import HARNESSES, AcmError, attach, checkpoint, claim, context, session_list, task_history, task_list
 from agent_cowork_memory.memory import note_add, note_forget, note_promote, note_search
 from agent_cowork_memory.transcript import resume, transcript_read
 
@@ -215,7 +215,7 @@ def main(argv=None):
     sub.add_parser("doctor")
     sub.add_parser("setup")
     p = sub.add_parser("mcp")
-    p.add_argument("--harness", required=True)
+    p.add_argument("--harness", choices=HARNESSES)
 
     args = parser.parse_args(argv)
     if args.cmd == "mcp":

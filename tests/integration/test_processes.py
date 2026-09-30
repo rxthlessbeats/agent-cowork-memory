@@ -12,6 +12,7 @@ from unittest import mock
 
 from mcp.client.session import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
+from mcp.types import Implementation
 
 from agent_cowork_memory.db import connect
 from agent_cowork_memory.delegate import Deps, delegate
@@ -107,6 +108,25 @@ class StdioTest(Agents):
         self.assertIn("notes.md", json.dumps(held["held"]))
         self.assertEqual([(j["to"], j["state"]) for j in sent["jobs"]], [("codex", "done")])
         self.assertTrue((self.work / "plan.md").exists())
+
+    def test_harness_comes_from_the_client_name(self):
+        params = StdioServerParameters(
+            command=sys.executable, args=["-c", ACM, "--home", str(self.home), "mcp"], env={"PATH": self.path},
+        )
+
+        async def attach_as(name):
+            info = Implementation(name=name, version="1")
+            async with stdio_client(params) as (read, write), ClientSession(read, write, client_info=info) as client:
+                await client.initialize()
+                return await client.call_tool("attach", {"repo_path": str(self.work), "label": name, "title": "Trip"})
+
+        self.assertFalse(asyncio.run(attach_as("claude-code")).is_error)
+        unknown = asyncio.run(attach_as("some-editor"))
+        self.assertTrue(unknown.is_error)
+        self.assertIn("--harness", unknown.content[0].text)
+        conn = connect(self.home)
+        self.assertEqual([r["harness"] for r in conn.execute("SELECT harness FROM sessions")], ["claude"])
+        conn.close()
 
 
 if __name__ == "__main__":

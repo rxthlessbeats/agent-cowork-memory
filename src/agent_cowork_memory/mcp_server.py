@@ -1,10 +1,10 @@
 import json
 
-from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver import Context, MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from agent_cowork_memory.db import connect
-from agent_cowork_memory.ledger import AcmError
+from agent_cowork_memory.ledger import HARNESSES, AcmError
 
 ATTACH = (
     "Call this first. repo_path is your working directory. Pass title to create a task "
@@ -44,8 +44,26 @@ NOTE_ADD = (
 NOTE_SEARCH = "Search note text in this project. Expired, forgotten, and superseded notes stay out."
 
 
+def client_harness(name):
+    name = (name or "").lower()
+    return next((h for h in HARNESSES if h in name), None)
+
+
 def build_server(harness, home):
     mcp = MCPServer("acm")
+
+    def who(ctx):
+        if harness:
+            return harness
+        params = ctx.request_context.session.client_params
+        name = params.client_info.name if params else ""
+        found = client_harness(name)
+        if found is None:
+            raise ToolError(json.dumps({
+                "error": "harness",
+                "message": f"Unknown MCP client {name!r}. Start acm with: acm mcp --harness {'|'.join(HARNESSES)}",
+            }))
+        return found
 
     def run(fn, session=None):
         conn = connect(home)
@@ -62,10 +80,11 @@ def build_server(harness, home):
             conn.close()
 
     @mcp.tool(description=ATTACH)
-    def attach(repo_path: str, label: str, task: str | None = None, title: str | None = None, goal: str | None = None, native_id: str | None = None) -> dict:
+    def attach(ctx: Context, repo_path: str, label: str, task: str | None = None, title: str | None = None, goal: str | None = None, native_id: str | None = None) -> dict:
         from agent_cowork_memory.ledger import attach as attach_op
+        kind = who(ctx)
         return run(lambda conn: attach_op(
-            conn, repo_path=repo_path, harness=harness, label=label,
+            conn, repo_path=repo_path, harness=kind, label=label,
             task=task, title=title, goal=goal, native_id=native_id,
         ))
 
@@ -75,17 +94,19 @@ def build_server(harness, home):
         return run(lambda conn: context_op(conn, session=session, hold=hold), session)
 
     @mcp.tool(description=RESUME)
-    def resume(repo_path: str, source: str, limit: int = 30) -> dict:
+    def resume(ctx: Context, repo_path: str, source: str, limit: int = 30) -> dict:
         from agent_cowork_memory.transcript import resume as resume_op
+        kind = who(ctx)
         return run(lambda conn: resume_op(
-            conn, harness=harness, repo_path=repo_path, source=source, limit=limit,
+            conn, harness=kind, repo_path=repo_path, source=source, limit=limit,
         ))
 
     @mcp.tool(description=DELEGATE)
-    def delegate(repo_path: str, summary: str, tasks: list[dict], session: str | None = None) -> dict:
+    def delegate(ctx: Context, repo_path: str, summary: str, tasks: list[dict], session: str | None = None) -> dict:
         from agent_cowork_memory.delegate import delegate as delegate_op
+        kind = who(ctx)
         return run(lambda conn: delegate_op(
-            conn, harness=harness, repo_path=repo_path, summary=summary, tasks=tasks, session=session,
+            conn, harness=kind, repo_path=repo_path, summary=summary, tasks=tasks, session=session,
         ), session)
 
     @mcp.tool(description=DELEGATE_WAIT)

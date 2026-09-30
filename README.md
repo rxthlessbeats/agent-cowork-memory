@@ -1,5 +1,7 @@
 # Agent Cowork Memory (ACM)
 
+<!-- mcp-name: io.github.rxthlessbeats/agent-cowork-memory -->
+
 Tired of copying a chat into the next agent? Pick up the same task where you left off, or tell one agent to put the others to work.
 
 [![GitHub Release](https://img.shields.io/github/v/release/rxthlessbeats/agent-cowork-memory?style=flat&color=blue)](https://github.com/rxthlessbeats/agent-cowork-memory/releases/latest)
