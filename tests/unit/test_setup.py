@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from agent_cowork_memory.cli import PACKAGE_SOURCE, setup_clients
+from agent_cowork_memory.cli import mcp_command, setup_clients
 
 
 class SetupTest(unittest.TestCase):
@@ -40,13 +40,8 @@ class SetupTest(unittest.TestCase):
             self.assertEqual(opencode["mcp"]["acm"]["command"][-1], "opencode")
 
             self.assertEqual(len(calls), 1)
-            self.assertEqual(calls[0], [
-                "/tmp/codex", "mcp", "add", "acm", "--",
-                "/tmp/uvx", "--from", PACKAGE_SOURCE, "acm", "mcp", "--harness", "codex",
-            ])
+            self.assertEqual(calls[0], ["/tmp/codex", "mcp", "add", "acm", "--", *mcp_command("/tmp/uvx", "codex")])
             servers = json.loads(cursor_file.read_text())["mcpServers"]
             self.assertEqual(servers["other"], {"command": "other"})
-            self.assertEqual(servers["acm"], {
-                "command": "/tmp/uvx",
-                "args": ["--from", PACKAGE_SOURCE, "acm", "mcp", "--harness", "cursor"],
-            })
+            cursor = mcp_command("/tmp/uvx", "cursor")
+            self.assertEqual(servers["acm"], {"command": cursor[0], "args": cursor[1:]})

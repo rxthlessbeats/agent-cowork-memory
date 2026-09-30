@@ -16,7 +16,10 @@ from agent_cowork_memory.memory import note_add, note_forget, note_promote, note
 from agent_cowork_memory.transcript import resume, transcript_read
 
 EXIT = {"invalid": 2, "conflict": 3, "not_owner": 3, "not_allowed": 3, "unavailable": 4, "not_found": 4}
-PACKAGE_SOURCE = "git+https://github.com/rxthlessbeats/agent-cowork-memory.git"
+
+
+def mcp_command(uvx, harness):
+    return [uvx, "agent-cowork-memory", "mcp", "--harness", harness]
 
 
 def _print(payload, *, err=False):
@@ -76,7 +79,7 @@ def setup_clients():
         result["codex"] = "already configured (left unchanged)"
     else:
         subprocess.run(
-            [codex, "mcp", "add", "acm", "--", uvx, "--from", PACKAGE_SOURCE, "acm", "mcp", "--harness", "codex"],
+            [codex, "mcp", "add", "acm", "--", *mcp_command(uvx, "codex")],
             cwd=home, check=True, capture_output=True, text=True, timeout=15,
         )
         result["codex"] = "configured"
@@ -85,7 +88,8 @@ def setup_clients():
     if "acm" in cursor_servers:
         result["cursor"] = "already configured (left unchanged)"
     else:
-        cursor_servers["acm"] = {"command": uvx, "args": ["--from", PACKAGE_SOURCE, "acm", "mcp", "--harness", "cursor"]}
+        command = mcp_command(uvx, "cursor")
+        cursor_servers["acm"] = {"command": command[0], "args": command[1:]}
         cursor_file.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=cursor_file.parent, delete=False) as out:
             json.dump(cursor_config, out, indent=2)
@@ -112,7 +116,7 @@ def setup_clients():
     else:
         servers["acm"] = {
             "type": "local",
-            "command": [uvx, "--from", PACKAGE_SOURCE, "acm", "mcp", "--harness", "opencode"],
+            "command": mcp_command(uvx, "opencode"),
             "enabled": True,
         }
         opencode_file.parent.mkdir(parents=True, exist_ok=True)

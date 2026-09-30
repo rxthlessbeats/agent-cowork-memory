@@ -23,14 +23,14 @@ Tired of copying a chat into the next agent? Pick up the same task where you lef
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then run:
 
 ```sh
-uvx --from "git+https://github.com/rxthlessbeats/agent-cowork-memory.git" acm setup
+uvx agent-cowork-memory setup
 ```
 
 Restart Codex, Cursor, and OpenCode. ACM is now available in every project.
 For Claude Code, add it yourself, then restart Claude Code:
 
 ```sh
-claude mcp add -s user acm -- uvx --from "git+https://github.com/rxthlessbeats/agent-cowork-memory.git" acm mcp --harness claude
+claude mcp add -s user acm -- uvx agent-cowork-memory mcp --harness claude
 ```
 
 ## Use
