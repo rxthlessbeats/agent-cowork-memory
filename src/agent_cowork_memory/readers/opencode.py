@@ -70,7 +70,11 @@ def chats(base, repo_root):
             (_storage(base) / "session" / f"{sid}.json", workspace, stamp)
             for sid, workspace, stamp in _sessions_db(db) if related(workspace, repo_root)
         ]
-    return found
+    # A session can be in both the old files and the database; keep the newer one.
+    newest_per_id = {}
+    for item in sorted(found, key=lambda item: item[2]):
+        newest_per_id[item[0].stem] = item
+    return list(newest_per_id.values())
 
 
 def latest(base, repo_root):

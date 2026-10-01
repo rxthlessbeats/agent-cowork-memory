@@ -69,6 +69,7 @@ def _session_row(conn, session_id):
     row = conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,)).fetchone()
     if row is None:
         raise AcmError("invalid", message="unknown session", hint="attach", session=session_id)
+    conn.execute("UPDATE sessions SET last_seen_at = ? WHERE id = ?", (now(), session_id))
     return row
 
 
@@ -248,8 +249,6 @@ def context(conn, *, session, hold=None):
     row = _session_row(conn, session)
     if not row["active_task_id"]:
         raise AcmError("invalid", message="session has no task", hint="attach", session=session)
-    conn.execute("UPDATE sessions SET last_seen_at = ? WHERE id = ?", (now(), session))
-    conn.commit()
     from agent_cowork_memory.memory import activity, claim, fit_notes, sweep, visible_notes
     sweep(conn, row["project_id"])
     busy = claim(conn, row, hold) if hold is not None else []

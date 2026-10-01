@@ -55,13 +55,17 @@ def doctor(conn, home):
 
 
 def _write_json(path, data):
-    """Replace the file in one step, so an interrupted setup never leaves half a config."""
+    """Replace the file in one step, so an interrupted setup never leaves half a config.
+    A symlinked config is written at its target, with the target's permissions."""
+    path = path.resolve()
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as out:
         json.dump(data, out, indent=2)
         out.write("\n")
         temporary = out.name
     try:
+        if path.exists():
+            os.chmod(temporary, path.stat().st_mode & 0o777)
         os.replace(temporary, path)
     finally:
         if os.path.exists(temporary):

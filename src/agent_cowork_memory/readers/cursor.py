@@ -1,8 +1,7 @@
 import os
-import re
 from pathlib import Path
 
-from agent_cowork_memory.readers import newest, slug
+from agent_cowork_memory.readers import dashes, newest, slug
 
 
 def root():
@@ -12,7 +11,7 @@ def root():
 def _folders(workspace):
     """Cursor's folder name for a workspace. Paths with only letters, digits and / are known to map to
     slug(); for other characters it is unconfirmed, so both the slug and the all-dashes form are tried."""
-    names = {slug(workspace), re.sub(r"[^A-Za-z0-9]", "-", str(workspace)).strip("-")}
+    names = {slug(workspace), dashes(workspace).strip("-")}
     return [Path(name) / "agent-transcripts" for name in sorted(names)]
 
 

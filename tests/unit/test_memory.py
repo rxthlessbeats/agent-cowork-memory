@@ -71,6 +71,16 @@ class MemoryTest(unittest.TestCase):
         found = note_search(self.conn, session=self.other["session"], query="redis OR memcached")
         self.assertEqual([n["body"] for n in found["notes"]], ["use redis or memcached"])
         self.assertEqual(note_search(self.conn, session=self.other["session"], query="NOT")["notes"], [])
+        rain = note_add(self.conn, session=self.owner["session"], text="if it rains, use the cafe")
+        self.assertEqual([n["id"] for n in note_search(self.conn, session=self.other["session"], query="rain")["notes"]], [rain["id"]])
+
+    def test_long_notes_survive_many_short_notes(self):
+        note_add(self.conn, session=self.owner["session"], text="use pnpm, not npm", tier="long")
+        for n in range(40):
+            note_add(self.conn, session=self.owner["session"], text=f"progress {n} " + "x" * 400)
+        seen = context(self.conn, session=self.other["session"])
+        self.assertEqual([n["body"] for n in seen["long_notes"]], ["use pnpm, not npm"])
+        self.assertGreater(seen["omitted"]["short"], 0)
 
     def test_context_shows_whole_project_own_task_first(self):
         elsewhere = attach(self.conn, repo_path=self.repo, harness="claude", label="c", title="Other task")
@@ -99,7 +109,19 @@ class MemoryTest(unittest.TestCase):
         context(self.conn, session=self.owner["session"], hold=["./plan.md"])
         other = context(self.conn, session=self.other["session"], hold=["plan.md"])
         self.assertEqual(other["busy"], [{"path": "plan.md", "agent": "a"}])
-        self.conn.execute("UPDATE sessions SET last_seen_at = '2000-01-01T00:00:00Z' WHERE id = ?", (self.owner["session"],))
+        quiet = "UPDATE sessions SET last_seen_at = '2000-01-01T00:00:00Z' WHERE id = ?"
+        self.conn.execute(quiet, (self.owner["session"],))
+        note_add(self.conn, session=self.owner["session"], text="still editing plan.md")
+        self.assertIn("busy", context(self.conn, session=self.other["session"], hold=["plan.md"]))
+        self.conn.execute("UPDATE sessions SET label = 'codex-work' WHERE id = ?", (self.owner["session"],))
+        self.conn.execute(
+            """INSERT INTO delegations (id, caller_session_id, folder, kind, agent_name, summary, task, prompt, state, started_at)
+               VALUES ('acm_j_1', ?, ?, 'codex', 'codex-work', 's', 't', 'p', 'running', '2026-09-30T00:00:00Z')""",
+            (self.other["session"], str(self.repo.resolve())),
+        )
+        self.conn.execute(quiet, (self.owner["session"],))
+        self.assertIn("busy", context(self.conn, session=self.other["session"], hold=["plan.md"]))
+        self.conn.execute("UPDATE delegations SET state = 'done'")
         taken = context(self.conn, session=self.other["session"], hold=["plan.md"])
         self.assertNotIn("busy", taken)
 
@@ -141,6 +163,7 @@ class MemoryTest(unittest.TestCase):
     def test_concurrent_first_connects_migrate_once(self):
         home = Path(self.tmp.name) / "race"
         start, errors = threading.Barrier(8), []
+        once = MIGRATIONS + ["INSERT INTO projects (id, git_common_dir, created_at) VALUES ('p', 'x', 'now');"]
 
         def go():
             start.wait()
@@ -150,11 +173,15 @@ class MemoryTest(unittest.TestCase):
                 errors.append(exc)
 
         threads = [threading.Thread(target=go) for _ in range(8)]
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
+        with mock.patch("agent_cowork_memory.db.MIGRATIONS", once):
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
         self.assertEqual(errors, [])
+        conn = sqlite3.connect(home / "state.sqlite3")
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0], 1)
+        conn.close()
 
     def test_failed_migration_step_changes_nothing(self):
         conn = sqlite3.connect(":memory:", isolation_level=None)

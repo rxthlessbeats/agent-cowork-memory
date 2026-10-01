@@ -1,12 +1,16 @@
 import json
 import os
+import signal
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from agent_cowork_memory.db import connect
-from agent_cowork_memory.delegate import Deps, HerdrError, _clean_jobs, build_prompt, delegate, delegate_wait
+from agent_cowork_memory.delegate import (
+    Deps, HerdrError, _clean_jobs, _headless, build_prompt, delegate, delegate_wait, spawn_background,
+)
 from agent_cowork_memory.ledger import AcmError, context
 
 
@@ -18,6 +22,7 @@ class FakeHerdr:
         self.panes = []
         self.prompts = []
         self.block_start = set()
+        self.stuck_start = set()
         self.finish = True
         self.drop = 0
         self.started = 0
@@ -60,6 +65,9 @@ class FakeHerdr:
             return {"agents": list(self.agents.values())}
         if cmd == ("agent", "start"):
             name, kind, pane = args[2], args[args.index("--kind") + 1], args[args.index("--pane") + 1]
+            assert 3000 < int(args[args.index("--timeout") + 1]) <= 300000
+            if kind in self.stuck_start:
+                raise HerdrError("timeout", "timed out waiting for agent startup")
             self.agents[name] = {
                 "name": name, "agent": kind, "pane_id": pane, "workspace_id": "w1",
                 "agent_status": "blocked" if kind in self.block_start else "idle",
@@ -166,7 +174,7 @@ class DelegateTest(unittest.TestCase):
         self.assertIn("## Context\nCarry-on only.", prompts["claude-work"])
         self.assertIn("Don't delegate", prompts["claude-work"])
 
-    def test_results_become_notes_from_the_worker_on_one_task(self):
+    def test_results_become_notes_and_each_new_caller_gets_its_own_task(self):
         first = self.run_delegate([{"to": "codex", "task": "Write plan.md"}])
         second = self.run_delegate([{"to": "claude", "task": "Write packing.md"}], summary="Pack for it.")
         notes = self.conn.execute(
@@ -176,10 +184,11 @@ class DelegateTest(unittest.TestCase):
         self.assertEqual([(n["harness"], n["label"], n["kind"]) for n in notes],
                          [("codex", "codex-work", "result"), ("claude", "claude-work", "result")])
         self.assertIn("codex-work did: Write plan.md\nResult: codex-work finished the work", notes[0]["body"])
-        tasks = {r["active_task_id"] for r in self.conn.execute(
-            "SELECT active_task_id FROM sessions WHERE id IN (?, ?)", (first["session"], second["session"]))}
-        self.assertEqual(len(tasks), 1)
-        self.assertEqual({n["task_id"] for n in notes}, tasks)
+        tasks = [self.conn.execute(
+            "SELECT t.id, t.title FROM sessions s JOIN tasks t ON t.id = s.active_task_id WHERE s.id = ?", (s,)).fetchone()
+            for s in (first["session"], second["session"])]
+        self.assertEqual([t["title"] for t in tasks], ["Plan a Lisbon trip.", "Pack for it."])
+        self.assertEqual([n["task_id"] for n in notes], [t["id"] for t in tasks])
         self.assertNotIn("Save a short acm note", self.fake.prompts[0][1])
 
     def test_follow_up_reuses_agent_and_skips_unchanged_problem(self):
@@ -267,6 +276,25 @@ class DelegateTest(unittest.TestCase):
         done = delegate_wait(self.conn, session=got["session"], deps=self.fake.deps())
         self.assertEqual(done["jobs"][0]["state"], "done")
 
+    def test_agent_that_never_starts_is_gone_and_others_still_run(self):
+        self.fake.stuck_start.add("codex")
+        self.fake.t = 44.0
+        got = self.run_delegate([{"to": "codex", "task": "Write plan.md"}, {"to": "claude", "task": "Write packing.md"}])
+        states = {j["agent"]: j["state"] for j in got["jobs"]}
+        self.assertEqual(states, {"codex-work": "gone", "claude-work": "done"})
+        self.assertIn("could not start codex: timed out", next(j["result"] for j in got["jobs"] if j["agent"] == "codex-work"))
+
+    def test_denied_action_in_a_pane_comes_back_as_needs_approval(self):
+        self.fake.finish = False
+        got = self.run_delegate([{"to": "claude", "task": "Delete ~/old.txt"}])
+        name, prompt = self.fake.prompts[0]
+        self.assertIn("## If an action is denied", prompt)
+        self.fake.complete(name, prompt, "BLOCKED: auto mode denied deleting ~/old.txt")
+        self.fake.agents[name]["agent_status"] = "idle"
+        done = delegate_wait(self.conn, session=got["session"], deps=self.fake.deps())
+        self.assertEqual(done["jobs"][0]["state"], "needs_approval")
+        self.assertIn("needs_approval", done)
+
     def test_closed_pane_is_gone(self):
         self.fake.finish = False
         got = self.run_delegate([{"to": "cursor", "task": "X"}])
@@ -344,6 +372,68 @@ class DelegateTest(unittest.TestCase):
                      deps=Deps(herdr=None, use_herdr=lambda: False, spawn=spawn, installed=lambda name: None,
                                delegated=lambda: False))
         self.assertEqual(caught.exception.code, "unavailable")
+
+    def test_background_denied_action_comes_back_to_the_caller(self):
+        runs = []
+
+        def spawn(cmd, folder, out, log, exit_file):
+            runs.append(cmd)
+            Path(cmd[cmd.index("-o") + 1]).write_text("BLOCKED: run `npm publish`, which pushes a release")
+            out.write_text("")
+            exit_file.write_text("0\n")
+
+        deps = Deps(herdr=None, use_herdr=lambda: False, spawn=spawn, installed=lambda name: name,
+                    delegated=lambda: False, sleep=self.fake.sleep, clock=self.fake.clock)
+        got = delegate(self.conn, harness="cursor", repo_path=self.folder, summary="Ship it.",
+                       tasks=[{"to": "codex", "task": "Publish"}], deps=deps)
+        self.assertEqual(got["jobs"][0]["state"], "needs_approval")
+        self.assertEqual(got["jobs"][0]["result"], "BLOCKED: run `npm publish`, which pushes a release")
+        self.assertIn("needs_approval", got)
+        self.assertNotIn("next", got)
+        self.assertIn("## If an action is denied", runs[0][-1])
+        again = delegate(self.conn, harness="cursor", repo_path=self.folder, summary="Ship it.",
+                         tasks=[{"to": "codex", "task": "Publish; the user approved npm publish"}], deps=deps)
+        self.assertEqual(again["jobs"][0]["state"], "needs_approval")
+        self.assertEqual(len(runs), 2)
+        self.assertIn("--permission-prompts", _headless("claude", "p", "/w", "/a"))
+
+    def test_background_job_still_running_is_stopped_at_the_limit(self):
+        pids = []
+
+        def hang(cmd, folder, out, log, exit_file):
+            spawn_background(["sleep", "30"], folder, out, log, exit_file)
+            pids.append(int(exit_file.with_suffix(".pid").read_text()))
+
+        def stop_leftovers():
+            for pid in pids:
+                try:
+                    os.killpg(pid, signal.SIGKILL)
+                except OSError:
+                    pass
+
+        self.addCleanup(stop_leftovers)
+        deps = Deps(herdr=None, use_herdr=lambda: False, spawn=hang, installed=lambda name: name,
+                    delegated=lambda: False, sleep=self.fake.sleep, clock=self.fake.clock)
+        with mock.patch("agent_cowork_memory.delegate.JOB_SECONDS", -1):
+            stopped = delegate(self.conn, harness="cursor", repo_path=self.folder, summary="Ship it.",
+                               tasks=[{"to": "cursor", "task": "Run the risky command"}], deps=deps)
+            self.assertEqual(stopped["jobs"][0]["state"], "needs_approval")
+            self.assertIn("no result", stopped["jobs"][0]["result"])
+            self.assertIn("approval", stopped["jobs"][0]["result"])
+            self.assertIn("needs_approval", stopped)
+            # The group's last child can stay a zombie for a moment until init reaps it.
+            for _ in range(40):
+                try:
+                    os.killpg(pids[-1], 0)
+                except ProcessLookupError:
+                    break
+                time.sleep(0.05)
+            else:
+                self.fail("the job's process group is still there")
+            again = delegate(self.conn, harness="cursor", repo_path=self.folder, summary="Ship it.",
+                             tasks=[{"to": "cursor", "task": "Run it again"}], deps=deps)
+        self.assertEqual(again["jobs"][0]["state"], "needs_approval")
+        self.assertEqual(len(pids), 2)
 
     def test_prompt_leaves_out_empty_sections(self):
         text = build_prompt(job="acm_j_1", harness="codex", session="acm_s_1", folder="/w", summary="S", task="T")

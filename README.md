@@ -59,7 +59,7 @@ Any agent can hand work to the others:
 
 Each agent gets a brief, claims the files it edits so they don't collide, and reports back. Agents run in the background. With [herdr](https://herdr.dev) installed, each one gets its own pane you can watch (`herdr session attach acm`).
 
-Delegated agents run in each agent's auto mode: Codex `--approve-for-me`, Claude Code `--permission-mode auto`, and Cursor `--auto-review`. Safe actions run on their own, and anything else waits for you in the agent's pane, where ACM reports the job as `blocked`. OpenCode has no auto-review mode, so it runs with `--auto`, which approves anything not explicitly denied.
+Delegated agents run in each agent's auto mode: Codex `--approve-for-me`, Claude Code `--permission-mode auto`, and Cursor `--auto-review`. Safe actions run on their own. When auto mode denies an action, the agent stops, and ACM reports the job as `needs_approval` to the chat that delegated it, saying what the agent needs. A background job still running after 15 minutes is stopped and reported the same way. Approve it there, and that agent runs the step or delegates again. If an agent asks a question in its herdr pane instead, ACM reports the job as `blocked` until you answer it there. OpenCode has no auto-review mode, so it runs with `--auto`, which approves anything not explicitly denied.
 
 There is one agent per kind per folder. A task for a busy agent comes back as `busy`.
 

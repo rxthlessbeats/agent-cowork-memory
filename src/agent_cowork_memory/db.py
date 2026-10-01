@@ -146,16 +146,32 @@ ALTER TABLE delegations ADD COLUMN resent INTEGER NOT NULL DEFAULT 0;
 MIGRATIONS = [SCHEMA, V2, V3, V4, V5, V6]
 
 
+def _statements(sql):
+    done, part = [], ""
+    for piece in sql.split(";"):
+        part += piece + ";"
+        if sqlite3.complete_statement(part):
+            if part.strip(" \n;"):
+                done.append(part)
+            part = ""
+    return done
+
+
 def migrate(conn):
-    version = conn.execute("PRAGMA user_version").fetchone()[0]
-    for number, sql in enumerate(MIGRATIONS[version:], start=version + 1):
+    for number, sql in enumerate(MIGRATIONS, start=1):
+        if conn.execute("PRAGMA user_version").fetchone()[0] >= number:
+            continue
+        conn.execute("BEGIN IMMEDIATE")
         try:
-            conn.executescript(f"BEGIN IMMEDIATE; {sql} PRAGMA user_version={number}; COMMIT;")
-        except sqlite3.OperationalError:
-            conn.rollback()
-            # Another process ran this step first.
+            # Read again under the lock: another process may have run this step while we waited.
             if conn.execute("PRAGMA user_version").fetchone()[0] < number:
-                raise
+                for statement in _statements(sql):
+                    conn.execute(statement)
+                conn.execute(f"PRAGMA user_version={number}")
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
 
 
 def connect(home):

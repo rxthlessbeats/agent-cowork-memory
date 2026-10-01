@@ -1,10 +1,11 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from agent_cowork_memory.cli import mcp_command, setup_clients
+from agent_cowork_memory.cli import _write_json, mcp_command, setup_clients
 
 
 class SetupTest(unittest.TestCase):
@@ -45,6 +46,17 @@ class SetupTest(unittest.TestCase):
             self.assertEqual(servers["other"], {"command": "other"})
             cursor = mcp_command("/tmp/uvx", "cursor")
             self.assertEqual(servers["acm"], {"command": cursor[0], "args": cursor[1:]})
+
+    def test_config_symlink_is_written_at_its_target(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            target, link = Path(tmp) / "dotfiles.json", Path(tmp) / "opencode.json"
+            target.write_text("{}")
+            target.chmod(0o644)
+            link.symlink_to(target)
+            _write_json(link, {"mcp": {}})
+            self.assertTrue(link.is_symlink())
+            self.assertEqual(json.loads(target.read_text()), {"mcp": {}})
+            self.assertEqual(os.stat(target).st_mode & 0o777, 0o644)
 
     def test_opencode_jsonc_is_used_and_never_loses_comments(self):
         with tempfile.TemporaryDirectory() as tmp:

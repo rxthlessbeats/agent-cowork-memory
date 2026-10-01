@@ -3,11 +3,11 @@ import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
 
-from agent_cowork_memory.ledger import AcmError, new_id, now
+from agent_cowork_memory.ledger import AcmError, _session_row as _session, new_id, now
 
 _BUDGET = 12_000
 _KEEP_RESULTS = 20  # ponytail: one log cap, raise it if a project outgrows the job history
-_HOLD_HOURS = 2  # ponytail: a hold lapses once its session has not called acm for this long
+_HOLD_HOURS = 2  # ponytail: a hold lapses once its session has not called acm for this long, unless its job is open
 _VISIBLE = """forgotten_at IS NULL AND superseded_at IS NULL AND promoted_at IS NULL
     AND (expires_at IS NULL OR expires_at > ?)"""
 OPEN = ("starting", "running", "blocked")
@@ -26,13 +26,6 @@ def short_note_days(conn):
         return 7
     match = re.search(r"(?m)^short_note_days\s*=\s*(\d+)\s*$", path.read_text())
     return int(match.group(1)) if match else 7
-
-
-def _session(conn, session_id):
-    row = conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,)).fetchone()
-    if row is None:
-        raise AcmError("invalid", message="unknown session", hint="attach", session=session_id)
-    return row
 
 
 def _note(conn, note_id, project_id):
@@ -108,7 +101,7 @@ def note_search(conn, *, session, query, task=None):
     words = re.findall(r"\w+", query or "")
     if not words:
         raise AcmError("invalid", message="empty search", session=session)
-    match = " AND ".join(f'"{word}"' for word in words)
+    match = " AND ".join(f'"{word}"*' for word in words)  # a prefix, so rain finds rains
     sql = f"""SELECT m.* FROM memories_fts f
               JOIN memories m ON m.id = f.memory_id
               WHERE memories_fts MATCH ? AND m.project_id = ? AND {_VISIBLE}"""
@@ -170,7 +163,10 @@ def sweep(conn, project_id):
     """Delete notes nobody can see, job results past the cap, and holds of sessions gone quiet."""
     quiet = (datetime.now(timezone.utc) - timedelta(hours=_HOLD_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     conn.execute(
-        "DELETE FROM holds WHERE project_id = ? AND session_id IN (SELECT id FROM sessions WHERE last_seen_at < ?)",
+        f"""DELETE FROM holds WHERE project_id = ? AND session_id IN (
+              SELECT s.id FROM sessions s WHERE s.last_seen_at < ? AND NOT EXISTS (
+                SELECT 1 FROM delegations d WHERE d.agent_name = s.label AND d.folder = s.working_directory
+                  AND d.state IN ({OPEN_SQL})))""",
         (project_id, quiet),
     )
     dead = [row["id"] for row in conn.execute(
@@ -266,7 +262,8 @@ def fit_notes(checkpoint, short, long):
     body["long_notes"] = []
     body["omitted"] = {"short": 0, "long": 0}
     used = len(json.dumps(body))
-    for key, rows in (("short_notes", short), ("long_notes", long)):
+    # Long notes first: decisions and conventions matter more than progress, and results pile up as short notes.
+    for key, rows in (("long_notes", long), ("short_notes", short)):
         kept = []
         for note in rows:
             extra = len(json.dumps(note)) + 1

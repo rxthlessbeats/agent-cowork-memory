@@ -1,8 +1,7 @@
 import os
-import re
 from pathlib import Path
 
-from agent_cowork_memory.readers import first_objects, in_workspaces, newest
+from agent_cowork_memory.readers import dashes, first_objects, in_workspaces, newest
 
 _SKIP = {"queue-operation", "attachment", "atis-latch", "last-prompt", "cost-state", "system", "summary"}
 
@@ -12,7 +11,7 @@ def root():
 
 
 def chats(base, repo_root):
-    return in_workspaces(base, repo_root, lambda workspace: re.sub(r"[^A-Za-z0-9]", "-", str(workspace)), "*.jsonl")
+    return in_workspaces(base, repo_root, dashes, "*.jsonl")
 
 
 def latest(base, repo_root):

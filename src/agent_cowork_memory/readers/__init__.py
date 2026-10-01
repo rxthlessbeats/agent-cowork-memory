@@ -11,10 +11,16 @@ turn_ended(obj)        True for the record that closes an agent turn
 Readers whose chats are not one jsonl file also expose read(path) -> jsonl bytes and exists(path).
 """
 import json
+import re
 
 
 def slug(path):
     return str(path).strip("/").replace("/", "-")
+
+
+def dashes(path):
+    """Claude Code's folder name for a workspace: every character but a letter or digit becomes -."""
+    return re.sub(r"[^A-Za-z0-9]", "-", str(path))
 
 
 def related(workspace, repo_root):

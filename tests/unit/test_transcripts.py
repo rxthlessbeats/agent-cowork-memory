@@ -146,7 +146,10 @@ class TranscriptTest(unittest.TestCase):
         back = resume(self.conn, harness="cursor", repo_path=self.repo, source="claude", root=self.root / "claude")
         self.assertEqual(back["messages"], [{"role": "user", "text": "hi"}])
 
-        own_kind = resume(self.conn, harness="cursor", repo_path=self.repo, source="cursor", root=self.root)
+        with self.assertRaises(AcmError) as caught:
+            resume(self.conn, harness="cursor", repo_path=self.repo, source="cursor", root=self.root)
+        self.assertEqual(caught.exception.code, "invalid")
+        own_kind = resume(self.conn, harness="cursor", repo_path=self.repo, chat="c1", root=self.root, roots={"cursor": self.root})
         self.assertEqual(own_kind["native_id"], "c1")
 
     def test_resume_lets_the_user_choose_between_chats(self):
@@ -173,17 +176,34 @@ class TranscriptTest(unittest.TestCase):
         self.assertEqual(picked["task"], owner["task"])
         asked = resume(self.conn, harness="codex", repo_path=self.repo, roots=roots)
         self.assertNotIn("messages", asked)
-        self.assertEqual([(c["chat"], c["task"]) for c in asked["choose"]], [("c2", None), ("c1", "Trip")])
+        self.assertEqual([(c["chat"], c["task"]) for c in asked["choose"]], [("c1", "Trip"), ("c2", None)])
         self.assertEqual(asked["more"], 0)
 
         with self.assertRaises(AcmError) as caught:
             resume(self.conn, harness="codex", repo_path=self.repo, source="cursor", chat="nope", root=self.root)
         self.assertEqual(caught.exception.code, "not_found")
+        with self.assertRaises(AcmError) as caught:
+            resume(self.conn, harness="cursor", repo_path=self.repo, roots=roots)
+        self.assertEqual(caught.exception.code, "not_found")
+
+    def test_resume_picks_the_one_chat_in_the_repo_over_parent_folder_chats(self):
+        slug = str(self.repo.resolve()).strip("/").replace("/", "-")
+        for folder, name, text in ((slug, "c1", "x" * 30_000), (slug.rsplit("-", 1)[0], "c2", "home chat")):
+            path = self.root / folder / "agent-transcripts" / name / f"{name}.jsonl"
+            path.parent.mkdir(parents=True)
+            path.write_text(
+                json.dumps({"role": "user", "message": {"content": [{"type": "text", "text": text}]}}) + "\n"
+                + json.dumps({"role": "user", "message": {"content": [{"type": "text", "text": "y" * 2_000}]}}) + "\n"
+            )
+        got = resume(self.conn, harness="codex", repo_path=self.repo, roots={"cursor": self.root})
+        self.assertEqual(got["native_id"], "c1")
+        self.assertEqual(got["omitted_messages"], 1)
+        self.assertEqual(got["clipped_messages"], 0)
 
     def test_resume_claude_dotted_folder_image_and_done_task(self):
         repo = Path(self.tmp.name) / "my.app_x"
         git_repo(repo)
-        chat = self.root / ("-" + str(repo.resolve()).strip("/").replace("/", "-").replace(".", "-").replace("_", "-")) / "s1.jsonl"
+        chat = self.root / re.sub(r"[^A-Za-z0-9]", "-", str(repo.resolve())) / "s1.jsonl"
         chat.parent.mkdir(parents=True)
         image = {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": "x"}}
         chat.write_text(json.dumps({
@@ -244,6 +264,13 @@ class TranscriptTest(unittest.TestCase):
         got = resume(self.conn, harness="cursor", repo_path=self.repo, source="opencode", chat="ses_new", root=self.root)
         self.assertEqual([m["text"] for m in got["messages"]], ["from sqlite"])
         self.assertEqual(got["native_id"], "ses_new")
+
+        conn = sqlite3.connect(db)
+        conn.execute("INSERT INTO session VALUES ('ses_old', ?, ?, NULL)", (str(repo), int((os_utime + 20) * 1000)))
+        conn.commit()
+        conn.close()
+        asked = resume(self.conn, harness="cursor", repo_path=self.repo, source="opencode", root=self.root)
+        self.assertEqual([c["chat"] for c in asked["choose"]], ["ses_old", "ses_new"])
 
     def test_opencode_turn_ends_only_after_a_finished_reply(self):
         session = self.root / "session" / "ses_1.json"

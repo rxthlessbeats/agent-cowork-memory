@@ -3,6 +3,7 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import time
 from collections import Counter
@@ -17,7 +18,7 @@ from agent_cowork_memory.transcript import READERS, _parse, chat_bytes, chat_exi
 
 SESSION = "acm"
 FLAGS = {
-    "codex": ["--approve-for-me"],
+    "codex": ["--approve-for-me", "-c", "check_for_update_on_startup=false"],
     "claude": ["--permission-mode", "auto"],
     "cursor": ["--auto-review", "--trust", "--approve-mcps"],
     "opencode": ["--auto"],
@@ -26,26 +27,66 @@ WAIT_SECONDS = 45
 POLL_SECONDS = 2
 RESEND_AFTER = 10
 JOB_FILE_DAYS = 7  # ponytail: output files of finished jobs are kept this long, for debugging
+JOB_SECONDS = 15 * 60  # ponytail: a background job still running after this is stopped; cursor can wait on a prompt forever
 WATCH = f"herdr session attach {SESSION}"
 BACKGROUND = "background"
+FINISHED = ("done", "gone", "needs_approval")
+_ASKS = re.compile(r"(?m)^\W*BLOCKED:")
 
 
 def _headless(kind, prompt, folder, answer):
     return {
         "codex": ["codex", "exec", *FLAGS["codex"], "--skip-git-repo-check", "--cd", str(folder), "-o", str(answer), prompt],
-        "claude": ["claude", "-p", *FLAGS["claude"], prompt],
+        "claude": ["claude", "-p", *FLAGS["claude"], "--permission-prompts", "none", prompt],
         "cursor": ["cursor-agent", "-p", *FLAGS["cursor"], prompt],
         "opencode": ["opencode", "run", "--auto", "--dir", str(folder), prompt],
     }[kind]
 
 
 def spawn_background(cmd, folder, out, log, exit_file):
-    subprocess.Popen(
+    proc = subprocess.Popen(
         ["sh", "-c", '"$@" > "$ACM_OUT" 2> "$ACM_LOG" < /dev/null; echo $? > "$ACM_EXIT.tmp"; mv "$ACM_EXIT.tmp" "$ACM_EXIT"', "sh", *cmd],
         cwd=folder, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         env={**os.environ, "ACM_DELEGATED": "1", "ACM_OUT": str(out), "ACM_LOG": str(log), "ACM_EXIT": str(exit_file)},
         start_new_session=True,
     )
+    exit_file.with_suffix(".pid").write_text(str(proc.pid))
+    proc.returncode = 0  # ponytail: _stop_job reaps this pid; Popen must not wait on it too
+
+
+def _gone(pid):
+    """True when that process has exited. A zombie counts: its parent may be another acm process."""
+    try:
+        os.waitpid(pid, os.WNOHANG)
+    except ChildProcessError:
+        pass
+    try:
+        state = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[0]
+    except OSError:
+        return True
+    return state == "Z"
+
+
+def _stop_job(exit_file):
+    """End that background process group. True once it is gone."""
+    try:
+        pid = int(exit_file.with_suffix(".pid").read_text().strip())
+    except (OSError, ValueError):
+        return False
+    if pid <= 0:
+        return False
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(pid, sig)
+        except ProcessLookupError:
+            return True
+        except OSError:
+            return False
+        for _ in range(10):
+            if _gone(pid):
+                return True
+            time.sleep(0.05)
+    return False
 
 
 class HerdrError(Exception):
@@ -198,21 +239,28 @@ def _check_background(conn, row):
     try:
         code = int(exit_file.read_text().strip())
     except (OSError, ValueError):
-        return "running", None
+        if _age(row) <= JOB_SECONDS or not _stop_job(exit_file):
+            return "running", None
+        tail = log.read_text(errors="replace").strip()[-800:] if log.exists() else ""
+        return "needs_approval", (
+            f"Stopped after {JOB_SECONDS // 60} minutes with no result. It may have been waiting for an "
+            "approval nobody can answer in the background. Last lines: " + (tail or "(none)")
+        )
     text = answer if row["kind"] == "codex" and answer.exists() else out
     reply = text.read_text(errors="replace").strip() if text.exists() else ""
     if code == 0:
-        return "done", reply
+        return ("needs_approval" if _ASKS.search(reply) else "done"), reply
     tail = log.read_text(errors="replace").strip()[-800:] if log.exists() else ""
     return "gone", f"The agent exited with code {code}. Last lines: " + (tail or reply[-800:] or "(none)")
 
 
 def _pane_tail(deps, pane, lines=12):
+    """The last lines with text. Full-screen agents leave the bottom rows blank, so read well past them."""
     try:
-        text = deps.herdr("pane", "read", pane, "--source", "recent-unwrapped", "--lines", str(lines), raw=True)
+        text = deps.herdr("pane", "read", pane, "--source", "recent-unwrapped", "--lines", str(lines * 8), raw=True)
     except (HerdrError, AcmError):
         return ""
-    return "\n".join(line for line in text.splitlines() if line.strip())[-800:]
+    return "\n".join([line for line in text.splitlines() if line.strip()][-lines:])[-800:]
 
 
 def build_prompt(*, job, harness, session, folder, summary, task, done_when=None, context=None, others=(), problem=True):
@@ -228,12 +276,19 @@ def build_prompt(*, job, harness, session, folder, summary, task, done_when=None
         parts.append(f"## Others working in this folder right now\n{lines}\nDon't edit files another agent is working on.")
     parts.append(
         "## Before you edit\nCall acm context with your session and hold set to every file you will "
-        "create or edit, relative to this folder. If a path comes back busy, leave it alone. "
+        "create or edit, relative to this folder. Files outside this folder can't be held; don't try. "
+        "If a path comes back busy, leave it alone. "
         "Call context again before you edit a file you have not held."
     )
     parts.append(
-        "## When you finish\nReply with a one-paragraph summary of what you did and what you checked; "
-        "acm saves it for the other agents. Don't delegate this job to other agents."
+        "## If an action is denied\nIf something you need is denied, don't work around it. Stop, and start "
+        "your reply with a line `BLOCKED: ` saying exactly what you need approved and why. acm passes it to "
+        "the chat that sent you."
+    )
+    parts.append(
+        "## When you finish\nacm takes the end of your turn as the end of this job, so wait for every command "
+        "you start; don't leave work running in the background. Then reply with a one-paragraph summary of "
+        "what you did and what you checked; acm saves it for the other agents. Don't delegate this job to other agents."
     )
     return "\n\n".join(parts)
 
@@ -244,16 +299,8 @@ def _caller(conn, harness, root, summary, session):
         if row is None:
             raise AcmError("invalid", message="unknown session", hint="omit session to attach", session=session)
         return session
-    last = conn.execute(
-        """SELECT t.id FROM delegations d
-           JOIN sessions s ON s.id = d.caller_session_id
-           JOIN tasks t ON t.id = s.active_task_id
-           WHERE d.folder = ? AND t.status = 'open' AND t.archived_at IS NULL
-           ORDER BY d.started_at DESC, d.rowid DESC LIMIT 1""",
-        (str(root),),
-    ).fetchone()
-    joined = {"task": last["id"]} if last else {"title": one_line(summary, 80)}
-    return attach(conn, repo_path=root, harness=harness, label="delegate", **joined)["session"]
+    # No session: a new task named after the problem. Follow-ups pass the returned session to stay on it.
+    return attach(conn, repo_path=root, harness=harness, label="delegate", title=one_line(summary, 80))["session"]
 
 
 def _worker_session(conn, row):
@@ -332,7 +379,7 @@ def delegate(conn, *, harness, repo_path, summary, tasks, session=None, deps=Non
             doing = running.get(name) or next((i["task"] for i, n, _r, _p in plan if n == name), None)
             busy.append({
                 "to": kind, "agent": name, "state": "busy",
-                "result": f"{name} is still working" + (f" on: {one_line(doing, 120)}" if doing else "") + ". Try again when it finishes.",
+                "result": f"{name} is still working" + (f" on: {one_line(doing, 120).rstrip('.')}" if doing else "") + ". Try again when it finishes.",
             })
             continue
         last = conn.execute(
@@ -354,7 +401,7 @@ def delegate(conn, *, harness, repo_path, summary, tasks, session=None, deps=Non
             job=job, harness=harness, session=worker, folder=root, summary=summary, task=item["task"],
             done_when=item.get("done_when"), context=item.get("context"), others=mates, problem=problem,
         )
-        state, pane = "running", agents.get(name, {}).get("pane_id")
+        state, pane, failed = "running", agents.get(name, {}).get("pane_id"), None
         if not herdr:
             _start_background(conn, deps, kind, job, prompt, root)
             pane = BACKGROUND
@@ -362,18 +409,22 @@ def delegate(conn, *, harness, repo_path, summary, tasks, session=None, deps=Non
             pane, fresh = fresh or _new_pane(deps, workspace, root), None
             agents[name] = {"name": name, "pane_id": pane}
             try:
-                budget = max(1000, int((started + WAIT_SECONDS - deps.clock()) * 1000))
+                # herdr takes a startup timeout between 3 and 300 seconds.
+                budget = max(5000, int((started + WAIT_SECONDS - deps.clock()) * 1000))
                 deps.herdr("agent", "start", name, "--kind", kind, "--pane", pane, "--timeout", str(budget), "--", *FLAGS[kind])
             except HerdrError as exc:
-                if exc.code != "agent_not_ready":
-                    raise AcmError("unavailable", message=f"herdr could not start {kind}: {exc}") from None
-                state = "starting"
+                if exc.code == "agent_not_ready":
+                    state = "starting"
+                else:
+                    # One agent that won't start (an update prompt, a login screen) must not stop the others.
+                    agents.pop(name, None)
+                    state, failed = "gone", f"herdr could not start {kind}: {exc}. Last lines: " + (_pane_tail(deps, pane) or "(none)")
         if herdr and state == "running":
             state = _send(deps, name, prompt)
         conn.execute(
-            """INSERT INTO delegations (id, caller_session_id, folder, kind, agent_name, pane_id, summary, task, prompt, state, started_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (job, session, str(root), kind, name, pane, summary, item["task"], prompt, state, now()),
+            """INSERT INTO delegations (id, caller_session_id, folder, kind, agent_name, pane_id, summary, task, prompt, state, result, started_at, finished_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (job, session, str(root), kind, name, pane, summary, item["task"], prompt, state, failed, now(), now() if failed else None),
         )
         conn.commit()
     result = _wait(conn, deps, session, started)
@@ -460,7 +511,7 @@ def _check(conn, deps, row, agents):
     raw = chat_bytes(row["kind"], path) if path else b""
     answer = _finished(row["kind"], raw, row["id"]) if raw else None
     if answer is not None:
-        return "done", answer
+        return ("needs_approval" if _ASKS.search(answer) else "done"), answer
     if status == "blocked":
         return "blocked", _pane_tail(deps, row["pane_id"])
     if status in ("idle", "done") and not row["resent"] and row["id"].encode() not in raw and _age(row) > RESEND_AFTER:
@@ -478,7 +529,7 @@ def _refresh(conn, deps, rows, agents):
     for row in rows:
         state, text = _check(conn, deps, row, agents)
         if state != row["state"] or text is not None:
-            finished = now() if state in ("done", "gone") else None
+            finished = now() if state in FINISHED else None
             conn.execute(
                 "UPDATE delegations SET state = ?, result = COALESCE(?, result), finished_at = COALESCE(?, finished_at) WHERE id = ?",
                 (state, text, finished, row["id"]),
@@ -486,7 +537,7 @@ def _refresh(conn, deps, rows, agents):
             conn.commit()
             if state == "done":
                 _save_result(conn, row, text)
-            if state in ("done", "gone"):
+            if state in FINISHED:
                 release(conn, row["folder"], row["agent_name"])
     conn.commit()
 
@@ -515,7 +566,7 @@ def _wait(conn, deps, session, started):
             "job": row["id"], "to": row["kind"], "agent": row["agent_name"], "pane": row["pane_id"],
             "state": row["state"], "result": one_line(row["result"]) if row["state"] in ("done", "gone") else row["result"],
         })
-        if row["state"] in ("done", "gone"):
+        if row["state"] in FINISHED:
             conn.execute("UPDATE delegations SET reported = 1 WHERE id = ?", (row["id"],))
     conn.commit()
     watch = WATCH if deps.use_herdr() else f"tail -f {_jobs_dir(conn)}/<job>.log"
@@ -527,4 +578,10 @@ def _wait(conn, deps, session, started):
         )
     if any(j["state"] in ("starting", "blocked") for j in jobs):
         out["blocked"] = "An agent is waiting on a question or approval. Tell the user; do not answer it for them."
+    if any(j["state"] == "needs_approval" for j in jobs):
+        out["needs_approval"] = (
+            "An agent stopped at an action it was not allowed to run; its result says what it needs. "
+            "Show the user. If they approve, run that step yourself or delegate again with their answer. "
+            "Never approve it for them."
+        )
     return out

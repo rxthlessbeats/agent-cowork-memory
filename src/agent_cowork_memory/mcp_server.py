@@ -18,10 +18,11 @@ CONTEXT = (
 )
 RESUME = (
     "Call when the user says continue, or wants to pick up a chat from another agent. source "
-    "(codex, cursor, claude, or opencode) narrows it to that agent; leave it out to look at every agent. "
+    "(codex, cursor, claude, or opencode) narrows it to that agent; leave it out to look at every other agent. "
+    "To resume another chat of your own agent, pass its chat id from chats. "
     "Without chat: if this repo has more than one matching chat, the result has choose instead of "
     "messages. Show that list to the user, ask which chat to continue, and call resume again with its "
-    "chat id; never pick for them. With chat, or when only one chat matches, it attaches you to that "
+    "chat id; never pick for them. With chat, or when only one chat ran in this repo itself, it attaches you to that "
     "chat's task and returns the recent messages. Carry on from the last user message without asking "
     "the user to repeat it."
 )

@@ -225,11 +225,11 @@ _TAG = re.compile(r"</?[A-Za-z_][\w-]*[^>]*>")
 
 
 def _all_chats(harness, repo_root, root=None):
-    """Chats whose workspace is the repo, inside it, or contains it, newest first."""
+    """Chats whose workspace is the repo, inside it, or contains it."""
     base = Path(root) if root else default_root(harness)
     if not base.exists():
         return []
-    return sorted(READERS[harness].chats(base, Path(repo_root)), key=lambda item: item[2], reverse=True)
+    return READERS[harness].chats(base, Path(repo_root))
 
 
 def _opening(harness, raw):
@@ -310,6 +310,14 @@ def _clip(text, size):
 
 
 _CHOICES = 10
+_SCAN = 30  # ponytail: the user's own chats go before job chats among the newest 30; raise it if jobs crowd them out
+
+
+def _own_chats_first(conn, items, repo_root, common_dir):
+    """Chats in the repo before chats in a folder above it, and in each, the user's own before acm's job chats."""
+    above = Path(repo_root).parents
+    entries = [_entry(conn, item, common_dir) for item in items]
+    return sorted(entries, key=lambda e: (Path(e["folder"]) in above, e["job"] is not None))
 
 
 def resume(conn, *, harness, repo_path, source=None, chat=None, limit=30, budget=12_000, root=None, roots=None):
@@ -318,20 +326,25 @@ def resume(conn, *, harness, repo_path, source=None, chat=None, limit=30, budget
 
     if source is not None and source not in READERS:
         raise AcmError("invalid", message=f"source must be {', '.join(READERS)}")
+    if source == harness and not chat:
+        raise AcmError("invalid", message="your own chat would be in the list; to resume another chat of your own agent, pass chat (from chats)")
     roots = dict(roots or {})
     if root and source:
         roots[source] = root
     repo_root, common_dir, _branch = git_identity(repo_path)
-    listed = _listing([source] if source else list(READERS), repo_root, roots)
+    # Without chat, leave out this agent's own kind: its newest chat is the one calling.
+    kinds = [source] if source else [kind for kind in READERS if chat or kind != harness]
+    listed = _listing(kinds, repo_root, roots)
+    own_folder = [item for item in listed if Path(item[3]) not in Path(repo_root).parents]
     if chat:
         hit = next((item for item in listed if _native_id(item[1], item[2]) == chat), None)
         if hit is None:
-            raise AcmError("not_found", message=f"no chat {chat} in this repo; call resume without chat to list them")
-    elif len(listed) == 1:
-        hit = listed[0]
+            raise AcmError("not_found", message=f"no chat {chat} in this repo; call chats to list them")
+    elif len(own_folder) == 1 or len(listed) == 1:
+        hit = (own_folder or listed)[0]
     elif listed:
         return {
-            "choose": [_entry(conn, item, common_dir) for item in listed[:_CHOICES]],
+            "choose": _own_chats_first(conn, listed[:_SCAN], repo_root, common_dir)[:_CHOICES],
             "more": max(0, len(listed) - _CHOICES),
             "next": "Show the user these chats (agent, updated, folder, task, first message, and whether acm "
                     "started it as a job) and ask which one to continue. Then call resume with that chat id. "
@@ -345,12 +358,11 @@ def resume(conn, *, harness, repo_path, source=None, chat=None, limit=30, budget
     records, _end, unknown, _truncated = _parse(source, raw, 0, len(raw))
     kept, used, clipped = [], 0, 0
     for rec in reversed(records[-limit:]):
-        text = rec["text"]
-        if len(text) > budget:
-            text, clipped = _clip(text, budget), clipped + 1
+        text = _clip(rec["text"], budget) if len(rec["text"]) > budget else rec["text"]
         used += len(text)
         if kept and used > budget:
             break
+        clipped += text is not rec["text"]
         kept.append({"role": rec["role"], "text": text})
     kept.reverse()
     native = _native_id(source, path)
