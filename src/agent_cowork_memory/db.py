@@ -149,7 +149,13 @@ MIGRATIONS = [SCHEMA, V2, V3, V4, V5, V6]
 def migrate(conn):
     version = conn.execute("PRAGMA user_version").fetchone()[0]
     for number, sql in enumerate(MIGRATIONS[version:], start=version + 1):
-        conn.executescript(f"BEGIN; {sql} PRAGMA user_version={number}; COMMIT;")
+        try:
+            conn.executescript(f"BEGIN IMMEDIATE; {sql} PRAGMA user_version={number}; COMMIT;")
+        except sqlite3.OperationalError:
+            conn.rollback()
+            # Another process ran this step first.
+            if conn.execute("PRAGMA user_version").fetchone()[0] < number:
+                raise
 
 
 def connect(home):

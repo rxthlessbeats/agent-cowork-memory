@@ -1,12 +1,13 @@
 import json
 import re
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from agent_cowork_memory.ledger import AcmError, new_id, now
 
 _BUDGET = 12_000
 _KEEP_RESULTS = 20  # ponytail: one log cap, raise it if a project outgrows the job history
+_HOLD_HOURS = 2  # ponytail: a hold lapses once its session has not called acm for this long
 _VISIBLE = """forgotten_at IS NULL AND superseded_at IS NULL AND promoted_at IS NULL
     AND (expires_at IS NULL OR expires_at > ?)"""
 OPEN = ("starting", "running", "blocked")
@@ -107,7 +108,7 @@ def note_search(conn, *, session, query, task=None):
     words = re.findall(r"\w+", query or "")
     if not words:
         raise AcmError("invalid", message="empty search", session=session)
-    match = " AND ".join(words)
+    match = " AND ".join(f'"{word}"' for word in words)
     sql = f"""SELECT m.* FROM memories_fts f
               JOIN memories m ON m.id = f.memory_id
               WHERE memories_fts MATCH ? AND m.project_id = ? AND {_VISIBLE}"""
@@ -162,11 +163,16 @@ def _rel(path):
     text = (path or "").replace("\\", "/").strip()
     if not text or text.startswith("/") or ".." in Path(text).parts:
         raise AcmError("invalid", message="hold paths must be relative to the project, such as src/app.py")
-    return text
+    return PurePosixPath(text).as_posix()
 
 
 def sweep(conn, project_id):
-    """Delete notes nobody can see, and job results past the cap."""
+    """Delete notes nobody can see, job results past the cap, and holds of sessions gone quiet."""
+    quiet = (datetime.now(timezone.utc) - timedelta(hours=_HOLD_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    conn.execute(
+        "DELETE FROM holds WHERE project_id = ? AND session_id IN (SELECT id FROM sessions WHERE last_seen_at < ?)",
+        (project_id, quiet),
+    )
     dead = [row["id"] for row in conn.execute(
         """SELECT id FROM memories WHERE project_id = ? AND (
              (expires_at IS NOT NULL AND expires_at <= ?)

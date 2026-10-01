@@ -13,7 +13,7 @@ from agent_cowork_memory.data import backup
 from agent_cowork_memory.db import connect, fts5_ok, home_dir
 from agent_cowork_memory.ledger import HARNESSES, AcmError, attach, checkpoint, claim, context, session_list, task_history, task_list
 from agent_cowork_memory.memory import note_add, note_forget, note_promote, note_search
-from agent_cowork_memory.transcript import resume, transcript_read
+from agent_cowork_memory.transcript import chats, resume, transcript_read
 
 EXIT = {"invalid": 2, "conflict": 3, "not_owner": 3, "not_allowed": 3, "unavailable": 4, "not_found": 4}
 
@@ -50,8 +50,29 @@ def doctor(conn, home):
         "home": str(home),
         "database": db.exists(),
         "fts5": fts5_ok(),
-        "writable": True,
+        "writable": os.access(home if home.exists() else home.parent, os.W_OK),
     }
+
+
+def _write_json(path, data):
+    """Replace the file in one step, so an interrupted setup never leaves half a config."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as out:
+        json.dump(data, out, indent=2)
+        out.write("\n")
+        temporary = out.name
+    try:
+        os.replace(temporary, path)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def _opencode_file(home):
+    if os.environ.get("OPENCODE_CONFIG"):
+        return Path(os.environ["OPENCODE_CONFIG"])
+    folder = home / ".config" / "opencode"
+    return next((p for p in (folder / "opencode.json", folder / "opencode.jsonc") if p.exists()), folder / "opencode.json")
 
 
 def setup_clients():
@@ -90,37 +111,33 @@ def setup_clients():
     else:
         command = mcp_command(uvx, "cursor")
         cursor_servers["acm"] = {"command": command[0], "args": command[1:]}
-        cursor_file.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=cursor_file.parent, delete=False) as out:
-            json.dump(cursor_config, out, indent=2)
-            out.write("\n")
-            temporary = out.name
-        try:
-            os.replace(temporary, cursor_file)
-        finally:
-            if os.path.exists(temporary):
-                os.unlink(temporary)
+        _write_json(cursor_file, cursor_config)
         result["cursor"] = "configured"
 
     opencode = shutil.which("opencode")
-    opencode_file = Path(os.environ.get("OPENCODE_CONFIG", home / ".config" / "opencode" / "opencode.json"))
+    opencode_file = _opencode_file(home)
     if not opencode:
         result["opencode"] = "not installed"
         return result
-    config = json.loads(opencode_file.read_text()) if opencode_file.exists() else {}
+    entry = {"type": "local", "command": mcp_command(uvx, "opencode"), "enabled": True}
+    try:
+        config = json.loads(opencode_file.read_text()) if opencode_file.exists() else {}
+    except json.JSONDecodeError:
+        if opencode_file.suffix != ".jsonc":
+            raise ValueError(f"Invalid MCP config: {opencode_file}") from None
+        result["opencode"] = (
+            f"not changed: {opencode_file} has comments, which setup would lose. "
+            f'Add this under "mcp" yourself: "acm": {json.dumps(entry)}'
+        )
+        return result
     if not isinstance(config, dict) or not isinstance(config.get("mcp", {}), dict):
         raise ValueError(f"Invalid MCP config: {opencode_file}")
     servers = config.setdefault("mcp", {})
     if "acm" in servers:
         result["opencode"] = "already configured (left unchanged)"
     else:
-        servers["acm"] = {
-            "type": "local",
-            "command": mcp_command(uvx, "opencode"),
-            "enabled": True,
-        }
-        opencode_file.parent.mkdir(parents=True, exist_ok=True)
-        opencode_file.write_text(json.dumps(config, indent=2) + "\n")
+        servers["acm"] = entry
+        _write_json(opencode_file, config)
         result["opencode"] = "configured"
     return result
 
@@ -177,8 +194,13 @@ def main(argv=None):
     r = sub.add_parser("resume")
     r.add_argument("--repo", required=True)
     r.add_argument("--harness", required=True)
-    r.add_argument("--source", required=True)
+    r.add_argument("--source", choices=HARNESSES)
+    r.add_argument("--chat")
     r.add_argument("--limit", type=int, default=30)
+
+    r = sub.add_parser("chats")
+    r.add_argument("--repo", required=True)
+    r.add_argument("--limit", type=int, default=20)
 
     p = sub.add_parser("note")
     note = p.add_subparsers(dest="note_cmd", required=True)
@@ -238,6 +260,9 @@ def main(argv=None):
         _print(doctor(None, home))
         return 0
     if args.cmd == "backup":
+        if not (home_dir(args.home) / "state.sqlite3").exists():
+            _print({"error": "not_found", "message": "no acm database to back up"}, err=True)
+            return 4
         _print(backup(home_dir(args.home), args.to))
         return 0
 
@@ -272,7 +297,9 @@ def main(argv=None):
             from agent_cowork_memory.delegate import delegate_wait
             return delegate_wait(conn, session=args.session)
         if args.cmd == "resume":
-            return resume(conn, harness=args.harness, repo_path=args.repo, source=args.source, limit=args.limit)
+            return resume(conn, harness=args.harness, repo_path=args.repo, source=args.source, chat=args.chat, limit=args.limit)
+        if args.cmd == "chats":
+            return chats(conn, repo_path=args.repo, limit=args.limit)
         if args.cmd == "note" and args.note_cmd == "add":
             return note_add(
                 conn, session=args.session, text=args.text, tier=args.tier, kind=args.kind,

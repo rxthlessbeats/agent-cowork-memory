@@ -45,7 +45,7 @@ class McpTest(unittest.TestCase):
         tools = asyncio.run(self.server.list_tools())
         names = sorted(t.name for t in tools)
         self.assertEqual(names, [
-            "attach", "context", "delegate", "delegate_wait", "note_add", "note_search", "resume",
+            "attach", "chats", "context", "delegate", "delegate_wait", "note_add", "note_search", "resume",
         ])
 
         created = payload(self.call("attach", {

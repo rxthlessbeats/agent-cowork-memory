@@ -1,4 +1,6 @@
 import json
+import os
+import re
 import sqlite3
 import subprocess
 import tempfile
@@ -8,7 +10,7 @@ from pathlib import Path
 from agent_cowork_memory.db import connect
 from agent_cowork_memory.ledger import AcmError, attach, checkpoint
 from agent_cowork_memory.readers import opencode
-from agent_cowork_memory.transcript import cursor_for, resume, transcript_read
+from agent_cowork_memory.transcript import chats, cursor_for, resume, transcript_read
 
 
 def git_repo(path):
@@ -138,15 +140,78 @@ class TranscriptTest(unittest.TestCase):
         self.assertNotEqual(fresh["task"], owner["task"])
         self.assertEqual(fresh["title"], "plan it")
 
-        claude_chat = self.root / "claude" / ("-" + slug) / "s1.jsonl"
+        claude_chat = self.root / "claude" / re.sub(r"[^A-Za-z0-9]", "-", str(repo)) / "s1.jsonl"
         claude_chat.parent.mkdir(parents=True)
         claude_chat.write_text(json.dumps({"type": "user", "sessionId": "s1", "message": {"role": "user", "content": "hi"}}) + "\n")
         back = resume(self.conn, harness="cursor", repo_path=self.repo, source="claude", root=self.root / "claude")
         self.assertEqual(back["messages"], [{"role": "user", "text": "hi"}])
 
+        own_kind = resume(self.conn, harness="cursor", repo_path=self.repo, source="cursor", root=self.root)
+        self.assertEqual(own_kind["native_id"], "c1")
+
+    def test_resume_lets_the_user_choose_between_chats(self):
+        slug = str(self.repo.resolve()).strip("/").replace("/", "-")
+        mine = self.root / slug / "agent-transcripts" / "c1" / "c1.jsonl"
+        job = self.root / slug / "agent-transcripts" / "c2" / "c2.jsonl"
+        for path, text in ((mine, "plan the trip"), (job, "[acm job acm_j_0123456789ab] A codex chat asked for this")):
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({"role": "user", "message": {"content": [{"type": "text", "text": text}]}}) + "\n")
+        owner = attach(self.conn, repo_path=self.repo, harness="cursor", label="a", title="Trip")
+        with mine.open("a") as out:
+            out.write(cursor_line(owner["session"], "Lisbon"))
+        os.utime(mine, (1_000, 1_000))
+        roots = {kind: self.root / "missing" for kind in ("codex", "claude", "opencode")} | {"cursor": self.root}
+
+        listed = chats(self.conn, repo_path=self.repo, roots=roots)["chats"]
+        self.assertEqual([(c["agent"], c["chat"], c["job"]) for c in listed], [
+            ("cursor", "c2", "acm_j_0123456789ab"), ("cursor", "c1", None),
+        ])
+        self.assertEqual(listed[1]["first"], "plan the trip")
+
+        picked = resume(self.conn, harness="codex", repo_path=self.repo, chat="c1", roots=roots)
+        self.assertEqual(picked["native_id"], "c1")
+        self.assertEqual(picked["task"], owner["task"])
+        asked = resume(self.conn, harness="codex", repo_path=self.repo, roots=roots)
+        self.assertNotIn("messages", asked)
+        self.assertEqual([(c["chat"], c["task"]) for c in asked["choose"]], [("c2", None), ("c1", "Trip")])
+        self.assertEqual(asked["more"], 0)
+
         with self.assertRaises(AcmError) as caught:
-            resume(self.conn, harness="cursor", repo_path=self.repo, source="cursor", root=self.root)
-        self.assertEqual(caught.exception.code, "invalid")
+            resume(self.conn, harness="codex", repo_path=self.repo, source="cursor", chat="nope", root=self.root)
+        self.assertEqual(caught.exception.code, "not_found")
+
+    def test_resume_claude_dotted_folder_image_and_done_task(self):
+        repo = Path(self.tmp.name) / "my.app_x"
+        git_repo(repo)
+        chat = self.root / ("-" + str(repo.resolve()).strip("/").replace("/", "-").replace(".", "-").replace("_", "-")) / "s1.jsonl"
+        chat.parent.mkdir(parents=True)
+        image = {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": "x"}}
+        chat.write_text(json.dumps({
+            "type": "user", "sessionId": "s1",
+            "message": {"role": "user", "content": [image, {"type": "text", "text": "fix this screen"}]},
+        }) + "\n")
+        first = resume(self.conn, harness="cursor", repo_path=repo, source="claude", root=self.root)
+        self.assertEqual(first["messages"], [{"role": "user", "text": "fix this screen"}])
+        checkpoint(self.conn, session=first["session"], task=first["task"], expect_version=1, summary="done", status="done")
+        again = resume(self.conn, harness="codex", repo_path=repo, source="claude", root=self.root)
+        self.assertNotEqual(again["task"], first["task"])
+
+    def test_resume_clips_one_huge_message_and_finds_cursor_folders_with_odd_names(self):
+        repo = Path(self.tmp.name) / "my_app.v2"
+        git_repo(repo)
+        dashed = re.sub(r"[^A-Za-z0-9]", "-", str(repo.resolve())).strip("-")
+        chat = self.root / dashed / "agent-transcripts" / "c9" / "c9.jsonl"
+        chat.parent.mkdir(parents=True)
+        huge = "start " + "x" * 50_000 + " end"
+        chat.write_text(json.dumps({"role": "user", "message": {"content": [{"type": "text", "text": huge}]}}) + "\n")
+
+        got = resume(self.conn, harness="codex", repo_path=repo, source="cursor", root=self.root, budget=1_000)
+        self.assertEqual(got["native_id"], "c9")
+        self.assertEqual(got["clipped_messages"], 1)
+        text = got["messages"][0]["text"]
+        self.assertLess(len(text), 1_100)
+        self.assertTrue(text.startswith("start ") and text.endswith(" end"))
+        self.assertIn("characters cut", text)
 
     def test_resume_reads_opencode_files_and_sqlite(self):
         repo = self.repo.resolve()
@@ -174,7 +239,9 @@ class TranscriptTest(unittest.TestCase):
         conn.execute("INSERT INTO part VALUES ('p2', 'm2', 2, ?)", (json.dumps({"type": "text", "text": "from sqlite"}),))
         conn.commit()
         conn.close()
-        got = resume(self.conn, harness="cursor", repo_path=self.repo, source="opencode", root=self.root)
+        asked = resume(self.conn, harness="cursor", repo_path=self.repo, source="opencode", root=self.root)
+        self.assertEqual([c["chat"] for c in asked["choose"]], ["ses_new", "ses_old"])
+        got = resume(self.conn, harness="cursor", repo_path=self.repo, source="opencode", chat="ses_new", root=self.root)
         self.assertEqual([m["text"] for m in got["messages"]], ["from sqlite"])
         self.assertEqual(got["native_id"], "ses_new")
 

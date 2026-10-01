@@ -219,12 +219,63 @@ def transcript_read(conn, *, session, target, since_cursor=None, limit=20, root=
     return result
 
 
-def latest_chat(harness, repo_root, root=None):
-    """Newest chat whose workspace is the repo, inside it, or contains it."""
+_JOB = re.compile(r"\[acm job (acm_j_[0-9a-f]+)\]")
+_QUERY = re.compile(r"<user_query>(.*?)</user_query>", re.S)
+_TAG = re.compile(r"</?[A-Za-z_][\w-]*[^>]*>")
+
+
+def _all_chats(harness, repo_root, root=None):
+    """Chats whose workspace is the repo, inside it, or contains it, newest first."""
     base = Path(root) if root else default_root(harness)
     if not base.exists():
-        return None, None
-    return READERS[harness].latest(base, Path(repo_root))
+        return []
+    return sorted(READERS[harness].chats(base, Path(repo_root)), key=lambda item: item[2], reverse=True)
+
+
+def _opening(harness, raw):
+    """The chat's first user message, without Cursor's wrappers, and the acm job id if acm sent it."""
+    records = _parse(harness, raw, 0, 200_000)[0]
+    first = next((r["text"] for r in records if r["role"] == "user"), "")
+    query = _QUERY.search(first)
+    text = " ".join(_TAG.sub(" ", query.group(1) if query else first).split())
+    job = _JOB.match(text)
+    return text, job.group(1) if job else None
+
+
+def _listing(harnesses, repo_root, roots):
+    """(mtime, harness, path, workspace) for every chat of these agents in the repo, newest first,
+    with chats opened in a folder above the repo after all the others."""
+    found = [
+        (mtime, harness, path, workspace)
+        for harness in harnesses
+        for path, workspace, mtime in _all_chats(harness, repo_root, roots.get(harness))
+    ]
+    above = Path(repo_root).parents
+    return sorted(found, key=lambda item: (Path(item[3]) in above, -item[0]))
+
+
+def _entry(conn, item, common_dir):
+    mtime, harness, path, workspace = item
+    raw = chat_bytes(harness, path)
+    first, job = _opening(harness, raw)
+    task = _chat_task(conn, harness, path, raw, common_dir)
+    title = conn.execute("SELECT title FROM tasks WHERE id = ?", (task,)).fetchone() if task else None
+    return {
+        "agent": harness,
+        "chat": _native_id(harness, path),
+        "updated": datetime.fromtimestamp(mtime, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "folder": str(workspace),
+        "task": title["title"] if title else None,
+        "first": first[:160],
+        "job": job,
+    }
+
+
+def chats(conn, *, repo_path, limit=20, roots=None):
+    from agent_cowork_memory.ledger import git_identity
+
+    repo_root, common_dir, _branch = git_identity(repo_path)
+    return {"chats": [_entry(conn, item, common_dir) for item in _listing(READERS, repo_root, roots or {})[:limit]]}
 
 
 def _chat_task(conn, source, path, raw, common_dir):
@@ -233,17 +284,18 @@ def _chat_task(conn, source, path, raw, common_dir):
         return None
     native = _native_id(source, path)
     row = conn.execute(
-        """SELECT active_task_id FROM sessions
-           WHERE project_id = ? AND harness = ? AND (native_id = ? OR transcript_path = ?)
-             AND active_task_id IS NOT NULL
-           ORDER BY attached_at DESC LIMIT 1""",
+        """SELECT s.active_task_id FROM sessions s JOIN tasks t ON t.id = s.active_task_id
+           WHERE s.project_id = ? AND s.harness = ? AND (s.native_id = ? OR s.transcript_path = ?)
+             AND t.archived_at IS NULL
+           ORDER BY s.attached_at DESC LIMIT 1""",
         (project["id"], source, native, str(path)),
     ).fetchone()
     if row:
         return row["active_task_id"]
     for session_id in reversed(re.findall(rb"acm_s_[0-9a-f]{12}", raw)):
         row = conn.execute(
-            "SELECT active_task_id FROM sessions WHERE id = ? AND project_id = ? AND active_task_id IS NOT NULL",
+            """SELECT s.active_task_id FROM sessions s JOIN tasks t ON t.id = s.active_task_id
+               WHERE s.id = ? AND s.project_id = ? AND t.archived_at IS NULL""",
             (session_id.decode(), project["id"]),
         ).fetchone()
         if row:
@@ -251,26 +303,55 @@ def _chat_task(conn, source, path, raw, common_dir):
     return None
 
 
-def resume(conn, *, harness, repo_path, source, limit=30, budget=12_000, root=None):
+def _clip(text, size):
+    """Keep the start and end of a message that alone is over the budget."""
+    half = size // 2
+    return f"{text[:half]}\n[... {len(text) - 2 * half} characters cut ...]\n{text[-half:]}"
+
+
+_CHOICES = 10
+
+
+def resume(conn, *, harness, repo_path, source=None, chat=None, limit=30, budget=12_000, root=None, roots=None):
+    """Read one chat. Without chat, the user picks: if more than one chat matches, the list comes back as choose."""
     from agent_cowork_memory.ledger import attach, git_identity
 
-    if source not in READERS:
+    if source is not None and source not in READERS:
         raise AcmError("invalid", message=f"source must be {', '.join(READERS)}")
-    if source == harness:
-        raise AcmError("invalid", message="source must be a different harness from this one")
+    roots = dict(roots or {})
+    if root and source:
+        roots[source] = root
     repo_root, common_dir, _branch = git_identity(repo_path)
-    path, workspace = latest_chat(source, repo_root, root)
-    if path is None:
-        raise AcmError("not_found", message=f"no {source} chat found for this repo")
+    listed = _listing([source] if source else list(READERS), repo_root, roots)
+    if chat:
+        hit = next((item for item in listed if _native_id(item[1], item[2]) == chat), None)
+        if hit is None:
+            raise AcmError("not_found", message=f"no chat {chat} in this repo; call resume without chat to list them")
+    elif len(listed) == 1:
+        hit = listed[0]
+    elif listed:
+        return {
+            "choose": [_entry(conn, item, common_dir) for item in listed[:_CHOICES]],
+            "more": max(0, len(listed) - _CHOICES),
+            "next": "Show the user these chats (agent, updated, folder, task, first message, and whether acm "
+                    "started it as a job) and ask which one to continue. Then call resume with that chat id. "
+                    "Do not pick one yourself. If more is above 0, chats lists older ones.",
+        }
+    else:
+        raise AcmError("not_found", message=f"no {source or 'agent'} chat found for this repo")
+    _mtime, source, path, workspace = hit
     raw = chat_bytes(source, path)
     task = _chat_task(conn, source, path, raw, common_dir)
     records, _end, unknown, _truncated = _parse(source, raw, 0, len(raw))
-    kept, used = [], 0
+    kept, used, clipped = [], 0, 0
     for rec in reversed(records[-limit:]):
-        used += len(rec["text"])
+        text = rec["text"]
+        if len(text) > budget:
+            text, clipped = _clip(text, budget), clipped + 1
+        used += len(text)
         if kept and used > budget:
             break
-        kept.append({"role": rec["role"], "text": rec["text"]})
+        kept.append({"role": rec["role"], "text": text})
     kept.reverse()
     native = _native_id(source, path)
     if task:
@@ -287,6 +368,7 @@ def resume(conn, *, harness, repo_path, source, limit=30, budget=12_000, root=No
         "native_id": native,
         "messages": kept,
         "omitted_messages": len(records) - len(kept),
+        "clipped_messages": clipped,
     }
     if not records and unknown:
         result["diagnostic"] = "unrecognized records"

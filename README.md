@@ -45,6 +45,10 @@ Or, in Cursor:
 
 > Use ACM to continue from Codex.
 
+Every agent can see every chat in the project. If there is more than one, the agent lists them (agent, time, task, first message, and whether ACM started it for a delegated job) and asks you which one to continue. You can also name it:
+
+> Use ACM to continue the Codex chat about the trip.
+
 For ongoing work, ask your agent to use ACM to track the task or remember a decision. You can ask it to search those notes later.
 
 ### Delegate to other agents
@@ -55,13 +59,16 @@ Any agent can hand work to the others:
 
 Each agent gets a brief, claims the files it edits so they don't collide, and reports back. Agents run in the background. With [herdr](https://herdr.dev) installed, each one gets its own pane you can watch (`herdr session attach acm`).
 
-Delegated agents run without sandbox or approval prompts, one per kind per folder. A task for a busy agent comes back as `busy`.
+Delegated agents run in each agent's auto mode: Codex `--approve-for-me`, Claude Code `--permission-mode auto`, and Cursor `--auto-review`. Safe actions run on their own, and anything else waits for you in the agent's pane, where ACM reports the job as `blocked`. OpenCode has no auto-review mode, so it runs with `--auto`, which approves anything not explicitly denied.
+
+There is one agent per kind per folder. A task for a busy agent comes back as `busy`.
 
 ## MCP tools
 
 | Tool              | What it does                                                                                                          |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `resume`        | Reads the other agent's recent chat and picks up the task.                                                            |
+| `chats`         | Lists recent chats from every agent in the project, and marks the ones ACM started.                                  |
+| `resume`        | Asks you which chat to continue when there are several, then reads it and picks up the task.                          |
 | `attach`        | Starts or joins a shared task.                                                                                        |
 | `context`       | Reads your task, project notes, who is working, and which files are held. Pass`hold` to claim files before writing. |
 | `note_add`      | Saves a short-term or long-term note.                                                                                 |

@@ -4,7 +4,7 @@ import os
 import sqlite3
 from pathlib import Path
 
-from agent_cowork_memory.readers import related
+from agent_cowork_memory.readers import newest, related
 
 
 def root():
@@ -62,7 +62,7 @@ def _file_sessions(base):
     return out
 
 
-def latest(base, repo_root):
+def chats(base, repo_root):
     found = [item for item in _file_sessions(base) if related(item[1], repo_root)]
     db = _db_for(base)
     if db:
@@ -70,10 +70,11 @@ def latest(base, repo_root):
             (_storage(base) / "session" / f"{sid}.json", workspace, stamp)
             for sid, workspace, stamp in _sessions_db(db) if related(workspace, repo_root)
         ]
-    if not found:
-        return None, None
-    path, workspace, _stamp = max(found, key=lambda item: item[2])
-    return path, workspace
+    return found
+
+
+def latest(base, repo_root):
+    return newest(chats(base, repo_root))
 
 
 def find(base, native):

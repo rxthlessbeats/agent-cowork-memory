@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 from agent_cowork_memory.readers import newest, slug
@@ -8,12 +9,25 @@ def root():
     return Path(os.environ.get("CURSOR_TRANSCRIPTS", Path.home() / ".cursor" / "projects"))
 
 
-def latest(base, repo_root):
-    found = []
+def _folders(workspace):
+    """Cursor's folder name for a workspace. Paths with only letters, digits and / are known to map to
+    slug(); for other characters it is unconfirmed, so both the slug and the all-dashes form are tried."""
+    names = {slug(workspace), re.sub(r"[^A-Za-z0-9]", "-", str(workspace)).strip("-")}
+    return [Path(name) / "agent-transcripts" for name in sorted(names)]
+
+
+def chats(base, repo_root):
+    found = {}
     for workspace in (repo_root, *repo_root.parents):
-        files = (base / slug(workspace) / "agent-transcripts").glob("*/*.jsonl")
-        found += [(p, workspace) for p in files if p.is_file()]
-    return newest(found)
+        for folder in _folders(workspace):
+            for path in (base / folder).glob("*/*.jsonl"):
+                if path.is_file():
+                    found.setdefault(path, (path, workspace, path.stat().st_mtime))
+    return list(found.values())
+
+
+def latest(base, repo_root):
+    return newest(chats(base, repo_root))
 
 
 def find(base, native):

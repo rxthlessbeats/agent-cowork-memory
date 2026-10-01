@@ -17,14 +17,15 @@ from agent_cowork_memory.transcript import READERS, _parse, chat_bytes, chat_exi
 
 SESSION = "acm"
 FLAGS = {
-    "codex": ["--dangerously-bypass-approvals-and-sandbox"],
-    "claude": ["--dangerously-skip-permissions"],
-    "cursor": ["--force", "--trust", "--approve-mcps"],
+    "codex": ["--approve-for-me"],
+    "claude": ["--permission-mode", "auto"],
+    "cursor": ["--auto-review", "--trust", "--approve-mcps"],
     "opencode": ["--auto"],
 }
 WAIT_SECONDS = 45
 POLL_SECONDS = 2
 RESEND_AFTER = 10
+JOB_FILE_DAYS = 7  # ponytail: output files of finished jobs are kept this long, for debugging
 WATCH = f"herdr session attach {SESSION}"
 BACKGROUND = "background"
 
@@ -167,6 +168,17 @@ def _jobs_dir(conn):
     return Path(conn.execute("PRAGMA database_list").fetchone()["file"]).parent / "jobs"
 
 
+def _clean_jobs(conn):
+    folder = _jobs_dir(conn)
+    if not folder.is_dir():
+        return
+    running = {row["id"] for row in conn.execute(f"SELECT id FROM delegations WHERE state IN ({OPEN_SQL})")}
+    cutoff = time.time() - JOB_FILE_DAYS * 86400
+    for path in folder.iterdir():
+        if path.stem not in running and path.stat().st_mtime < cutoff:
+            path.unlink(missing_ok=True)
+
+
 def _job_files(conn, job):
     base = _jobs_dir(conn) / job
     return base.with_suffix(".out"), base.with_suffix(".log"), base.with_suffix(".exit"), base.with_suffix(".answer")
@@ -292,6 +304,7 @@ def delegate(conn, *, harness, repo_path, summary, tasks, session=None, deps=Non
     root, _common, _branch = git_identity(repo_path)
     if root in (Path.home().resolve(), Path("/")):
         raise AcmError("invalid", message="refusing to delegate in the home folder or /; pass a project folder")
+    _clean_jobs(conn)
     if deps.delegated() and _on_acm_job(conn, deps, harness, root):
         raise AcmError(
             "not_allowed", message="this agent is working on a job acm sent it and cannot delegate until that job is done",

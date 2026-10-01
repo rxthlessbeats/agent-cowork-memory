@@ -1,11 +1,12 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from agent_cowork_memory.db import connect
-from agent_cowork_memory.delegate import Deps, HerdrError, build_prompt, delegate, delegate_wait
+from agent_cowork_memory.delegate import Deps, HerdrError, _clean_jobs, build_prompt, delegate, delegate_wait
 from agent_cowork_memory.ledger import AcmError, context
 
 
@@ -134,6 +135,20 @@ class DelegateTest(unittest.TestCase):
     def run_delegate(self, tasks, summary="Plan a Lisbon trip.", session=None, **kw):
         return delegate(self.conn, harness="cursor", repo_path=self.folder, summary=summary,
                         tasks=tasks, session=session, deps=self.fake.deps(**kw))
+
+    def test_old_job_files_are_removed_but_running_ones_stay(self):
+        first = self.run_delegate([{"to": "codex", "task": "Write plan.md"}])
+        job = first["jobs"][0]["job"]
+        jobs = self.home / "jobs"
+        jobs.mkdir(exist_ok=True)
+        old, running = jobs / "acm_j_000000000000.log", jobs / f"{job}.log"
+        for path in (old, running):
+            path.write_text("x")
+            os.utime(path, (1_000, 1_000))
+        self.conn.execute("UPDATE delegations SET state = 'running' WHERE id = ?", (job,))
+        _clean_jobs(self.conn)
+        self.assertFalse(old.exists())
+        self.assertTrue(running.exists())
 
     def test_two_agents_in_parallel_with_briefs(self):
         got = self.run_delegate([

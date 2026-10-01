@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from agent_cowork_memory.readers import first_objects, related
+from agent_cowork_memory.readers import first_objects, newest, related
 
 _SKIP_TYPES = {"session_meta", "event_msg", "token_usage_record", "turn_context", "world_state"}
 _SKIP_PAYLOAD = {"reasoning", "function_call", "function_call_output", "custom_tool_call", "custom_tool_call_output"}
@@ -18,13 +18,18 @@ def _meta(path):
     return (obj.get("payload") or {}) if obj.get("type") == "session_meta" else {}
 
 
-def latest(base, repo_root):
-    files = sorted(base.rglob("rollout-*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)
-    for path in files[:_RECENT]:
+def chats(base, repo_root):
+    files = sorted(((p.stat().st_mtime, p) for p in base.rglob("rollout-*.jsonl")), reverse=True)
+    found = []
+    for mtime, path in files[:_RECENT]:
         cwd = _meta(path).get("cwd")
         if cwd and related(Path(cwd), repo_root):
-            return path, Path(cwd)
-    return None, None
+            found.append((path, Path(cwd), mtime))
+    return found
+
+
+def latest(base, repo_root):
+    return newest(chats(base, repo_root))
 
 
 def find(base, native):

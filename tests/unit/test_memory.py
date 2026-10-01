@@ -1,4 +1,5 @@
 import sqlite3
+import threading
 import subprocess
 import tempfile
 import unittest
@@ -65,6 +66,12 @@ class MemoryTest(unittest.TestCase):
         self.assertEqual(copy.execute("SELECT COUNT(*) FROM memories").fetchone()[0], 2)
         copy.close()
 
+    def test_search_treats_operator_words_as_text(self):
+        note_add(self.conn, session=self.owner["session"], text="use redis or memcached")
+        found = note_search(self.conn, session=self.other["session"], query="redis OR memcached")
+        self.assertEqual([n["body"] for n in found["notes"]], ["use redis or memcached"])
+        self.assertEqual(note_search(self.conn, session=self.other["session"], query="NOT")["notes"], [])
+
     def test_context_shows_whole_project_own_task_first(self):
         elsewhere = attach(self.conn, repo_path=self.repo, harness="claude", label="c", title="Other task")
         note_add(self.conn, session=elsewhere["session"], text="other task, newer")
@@ -87,6 +94,14 @@ class MemoryTest(unittest.TestCase):
         self.assertEqual(taken["held"], [{"path": "plan.md", "agent": "b"}])
         with self.assertRaises(AcmError):
             context(self.conn, session=self.owner["session"], hold=["../secret"])
+
+    def test_hold_paths_normalize_and_quiet_holds_lapse(self):
+        context(self.conn, session=self.owner["session"], hold=["./plan.md"])
+        other = context(self.conn, session=self.other["session"], hold=["plan.md"])
+        self.assertEqual(other["busy"], [{"path": "plan.md", "agent": "a"}])
+        self.conn.execute("UPDATE sessions SET last_seen_at = '2000-01-01T00:00:00Z' WHERE id = ?", (self.owner["session"],))
+        taken = context(self.conn, session=self.other["session"], hold=["plan.md"])
+        self.assertNotIn("busy", taken)
 
     def test_context_shows_who_is_working_and_sweep_caps_results(self):
         self.conn.execute(
@@ -122,6 +137,24 @@ class MemoryTest(unittest.TestCase):
             conn.execute("SELECT body FROM memories").fetchall()
         finally:
             conn.close()
+
+    def test_concurrent_first_connects_migrate_once(self):
+        home = Path(self.tmp.name) / "race"
+        start, errors = threading.Barrier(8), []
+
+        def go():
+            start.wait()
+            try:
+                connect(home).close()
+            except Exception as exc:
+                errors.append(exc)
+
+        threads = [threading.Thread(target=go) for _ in range(8)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.assertEqual(errors, [])
 
     def test_failed_migration_step_changes_nothing(self):
         conn = sqlite3.connect(":memory:", isolation_level=None)

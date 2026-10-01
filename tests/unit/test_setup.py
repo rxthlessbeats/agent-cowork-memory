@@ -45,3 +45,26 @@ class SetupTest(unittest.TestCase):
             self.assertEqual(servers["other"], {"command": "other"})
             cursor = mcp_command("/tmp/uvx", "cursor")
             self.assertEqual(servers["acm"], {"command": cursor[0], "args": cursor[1:]})
+
+    def test_opencode_jsonc_is_used_and_never_loses_comments(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            folder = home / ".config" / "opencode"
+            folder.mkdir(parents=True)
+            jsonc = folder / "opencode.jsonc"
+
+            def which(name):
+                return None if name == "codex" else f"/tmp/{name}"
+
+            with patch("agent_cowork_memory.cli.Path.home", return_value=home), \
+                 patch("agent_cowork_memory.cli.shutil.which", side_effect=which), \
+                 patch.dict("agent_cowork_memory.cli.os.environ", {}, clear=True):
+                jsonc.write_text('{\n  // my theme\n  "theme": "dark"\n}\n')
+                kept = setup_clients()["opencode"]
+                self.assertTrue(kept.startswith("not changed"))
+                self.assertIn("// my theme", jsonc.read_text())
+
+                jsonc.write_text('{"theme": "dark"}\n')
+                self.assertEqual(setup_clients()["opencode"], "configured")
+                self.assertIn("acm", json.loads(jsonc.read_text())["mcp"])
+                self.assertFalse((folder / "opencode.json").exists())

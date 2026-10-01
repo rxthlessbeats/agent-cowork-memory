@@ -17,10 +17,19 @@ CONTEXT = (
     "Pass hold as an empty list to release yours."
 )
 RESUME = (
-    "Call when the user says continue, or wants to pick up a chat from another agent. "
-    "source is codex, cursor, claude, or opencode. It reads that agent's latest chat for this repo, "
-    "attaches you to the same task, and returns the recent messages. Carry on from the "
-    "last user message without asking the user to repeat it."
+    "Call when the user says continue, or wants to pick up a chat from another agent. source "
+    "(codex, cursor, claude, or opencode) narrows it to that agent; leave it out to look at every agent. "
+    "Without chat: if this repo has more than one matching chat, the result has choose instead of "
+    "messages. Show that list to the user, ask which chat to continue, and call resume again with its "
+    "chat id; never pick for them. With chat, or when only one chat matches, it attaches you to that "
+    "chat's task and returns the recent messages. Carry on from the last user message without asking "
+    "the user to repeat it."
+)
+CHATS = (
+    "List recent chats in this repo from every agent, newest first: agent, chat id, last update, the "
+    "folder the chat ran in (the repo, a folder inside it, or one above it), its acm task, the first user "
+    "message, and job (the acm job id when acm started that chat). Use it to show the user more chats "
+    "than resume's choose list, then pass the chat id they pick to resume."
 )
 DELEGATE = (
     "Call when the user asks another agent (codex, claude, cursor, or opencode) to do something, e.g. "
@@ -94,12 +103,17 @@ def build_server(harness, home):
         return run(lambda conn: context_op(conn, session=session, hold=hold), session)
 
     @mcp.tool(description=RESUME)
-    def resume(ctx: Context, repo_path: str, source: str, limit: int = 30) -> dict:
+    def resume(ctx: Context, repo_path: str, source: str | None = None, chat: str | None = None, limit: int = 30) -> dict:
         from agent_cowork_memory.transcript import resume as resume_op
         kind = who(ctx)
         return run(lambda conn: resume_op(
-            conn, harness=kind, repo_path=repo_path, source=source, limit=limit,
+            conn, harness=kind, repo_path=repo_path, source=source, chat=chat, limit=limit,
         ))
+
+    @mcp.tool(description=CHATS)
+    def chats(repo_path: str, limit: int = 20) -> dict:
+        from agent_cowork_memory.transcript import chats as chats_op
+        return run(lambda conn: chats_op(conn, repo_path=repo_path, limit=limit))
 
     @mcp.tool(description=DELEGATE)
     def delegate(ctx: Context, repo_path: str, summary: str, tasks: list[dict], session: str | None = None) -> dict:

@@ -1,7 +1,8 @@
 import os
+import re
 from pathlib import Path
 
-from agent_cowork_memory.readers import first_objects, newest, slug
+from agent_cowork_memory.readers import first_objects, in_workspaces, newest
 
 _SKIP = {"queue-operation", "attachment", "atis-latch", "last-prompt", "cost-state", "system", "summary"}
 
@@ -10,12 +11,12 @@ def root():
     return Path(os.environ.get("CLAUDE_CONFIG_DIR", Path.home() / ".claude")) / "projects"
 
 
+def chats(base, repo_root):
+    return in_workspaces(base, repo_root, lambda workspace: re.sub(r"[^A-Za-z0-9]", "-", str(workspace)), "*.jsonl")
+
+
 def latest(base, repo_root):
-    found = []
-    for workspace in (repo_root, *repo_root.parents):
-        files = (base / ("-" + slug(workspace))).glob("*.jsonl")
-        found += [(p, workspace) for p in files if p.is_file()]
-    return newest(found)
+    return newest(chats(base, repo_root))
 
 
 def find(base, native):
@@ -47,12 +48,8 @@ def visible(obj):
         if not isinstance(block, dict):
             continue
         btype = block.get("type")
-        if btype in ("tool_use", "thinking", "tool_result"):
-            continue
         if btype == "text" and block.get("text"):
             texts.append(block["text"])
-        elif btype not in ("text",):
-            return "unknown", []
     if not texts:
         return "skip", []
     return "message", [{"role": role, "text": "\n".join(texts), "timestamp": obj.get("timestamp")}]
