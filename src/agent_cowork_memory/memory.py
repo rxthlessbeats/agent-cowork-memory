@@ -8,6 +8,8 @@ from agent_cowork_memory.ledger import AcmError, _session_row as _session, new_i
 _BUDGET = 12_000
 _KEEP_RESULTS = 20  # ponytail: one log cap, raise it if a project outgrows the job history
 _HOLD_HOURS = 2  # ponytail: a hold lapses once its session has not called acm for this long, unless its job is open
+_OTHER_SHORT = 5  # ponytail: other tasks' short notes in context, newest first, one line each; note_search has the rest
+_IDLE_DAYS = 30  # a session idle this long that holds nothing, has no open job, and wrote no long note is deleted
 _VISIBLE = """forgotten_at IS NULL AND superseded_at IS NULL AND promoted_at IS NULL
     AND (expires_at IS NULL OR expires_at > ?)"""
 OPEN = ("starting", "running", "blocked")
@@ -160,7 +162,7 @@ def _rel(path):
 
 
 def sweep(conn, project_id):
-    """Delete notes nobody can see, job results past the cap, and holds of sessions gone quiet."""
+    """Delete notes nobody can see, job results past the cap, holds of sessions gone quiet, and sessions nobody uses."""
     quiet = (datetime.now(timezone.utc) - timedelta(hours=_HOLD_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
     conn.execute(
         f"""DELETE FROM holds WHERE project_id = ? AND session_id IN (
@@ -186,6 +188,47 @@ def sweep(conn, project_id):
         conn.execute(f"DELETE FROM memories_fts WHERE memory_id IN ({marks})", ids)
         conn.execute(f"DELETE FROM memories WHERE id IN ({marks})", ids)
     conn.commit()
+    _prune(conn, project_id)
+
+
+def _prune(conn, project_id):
+    """Delete idle sessions and the rows that only point at them, then archive tasks left with nothing.
+    Notes stay: a pruned author's id is kept on them, it just no longer resolves."""
+    idle = (datetime.now(timezone.utc) - timedelta(days=_IDLE_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    conn.execute("BEGIN IMMEDIATE")
+    try:
+        gone = [row["id"] for row in conn.execute(
+            f"""SELECT s.id FROM sessions s WHERE s.project_id = ? AND s.last_seen_at < ?
+                  AND NOT EXISTS (SELECT 1 FROM holds h WHERE h.session_id = s.id)
+                  AND NOT EXISTS (SELECT 1 FROM delegations d WHERE d.state IN ({OPEN_SQL}) AND (
+                    d.caller_session_id = s.id OR (d.agent_name = s.label AND d.folder = s.working_directory)))
+                  AND NOT EXISTS (SELECT 1 FROM memories m WHERE m.author_session_id = s.id AND m.tier = 'long')""",
+            (project_id, idle),
+        )]
+        if gone:
+            marks = ",".join("?" * len(gone))
+            conn.execute(
+                f"""DELETE FROM transcript_cursors WHERE consumer_session_id IN ({marks})
+                    OR source_id IN (SELECT id FROM transcript_sources WHERE session_id IN ({marks}))""",
+                gone + gone,
+            )
+            for sql in (
+                "DELETE FROM transcript_sources WHERE session_id IN ({})",
+                "DELETE FROM task_sessions WHERE session_id IN ({})",
+                "DELETE FROM delegations WHERE caller_session_id IN ({})",  # all finished: open ones keep their caller
+                "DELETE FROM sessions WHERE id IN ({})",
+            ):
+                conn.execute(sql.format(marks), gone)
+        conn.execute(
+            f"""UPDATE tasks SET archived_at = ? WHERE project_id = ? AND archived_at IS NULL
+                  AND NOT EXISTS (SELECT 1 FROM task_sessions ts WHERE ts.task_id = tasks.id)
+                  AND NOT EXISTS (SELECT 1 FROM memories m WHERE m.task_id = tasks.id AND {_VISIBLE})""",
+            (now(), project_id, now()),
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
 
 
 def release(conn, folder, label):
@@ -244,7 +287,8 @@ def activity(conn, session_row):
 
 
 def visible_notes(conn, project_id, task_id):
-    """Every live note in the project: this task's first, then the rest, newest first in each."""
+    """Live notes for context: this task's short notes and every long note in full, then the newest
+    few short notes of other tasks, clipped to one line. Returns (short, long, other short notes left out)."""
     rows = conn.execute(
         f"""SELECT * FROM memories
             WHERE project_id = ? AND {_VISIBLE}
@@ -252,8 +296,10 @@ def visible_notes(conn, project_id, task_id):
         (project_id, now(), task_id),
     ).fetchall()
     short = [_public(row) for row in rows if row["tier"] == "short"]
+    mine = [note for note in short if note["task"] == task_id]
+    others = [{**note, "body": one_line(note["body"])} for note in short if note["task"] != task_id]
     long = [_public(row) for row in rows if row["tier"] == "long"]
-    return short, long
+    return mine + others[:_OTHER_SHORT], long, len(others[_OTHER_SHORT:])
 
 
 def fit_notes(checkpoint, short, long):

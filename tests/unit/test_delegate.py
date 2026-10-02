@@ -1,4 +1,5 @@
 import json
+from collections import Counter
 import os
 import signal
 import tempfile
@@ -9,7 +10,7 @@ from unittest import mock
 
 from agent_cowork_memory.db import connect
 from agent_cowork_memory.delegate import (
-    Deps, HerdrError, _clean_jobs, _headless, build_prompt, delegate, delegate_wait, spawn_background,
+    Deps, HerdrError, _clean_jobs, _headless, build_prompt, card, delegate, delegate_wait, spawn_background,
 )
 from agent_cowork_memory.ledger import AcmError, context
 
@@ -23,6 +24,7 @@ class FakeHerdr:
         self.prompts = []
         self.block_start = set()
         self.stuck_start = set()
+        self.timeouts = {}
         self.finish = True
         self.drop = 0
         self.started = 0
@@ -65,8 +67,11 @@ class FakeHerdr:
             return {"agents": list(self.agents.values())}
         if cmd == ("agent", "start"):
             name, kind, pane = args[2], args[args.index("--kind") + 1], args[args.index("--pane") + 1]
-            assert 3000 < int(args[args.index("--timeout") + 1]) <= 300000
+            timeout = int(args[args.index("--timeout") + 1])
+            assert 3000 < timeout <= 300000
+            self.timeouts[kind] = timeout
             if kind in self.stuck_start:
+                self.t += timeout / 1000  # it waited out its whole budget
                 raise HerdrError("timeout", "timed out waiting for agent startup")
             self.agents[name] = {
                 "name": name, "agent": kind, "pane_id": pane, "workspace_id": "w1",
@@ -217,11 +222,14 @@ class DelegateTest(unittest.TestCase):
         busy = other["jobs"][0]
         self.assertEqual((busy["agent"], busy["state"]), ("codex-work", "busy"))
         self.assertIn("still working on: Long job", busy["result"])
+        self.assertEqual(card(other), "codex  busy")
         self.assertEqual(len(self.fake.prompts), 1)
         self.fake.complete(*self.fake.prompts[0])
         done = delegate_wait(self.conn, session=first["session"], deps=self.fake.deps())
         self.assertEqual([j["state"] for j in done["jobs"]], ["done"])
         self.assertNotIn("next", done)
+        self.assertEqual(delegate_wait(self.conn, session=first["session"], deps=self.fake.deps())["jobs"], [])
+        self.fake.running = False  # herdr down, nothing open: still answers
         self.assertEqual(delegate_wait(self.conn, session=first["session"], deps=self.fake.deps())["jobs"], [])
 
     def test_other_chat_sees_finished_agent_and_its_holds_are_released(self):
@@ -266,6 +274,29 @@ class DelegateTest(unittest.TestCase):
         self.assertEqual(got["jobs"][0]["state"], "blocked")
         self.assertIn("Do you want to proceed?", got["jobs"][0]["result"])
         self.assertIn("blocked", got)
+
+    def test_opencode_gets_a_tab_to_itself(self):
+        self.fake.roots["opencode"] = Path(self.tmp.name) / "t" / "opencode"
+        self.fake.roots["opencode"].mkdir()
+        self.fake.finish = False
+        self.run_delegate([
+            {"to": "opencode", "task": "A"}, {"to": "claude", "task": "B"}, {"to": "codex", "task": "C"},
+            {"to": "cursor", "task": "D"},
+        ])
+        tabs = Counter(p["tab_id"] for p in self.fake.panes)
+        opencode = self.fake.agents["opencode-work"]["pane_id"]
+        self.assertEqual(tabs[next(p["tab_id"] for p in self.fake.panes if p["pane_id"] == opencode)], 1)
+        self.assertEqual(sorted(tabs.values()), [1, 1, 2])
+
+    def test_a_stalled_start_does_not_shrink_the_others_budget(self):
+        self.fake.stuck_start.add("codex")
+        got = self.run_delegate([
+            {"to": "codex", "task": "Write plan.md"}, {"to": "claude", "task": "Write packing.md"},
+            {"to": "cursor", "task": "Write budget.md"},
+        ])
+        self.assertEqual(self.fake.timeouts, {"codex": 45000, "claude": 45000, "cursor": 45000})
+        states = {j["agent"]: j["state"] for j in got["jobs"]}
+        self.assertEqual(states, {"codex-work": "gone", "claude-work": "done", "cursor-work": "done"})
 
     def test_startup_prompt_then_task_is_sent_later(self):
         self.fake.block_start.add("claude")
@@ -388,6 +419,15 @@ class DelegateTest(unittest.TestCase):
                        tasks=[{"to": "codex", "task": "Publish"}], deps=deps)
         self.assertEqual(got["jobs"][0]["state"], "needs_approval")
         self.assertEqual(got["jobs"][0]["result"], "BLOCKED: run `npm publish`, which pushes a release")
+        self.assertEqual(got["jobs"][0]["ask"], "run `npm publish`, which pushes a release")
+        shown = card(got, [{"to": "codex", "task": "Publish"}])
+        self.assertTrue(shown.startswith("acm · delegate(tasks=1 · background)\n\ncodex\nPublish\n"))
+        self.assertIn("acm · delegate_wait(0/1 done)", shown)
+        self.assertIn("needs_approval · codex wants to run `npm publish`, which pushes a release", shown)
+        idle = delegate_wait(self.conn, session=got["session"], deps=deps)
+        self.assertEqual(idle["jobs"], [])
+        self.assertIn("message", idle)
+        self.assertEqual(card(idle), "acm · delegate_wait(nothing running; every result was already reported)")
         self.assertIn("needs_approval", got)
         self.assertNotIn("next", got)
         self.assertIn("## If an action is denied", runs[0][-1])

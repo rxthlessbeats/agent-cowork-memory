@@ -47,6 +47,18 @@ class SetupTest(unittest.TestCase):
             cursor = mcp_command("/tmp/uvx", "cursor")
             self.assertEqual(servers["acm"], {"command": cursor[0], "args": cursor[1:]})
 
+    def test_without_uv_agents_start_the_installed_acm(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            with patch("agent_cowork_memory.cli.Path.home", return_value=home), \
+                 patch("agent_cowork_memory.cli.shutil.which", side_effect=lambda n: "/venv/bin/acm" if n == "acm" else None):
+                self.assertEqual(setup_clients(), {"codex": "not installed", "cursor": "configured", "opencode": "not installed"})
+            acm = json.loads((home / ".cursor" / "mcp.json").read_text())["mcpServers"]["acm"]
+            self.assertEqual(acm, {"command": "/venv/bin/acm", "args": ["mcp", "--harness", "cursor"]})
+            with patch("agent_cowork_memory.cli.shutil.which", return_value=None):
+                with self.assertRaisesRegex(RuntimeError, "Install uv, or pip install"):
+                    setup_clients()
+
     def test_config_symlink_is_written_at_its_target(self):
         with tempfile.TemporaryDirectory() as tmp:
             target, link = Path(tmp) / "dotfiles.json", Path(tmp) / "opencode.json"

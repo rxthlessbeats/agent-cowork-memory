@@ -5,6 +5,7 @@
 Tired of copying a chat into the next agent? Pick up the same task where you left off, or tell one agent to put the others to work.
 
 [![GitHub Release](https://img.shields.io/github/v/release/rxthlessbeats/agent-cowork-memory?style=flat&color=blue)](https://github.com/rxthlessbeats/agent-cowork-memory/releases/latest)
+[![PyPI](https://img.shields.io/pypi/v/agent-cowork-memory?style=flat&color=blue)](https://pypi.org/project/agent-cowork-memory/)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat)](LICENSE)
 ![Agents supported](https://img.shields.io/badge/agents_supported-4-orange?style=flat)
 ![Python](https://img.shields.io/badge/python-3.11%2B-green?style=flat)
@@ -20,10 +21,17 @@ Tired of copying a chat into the next agent? Pick up the same task where you lef
 
 ## Install
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then run:
+```sh
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
+uvx agent-cowork-memory setup
+```
+
+or
 
 ```sh
-uvx agent-cowork-memory setup
+pip install agent-cowork-memory
+acm setup
 ```
 
 Restart Codex, Cursor, and OpenCode. ACM is now available in every project.
@@ -32,6 +40,8 @@ For Claude Code, add it yourself, then restart Claude Code:
 ```sh
 claude mcp add -s user acm -- uvx agent-cowork-memory mcp --harness claude
 ```
+
+Installed with pip, use `-- acm mcp --harness claude` instead.
 
 ## Use
 

@@ -253,12 +253,13 @@ def context(conn, *, session, hold=None):
     sweep(conn, row["project_id"])
     busy = claim(conn, row, hold) if hold is not None else []
     task = _task_row(conn, row["active_task_id"])
-    short, long = visible_notes(conn, task["project_id"], task["id"])
+    short, long, hidden = visible_notes(conn, task["project_id"], task["id"])
     head = _public_task(task, session)
     if task["version"] == 1:
         for key in ("owner", "summary", "next_action", "blockers", "version"):
             head.pop(key)
     body = fit_notes(head, short, long)
+    body["omitted"]["short"] += hidden
     body["working"], body["held"] = activity(conn, row)
     if busy:
         owners = {item["path"]: item["agent"] for item in body["held"]}

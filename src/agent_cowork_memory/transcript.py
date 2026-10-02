@@ -238,7 +238,8 @@ def _opening(harness, raw):
     first = next((r["text"] for r in records if r["role"] == "user"), "")
     query = _QUERY.search(first)
     text = " ".join(_TAG.sub(" ", query.group(1) if query else first).split())
-    job = _JOB.match(text)
+    # Clients may put a note before the brief (OpenCode: "Note: The user opened the file …"), so look past it.
+    job = _JOB.search(text[:600])
     return text, job.group(1) if job else None
 
 
@@ -336,12 +337,14 @@ def resume(conn, *, harness, repo_path, source=None, chat=None, limit=30, budget
     kinds = [source] if source else [kind for kind in READERS if chat or kind != harness]
     listed = _listing(kinds, repo_root, roots)
     own_folder = [item for item in listed if Path(item[3]) not in Path(repo_root).parents]
+    # The user's own chats in the repo folder; chats acm started for jobs don't count.
+    mine = [] if chat else [item for item in own_folder if _opening(item[1], chat_bytes(item[1], item[2]))[1] is None]
     if chat:
         hit = next((item for item in listed if _native_id(item[1], item[2]) == chat), None)
         if hit is None:
             raise AcmError("not_found", message=f"no chat {chat} in this repo; call chats to list them")
-    elif len(own_folder) == 1 or len(listed) == 1:
-        hit = (own_folder or listed)[0]
+    elif len(mine) == 1 or len(listed) == 1:
+        hit = (mine or listed)[0]
     elif listed:
         return {
             "choose": _own_chats_first(conn, listed[:_SCAN], repo_root, common_dir)[:_CHOICES],

@@ -156,18 +156,20 @@ class TranscriptTest(unittest.TestCase):
         slug = str(self.repo.resolve()).strip("/").replace("/", "-")
         mine = self.root / slug / "agent-transcripts" / "c1" / "c1.jsonl"
         job = self.root / slug / "agent-transcripts" / "c2" / "c2.jsonl"
-        for path, text in ((mine, "plan the trip"), (job, "[acm job acm_j_0123456789ab] A codex chat asked for this")):
+        older = self.root / slug / "agent-transcripts" / "c3" / "c3.jsonl"
+        for path, text in ((mine, "plan the trip"), (job, "[acm job acm_j_0123456789ab] A codex chat asked for this"), (older, "pack bags")):
             path.parent.mkdir(parents=True)
             path.write_text(json.dumps({"role": "user", "message": {"content": [{"type": "text", "text": text}]}}) + "\n")
         owner = attach(self.conn, repo_path=self.repo, harness="cursor", label="a", title="Trip")
         with mine.open("a") as out:
             out.write(cursor_line(owner["session"], "Lisbon"))
         os.utime(mine, (1_000, 1_000))
+        os.utime(older, (500, 500))
         roots = {kind: self.root / "missing" for kind in ("codex", "claude", "opencode")} | {"cursor": self.root}
 
         listed = chats(self.conn, repo_path=self.repo, roots=roots)["chats"]
         self.assertEqual([(c["agent"], c["chat"], c["job"]) for c in listed], [
-            ("cursor", "c2", "acm_j_0123456789ab"), ("cursor", "c1", None),
+            ("cursor", "c2", "acm_j_0123456789ab"), ("cursor", "c1", None), ("cursor", "c3", None),
         ])
         self.assertEqual(listed[1]["first"], "plan the trip")
 
@@ -176,7 +178,7 @@ class TranscriptTest(unittest.TestCase):
         self.assertEqual(picked["task"], owner["task"])
         asked = resume(self.conn, harness="codex", repo_path=self.repo, roots=roots)
         self.assertNotIn("messages", asked)
-        self.assertEqual([(c["chat"], c["task"]) for c in asked["choose"]], [("c1", "Trip"), ("c2", None)])
+        self.assertEqual([(c["chat"], c["task"]) for c in asked["choose"]], [("c1", "Trip"), ("c3", None), ("c2", None)])
         self.assertEqual(asked["more"], 0)
 
         with self.assertRaises(AcmError) as caught:
@@ -185,6 +187,16 @@ class TranscriptTest(unittest.TestCase):
         with self.assertRaises(AcmError) as caught:
             resume(self.conn, harness="cursor", repo_path=self.repo, roots=roots)
         self.assertEqual(caught.exception.code, "not_found")
+
+    def test_resume_picks_the_users_one_chat_over_job_chats(self):
+        slug = str(self.repo.resolve()).strip("/").replace("/", "-")
+        for name, text in (("c1", "plan the trip"), ("j1", "[acm job acm_j_0123456789ab] A codex chat asked"),
+                           ("j2", "Note: The user opened the file x.md. [acm job acm_j_ba9876543210] A codex chat asked")):
+            path = self.root / slug / "agent-transcripts" / name / f"{name}.jsonl"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({"role": "user", "message": {"content": [{"type": "text", "text": text}]}}) + "\n")
+        got = resume(self.conn, harness="codex", repo_path=self.repo, roots={"cursor": self.root})
+        self.assertEqual(got["native_id"], "c1")
 
     def test_resume_picks_the_one_chat_in_the_repo_over_parent_folder_chats(self):
         slug = str(self.repo.resolve()).strip("/").replace("/", "-")

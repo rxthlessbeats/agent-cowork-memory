@@ -18,8 +18,9 @@ from agent_cowork_memory.transcript import chats, resume, transcript_read
 EXIT = {"invalid": 2, "conflict": 3, "not_owner": 3, "not_allowed": 3, "unavailable": 4, "not_found": 4}
 
 
-def mcp_command(uvx, harness):
-    return [uvx, "agent-cowork-memory", "mcp", "--harness", harness]
+def mcp_command(uvx, harness, acm=None):
+    """How an agent starts acm: through uvx, or with a pip install and no uv, the acm it put on PATH."""
+    return [*([acm] if acm else [uvx, "agent-cowork-memory"]), "mcp", "--harness", harness]
 
 
 def _print(payload, *, err=False):
@@ -80,10 +81,14 @@ def _opencode_file(home):
 
 
 def setup_clients():
-    uvx = shutil.which("uvx")
-    if not uvx:
-        raise RuntimeError("Install uv before running ACM setup.")
-    uvx = str(Path(uvx).absolute())
+    uvx, acm = shutil.which("uvx"), None
+    if uvx:
+        uvx = str(Path(uvx).absolute())
+    else:
+        acm = shutil.which("acm")
+        if not acm:
+            raise RuntimeError("Install uv, or pip install agent-cowork-memory, before running ACM setup.")
+        acm = str(Path(acm).absolute())
     home = Path.home()
     cursor_file = (home / ".cursor" / "mcp.json").resolve()
     cursor_config = json.loads(cursor_file.read_text()) if cursor_file.exists() else {}
@@ -104,7 +109,7 @@ def setup_clients():
         result["codex"] = "already configured (left unchanged)"
     else:
         subprocess.run(
-            [codex, "mcp", "add", "acm", "--", *mcp_command(uvx, "codex")],
+            [codex, "mcp", "add", "acm", "--", *mcp_command(uvx, "codex", acm)],
             cwd=home, check=True, capture_output=True, text=True, timeout=15,
         )
         result["codex"] = "configured"
@@ -113,7 +118,7 @@ def setup_clients():
     if "acm" in cursor_servers:
         result["cursor"] = "already configured (left unchanged)"
     else:
-        command = mcp_command(uvx, "cursor")
+        command = mcp_command(uvx, "cursor", acm)
         cursor_servers["acm"] = {"command": command[0], "args": command[1:]}
         _write_json(cursor_file, cursor_config)
         result["cursor"] = "configured"
@@ -123,7 +128,7 @@ def setup_clients():
     if not opencode:
         result["opencode"] = "not installed"
         return result
-    entry = {"type": "local", "command": mcp_command(uvx, "opencode"), "enabled": True}
+    entry = {"type": "local", "command": mcp_command(uvx, "opencode", acm), "enabled": True}
     try:
         config = json.loads(opencode_file.read_text()) if opencode_file.exists() else {}
     except json.JSONDecodeError:
