@@ -7,6 +7,7 @@ import signal
 import subprocess
 import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -31,7 +32,7 @@ JOB_SECONDS = 15 * 60  # ponytail: a background job still running after this is 
 WATCH = f"herdr session attach {SESSION}"
 BACKGROUND = "background"
 FINISHED = ("done", "gone", "needs_approval")
-_ASKS = re.compile(r"(?m)^\W*BLOCKED:")
+_ASKS = re.compile(r"(?m)^\W*BLOCKED:[ \t]*(.*)")
 
 
 def _headless(kind, prompt, folder, answer):
@@ -183,11 +184,16 @@ def _workspace(deps, folder):
     return made["workspace"]["workspace_id"], made["root_pane"]["pane_id"]
 
 
-def _new_pane(deps, workspace, folder):
-    """A pane for a new agent. A tab holds two panes side by side, so agents stay wide enough to draw."""
+def _new_pane(deps, workspace, folder, kind, solo):
+    """A pane for a new agent. A tab holds two panes side by side, so agents stay wide enough to draw.
+    OpenCode gets a tab to itself, and its tab is never split: in a half-width pane it crashes
+    (a Bun segfault, OpenCode 1.18 on Bun 1.3). solo holds the panes this call gave OpenCode."""
     panes = [p for p in deps.herdr("pane", "list").get("panes", []) if p.get("workspace_id") == workspace]
     per_tab = Counter(p.get("tab_id") for p in panes)
-    lone = next((p for p in panes if per_tab[p.get("tab_id")] == 1), None)
+    lone = kind != "opencode" and next((
+        p for p in panes
+        if per_tab[p.get("tab_id")] == 1 and p["pane_id"] not in solo and p.get("agent") != "opencode"
+    ), None)
     where = ["--cwd", str(folder), "--env", "ACM_DELEGATED=1", "--no-focus"]
     if lone:
         return deps.herdr("pane", "split", lone["pane_id"], "--direction", "right", *where)["pane"]["pane_id"]
@@ -282,7 +288,8 @@ def build_prompt(*, job, harness, session, folder, summary, task, done_when=None
     )
     parts.append(
         "## If an action is denied\nIf something you need is denied, don't work around it. Stop, and start "
-        "your reply with a line `BLOCKED: ` saying exactly what you need approved and why. acm passes it to "
+        "your reply with one line `BLOCKED: <the action>`, worded to follow \"wants to\", e.g. "
+        "`BLOCKED: run npm run db:migrate on the dev database`. Say why on the next lines. acm passes it to "
         "the chat that sent you."
     )
     parts.append(
@@ -379,7 +386,7 @@ def delegate(conn, *, harness, repo_path, summary, tasks, session=None, deps=Non
             doing = running.get(name) or next((i["task"] for i, n, _r, _p in plan if n == name), None)
             busy.append({
                 "to": kind, "agent": name, "state": "busy",
-                "result": f"{name} is still working" + (f" on: {one_line(doing, 120).rstrip('.')}" if doing else "") + ". Try again when it finishes.",
+                "result": f"{name} is still working" + (f" on: {one_line(doing, 120).rstrip('.…')}" if doing else "") + ". Try again when it finishes.",
             })
             continue
         last = conn.execute(
@@ -391,6 +398,8 @@ def delegate(conn, *, harness, repo_path, summary, tasks, session=None, deps=Non
     for item, name, _reuse, _problem in plan:
         others.append((name, item["task"]))
 
+    # Panes first, in order: the layout depends on it.
+    jobs, solo = [], set()
     for item, name, reuse, problem in plan:
         kind, job = item["to"], new_id("acm_j_")
         mates = [(n, t) for n, t in others if n != name]
@@ -401,24 +410,43 @@ def delegate(conn, *, harness, repo_path, summary, tasks, session=None, deps=Non
             job=job, harness=harness, session=worker, folder=root, summary=summary, task=item["task"],
             done_when=item.get("done_when"), context=item.get("context"), others=mates, problem=problem,
         )
-        state, pane, failed = "running", agents.get(name, {}).get("pane_id"), None
+        pane = agents.get(name, {}).get("pane_id")
+        if herdr and not reuse:
+            pane, fresh = fresh or _new_pane(deps, workspace, root, kind, solo), None
+            if kind == "opencode":
+                solo.add(pane)
+            agents[name] = {"name": name, "pane_id": pane}
+        jobs.append((item, name, reuse, job, prompt, pane))
+
+    # Then start every new agent at once, each with the whole remaining budget, so one that stalls
+    # (an update prompt, a login screen) doesn't eat the others' time. A thread runs only the herdr call.
+    # herdr takes a startup timeout between 3 and 300 seconds.
+    budget = str(max(5000, int((started + WAIT_SECONDS - deps.clock()) * 1000)))
+
+    def start(name, kind, pane):
+        try:
+            deps.herdr("agent", "start", name, "--kind", kind, "--pane", pane, "--timeout", budget, "--", *FLAGS[kind])
+        except HerdrError as exc:
+            return exc
+
+    with ThreadPoolExecutor() as pool:
+        starting = {
+            name: pool.submit(start, name, item["to"], pane)
+            for item, name, reuse, _job, _prompt, pane in jobs if herdr and not reuse
+        }
+    errors = {name: future.result() for name, future in starting.items()}
+
+    for item, name, _reuse, job, prompt, pane in jobs:
+        kind, state, failed, exc = item["to"], "running", None, errors.get(name)
         if not herdr:
             _start_background(conn, deps, kind, job, prompt, root)
             pane = BACKGROUND
-        elif not reuse:
-            pane, fresh = fresh or _new_pane(deps, workspace, root), None
-            agents[name] = {"name": name, "pane_id": pane}
-            try:
-                # herdr takes a startup timeout between 3 and 300 seconds.
-                budget = max(5000, int((started + WAIT_SECONDS - deps.clock()) * 1000))
-                deps.herdr("agent", "start", name, "--kind", kind, "--pane", pane, "--timeout", str(budget), "--", *FLAGS[kind])
-            except HerdrError as exc:
-                if exc.code == "agent_not_ready":
-                    state = "starting"
-                else:
-                    # One agent that won't start (an update prompt, a login screen) must not stop the others.
-                    agents.pop(name, None)
-                    state, failed = "gone", f"herdr could not start {kind}: {exc}. Last lines: " + (_pane_tail(deps, pane) or "(none)")
+        elif exc is not None and exc.code == "agent_not_ready":
+            state = "starting"
+        elif exc is not None:
+            # One agent that won't start must not stop the others.
+            agents.pop(name, None)
+            state, failed = "gone", f"herdr could not start {kind}: {exc}. Last lines: " + (_pane_tail(deps, pane) or "(none)")
         if herdr and state == "running":
             state = _send(deps, name, prompt)
         conn.execute(
@@ -548,7 +576,7 @@ def _wait(conn, deps, session, started):
         rows = conn.execute(
             f"SELECT * FROM delegations WHERE caller_session_id = ? AND state IN ({OPEN_SQL})", (session,),
         ).fetchall()
-        _refresh(conn, deps, rows, _agents(deps))
+        _refresh(conn, deps, rows, _agents(deps) if rows else {})  # nothing open: don't need herdr, or fail without it
         pending = conn.execute(
             "SELECT COUNT(*) FROM delegations WHERE caller_session_id = ? AND state IN ('starting', 'running')",
             (session,),
@@ -562,15 +590,21 @@ def _wait(conn, deps, session, started):
     ).fetchall()
     jobs = []
     for row in rows:
-        jobs.append({
+        job = {
             "job": row["id"], "to": row["kind"], "agent": row["agent_name"], "pane": row["pane_id"],
             "state": row["state"], "result": one_line(row["result"]) if row["state"] in ("done", "gone") else row["result"],
-        })
+        }
+        found = _ASKS.search(row["result"] or "") if row["state"] == "needs_approval" else None
+        if found and found.group(1).strip():
+            job["ask"] = found.group(1).strip().rstrip(".")
+        jobs.append(job)
         if row["state"] in FINISHED:
             conn.execute("UPDATE delegations SET reported = 1 WHERE id = ?", (row["id"],))
     conn.commit()
     watch = WATCH if deps.use_herdr() else f"tail -f {_jobs_dir(conn)}/<job>.log"
     out = {"session": session, "watch": watch, "jobs": jobs}
+    if not jobs:
+        out["message"] = "No job is running, and every result was already reported. Nothing to wait for."
     if any(j["state"] in ("starting", "running", "blocked") for j in jobs):
         out["next"] = (
             "Some agents are not finished. Call delegate_wait with this session until none are running; "
@@ -585,3 +619,27 @@ def _wait(conn, deps, session, started):
             "Never approve it for them."
         )
     return out
+
+
+def card(out, tasks=None):
+    """What the user sees in the calling agent, laid out like the website demo: the briefs, each job's state, and any asks."""
+    lines = []
+    if tasks is not None:
+        where = "herdr panes" if out["watch"] == WATCH else "background"
+        lines += [f"acm · delegate(tasks={len(tasks)} · {where})", ""]
+        for item in tasks:
+            lines += [item["to"], one_line(item["task"])]
+        lines.append("")
+    jobs = [j for j in out["jobs"] if j["state"] != "busy"]
+    if not out["jobs"]:
+        return "\n".join(lines + ["acm · delegate_wait(nothing running; every result was already reported)"])
+    if jobs:
+        lines.append(f"acm · delegate_wait({sum(j['state'] == 'done' for j in jobs)}/{len(jobs)} done)")
+    width = max((len(j["to"]) for j in out["jobs"]), default=0) + 2
+    lines += [f"{j['to']:<{width}}{j['state']}" for j in out["jobs"]]
+    for j in out["jobs"]:
+        if j["state"] == "needs_approval":
+            lines.append(f"needs_approval · {j['to']} " + (f"wants to {j['ask']}" if j.get("ask") else one_line(j["result"], 160)))
+        elif j["state"] == "blocked":
+            lines.append(f"blocked · {j['to']} is waiting for an answer in its herdr pane")
+    return "\n".join(lines)

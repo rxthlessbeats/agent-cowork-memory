@@ -2,6 +2,7 @@ import json
 
 from mcp.server.mcpserver import Context, MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
+from mcp_types import CallToolResult, TextContent
 
 from agent_cowork_memory.db import connect
 from agent_cowork_memory.ledger import HARNESSES, AcmError
@@ -14,7 +15,8 @@ CONTEXT = (
     "Call before doing work, and again before you edit a file. Returns your task, this project's "
     "notes, who is working in this folder, and which files are held. Pass hold with repo-relative "
     "paths to claim them before you write; a path in busy is held by someone else, so leave it alone. "
-    "Pass hold as an empty list to release yours."
+    "Pass hold as an empty list to release yours. Other tasks' short notes come clipped to one line; "
+    "note_search returns them in full."
 )
 RESUME = (
     "Call when the user says continue, or wants to pick up a chat from another agent. source "
@@ -22,7 +24,7 @@ RESUME = (
     "To resume another chat of your own agent, pass its chat id from chats. "
     "Without chat: if this repo has more than one matching chat, the result has choose instead of "
     "messages. Show that list to the user, ask which chat to continue, and call resume again with its "
-    "chat id; never pick for them. With chat, or when only one chat ran in this repo itself, it attaches you to that "
+    "chat id; never pick for them. With chat, or when only one of the user's own chats (not an acm job chat) ran in this repo itself, it attaches you to that "
     "chat's task and returns the recent messages. Carry on from the last user message without asking "
     "the user to repeat it."
 )
@@ -40,10 +42,14 @@ DELEGATE = (
     "fails with not_allowed. summary: the problem, written for someone who has not seen this chat. "
     "tasks: [{to, task, done_when?, context?}]. Pass session if you have one from acm; otherwise "
     "keep the returned one. If the result has 'next', call delegate_wait with that session until "
-    "no job is running. Report each job's state and result. If an agent is blocked, tell the user "
-    "and do not answer it for them."
+    "no job is running. The result starts with a card (lines beginning 'acm · delegate'); most agents "
+    "don't display tool output, so copy that card into your reply as-is, in a code block, then report each "
+    "job's result. If an agent is blocked, tell the user and do not answer it for them."
 )
-DELEGATE_WAIT = "Wait up to 45 seconds more for this session's delegated agents, then report their states."
+DELEGATE_WAIT = (
+    "Wait up to 45 seconds more for this session's delegated agents, then report their states. Copy the "
+    "result's card (the lines before the JSON) into your reply as-is, in a code block."
+)
 NOTE_ADD = (
     "Save a note every agent in this project will see. Use tier='long' for things that stay true: "
     "decisions, the user's preferences, project conventions, gotchas. Use the default short tier "
@@ -57,6 +63,20 @@ NOTE_SEARCH = "Search note text in this project. Expired, forgotten, and superse
 def client_harness(name):
     name = (name or "").lower()
     return next((h for h in HARNESSES if h in name), None)
+
+
+# In the result too, not only the tool description: weaker models skip the description.
+REPLY = "Start your reply with the card above this JSON, copied as-is in a code block; most agents don't show tool output."
+
+
+def shown(text, data):
+    """The card first, for the person reading the tool output; the JSON after it, for the model.
+    No structured content: Claude Code shows that instead of the text, which hides the card.
+    The blank line keeps the JSON off the card's last line: Claude Code joins the blocks as they are."""
+    return CallToolResult(content=[
+        TextContent(type="text", text=text + "\n\n"),
+        TextContent(type="text", text=json.dumps({**data, "reply": REPLY}, indent=2, ensure_ascii=False)),
+    ])
 
 
 def build_server(harness, home):
@@ -117,17 +137,21 @@ def build_server(harness, home):
         return run(lambda conn: chats_op(conn, repo_path=repo_path, limit=limit))
 
     @mcp.tool(description=DELEGATE)
-    def delegate(ctx: Context, repo_path: str, summary: str, tasks: list[dict], session: str | None = None) -> dict:
+    def delegate(ctx: Context, repo_path: str, summary: str, tasks: list[dict], session: str | None = None) -> CallToolResult:
+        from agent_cowork_memory.delegate import card
         from agent_cowork_memory.delegate import delegate as delegate_op
         kind = who(ctx)
-        return run(lambda conn: delegate_op(
+        data = run(lambda conn: delegate_op(
             conn, harness=kind, repo_path=repo_path, summary=summary, tasks=tasks, session=session,
         ), session)
+        return shown(card(data, tasks), data)
 
     @mcp.tool(description=DELEGATE_WAIT)
-    def delegate_wait(session: str) -> dict:
+    def delegate_wait(session: str) -> CallToolResult:
+        from agent_cowork_memory.delegate import card
         from agent_cowork_memory.delegate import delegate_wait as wait_op
-        return run(lambda conn: wait_op(conn, session=session), session)
+        data = run(lambda conn: wait_op(conn, session=session), session)
+        return shown(card(data), data)
 
     @mcp.tool(description=NOTE_ADD)
     def note_add(session: str, text: str, tier: str = "short", kind: str | None = None, days: int | None = None, supersedes: str | None = None, source: str | None = None) -> dict:

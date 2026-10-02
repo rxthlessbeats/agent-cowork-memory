@@ -83,6 +83,8 @@ class StdioTest(Agents):
             env={"PATH": self.path},
         )
 
+        cards = []
+
         async def run():
             async with stdio_client(params) as (read, write), ClientSession(read, write) as client:
                 await client.initialize()
@@ -91,7 +93,9 @@ class StdioTest(Agents):
                 async def call(name, args):
                     result = await client.call_tool(name, args)
                     self.assertFalse(result.is_error, result.content)
-                    return result.structured_content or json.loads(result.content[0].text)
+                    if name == "delegate":
+                        cards.append(result.content[0].text)
+                    return result.structured_content or json.loads(result.content[-1].text)
 
                 attached = await call("attach", {"repo_path": str(self.work), "label": "cursor", "title": "Trip"})
                 await call("note_add", {"session": attached["session"], "text": "trip is 3 days", "tier": "long"})
@@ -107,6 +111,7 @@ class StdioTest(Agents):
         self.assertIn("trip is 3 days", json.dumps(held))
         self.assertIn("notes.md", json.dumps(held["held"]))
         self.assertEqual([(j["to"], j["state"]) for j in sent["jobs"]], [("codex", "done")])
+        self.assertTrue(cards[0].startswith("acm · delegate(tasks=1 · background)\n\ncodex\nWrite plan.md."), cards[0])
         self.assertTrue((self.work / "plan.md").exists())
 
     def test_harness_comes_from_the_client_name(self):
