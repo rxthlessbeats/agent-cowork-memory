@@ -1,0 +1,36 @@
+{
+  "name": "agent-cowork-memory",
+  "version": "0.3.0",
+  "description": "Shared memory and delegation for Codex, Cursor, Claude Code, and OpenCode.",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rxthlessbeats/agent-cowork-memory"
+  },
+  "mcpName": "io.github.rxthlessbeats/agent-cowork-memory",
+  "bin": {
+    "acm": "bin/acm.js",
+    "agent-cowork-memory": "bin/acm.js"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "check": "biome check && tsc --noEmit && node --test",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@types/node": "^24",
+    "typescript": "^7.0.2"
+  }
+}
