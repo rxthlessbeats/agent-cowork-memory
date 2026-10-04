@@ -1,4 +1,0 @@
-{"timestamp": "2026-01-01T00:00:00Z", "ordinal": 1, "type": "session_meta", "payload": {"session_id": "01EXAMPLESESSION", "cwd": "/tmp/playground", "cli_version": "0.158.0"}}
-{"timestamp": "2026-01-01T00:00:01Z", "ordinal": 2, "type": "response_item", "payload": {"type": "message", "role": "user", "content": [{"type": "input_text", "text": "hello"}]}}
-{"timestamp": "2026-01-01T00:00:02Z", "ordinal": 3, "type": "response_item", "payload": {"type": "message", "role": "assistant", "content": [{"type": "output_text", "text": "ok"}]}}
-{"timestamp": "2026-01-01T00:00:03Z", "ordinal": 4, "type": "response_item", "payload": {"type": "function_call", "name": "attach", "arguments": "{\"session\": \"acm_s_example0001\", \"repo_path\": \"/tmp/playground\"}", "call_id": "call_1"}}
