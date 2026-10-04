@@ -1,2 +1,0 @@
-{"role": "user", "message": {"content": [{"type": "text", "text": "hello"}]}}
-{"role": "assistant", "message": {"content": [{"type": "text", "text": "ok"}, {"type": "tool_use", "name": "attach", "input": {"session": "acm_s_example0001", "repo_path": "/tmp/playground", "label": "cursor"}}]}}
