@@ -77,7 +77,11 @@ export function debug(what: string, since: number): void {
   if (!process.env.ACM_DEBUG) return;
   const home = process.env.ACM_HOME || join(homedir(), ".agent-cowork-memory");
   const took = ((performance.now() - since) / 1000).toFixed(2);
-  appendFileSync(join(home, "debug.log"), `${now()} ${process.pid} ${what} ${took}s\n`);
+  try {
+    appendFileSync(join(home, "debug.log"), `${now()} ${process.pid} ${what} ${took}s\n`);
+  } catch {
+    // a debug line is never worth failing the work it describes
+  }
 }
 
 /** Whitespace collapsed, cut to `width` with an ellipsis. */
