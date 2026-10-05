@@ -28,6 +28,9 @@ function write(path: string, ...lines: unknown[]): string {
   return path;
 }
 
+/** Cursor's folder for a workspace. A drive colon cannot be a directory name on Windows, so there the
+ * test uses the all-dashes form, which the reader searches as well. */
+const cursorDir = (p: string) => (process.platform === "win32" ? dashes(p).replace(/^-+|-+$/g, "") : slug(p));
 const cursorUser = (text: string) => ({ role: "user", message: { content: [{ type: "text", text }] } });
 const cursorReply = (text: string) => ({ role: "assistant", message: { content: [{ type: "text", text }] } });
 const codexMsg = (role: string, text: string) => ({
@@ -58,7 +61,7 @@ afterEach(() => {
 
 test("resume reads each agent's newest chat and continues its thread", () => {
   // A Cursor chat opened in the folder above the repo, whose session worked on a thread.
-  const parent = slug(dirname(repo));
+  const parent = cursorDir(dirname(repo));
   cursorChat(parent, "c1", cursorUser("pick a city"), cursorReply("Lisbon"));
   const owner = session("cursor", "c1");
   noteAdd(db, owner, { text: "the trip is Lisbon" });
@@ -89,17 +92,17 @@ test("resume reads each agent's newest chat and continues its thread", () => {
 });
 
 test("a chat whose id is known leaves itself out, so its own kind can be resumed", () => {
-  cursorChat(slug(repo), "c1", cursorUser("first chat"));
-  cursorChat(slug(repo), "c2", cursorUser("this chat"));
+  cursorChat(cursorDir(repo), "c1", cursorUser("first chat"));
+  cursorChat(cursorDir(repo), "c2", cursorUser("this chat"));
   const got = resume(db, session("cursor", "c2"), { source: "cursor", roots: roots() });
   assert.equal(got.chat, "c1");
   assert.throws(() => resume(db, session("cursor", "proc:1"), { source: "cursor", roots: roots() }), /own chat/);
 });
 
 test("with several chats the user chooses; the user's own come before job chats", () => {
-  const mine = cursorChat(slug(repo), "c1", cursorUser("plan the trip"));
-  cursorChat(slug(repo), "c2", cursorUser("[acm job j_0123456789ab] A codex chat asked for this"));
-  const older = cursorChat(slug(repo), "c3", cursorUser("pack bags"));
+  const mine = cursorChat(cursorDir(repo), "c1", cursorUser("plan the trip"));
+  cursorChat(cursorDir(repo), "c2", cursorUser("[acm job j_0123456789ab] A codex chat asked for this"));
+  const older = cursorChat(cursorDir(repo), "c3", cursorUser("pack bags"));
   utimesSync(mine, 1000, 1000);
   utimesSync(older, 500, 500);
   const listed = chats(db, session("codex", "x"), 20, roots()).chats;
@@ -122,15 +125,15 @@ test("with several chats the user chooses; the user's own come before job chats"
 });
 
 test("the user's one chat is resumed over job chats, even when a client note comes before the job tag", () => {
-  cursorChat(slug(repo), "c1", cursorUser("plan the trip"));
-  cursorChat(slug(repo), "j1", cursorUser("[acm job j_0123456789ab] A codex chat asked"));
-  cursorChat(slug(repo), "j2", cursorUser("Note: The user opened the file x.md. [acm job j_ba9876543210] asked"));
+  cursorChat(cursorDir(repo), "c1", cursorUser("plan the trip"));
+  cursorChat(cursorDir(repo), "j1", cursorUser("[acm job j_0123456789ab] A codex chat asked"));
+  cursorChat(cursorDir(repo), "j2", cursorUser("Note: The user opened the file x.md. [acm job j_ba9876543210] asked"));
   assert.equal(resume(db, session("codex", "x"), { roots: roots() }).chat, "c1");
 });
 
 test("the one chat in the repo wins over chats in a folder above; long messages are clipped", () => {
-  cursorChat(slug(repo), "c1", cursorUser("x".repeat(30_000)), cursorUser("y".repeat(2_000)));
-  cursorChat(slug(dirname(repo)), "c2", cursorUser("home chat"));
+  cursorChat(cursorDir(repo), "c1", cursorUser("x".repeat(30_000)), cursorUser("y".repeat(2_000)));
+  cursorChat(cursorDir(dirname(repo)), "c2", cursorUser("home chat"));
   const got = resume(db, session("codex", "x"), { roots: roots() });
   assert.equal(got.chat, "c1");
   assert.equal(got.omitted_messages, 1);
@@ -294,13 +297,13 @@ test("Codex's own review subagents and internal context blocks are not the user'
 
 test("a process keeps its chat when a worker's chat is newer, and moves only to a new chat the user started", () => {
   const r = roots();
-  const mine = cursorChat(slug(repo), "mine", cursorUser("plan the trip"));
+  const mine = cursorChat(cursorDir(repo), "mine", cursorUser("plan the trip"));
   utimesSync(mine, 1000, 1000);
   // The caller's process settles on its chat.
   let caller = currentChat("cursor", repo, r, undefined, null);
   assert.equal(caller?.chat, "mine");
   // It delegates to its own kind: the worker's chat appears and is newer. The caller stays where it is.
-  const job = cursorChat(slug(repo), "job", cursorUser("[acm job j_0123456789ab] A cursor chat asked for this"));
+  const job = cursorChat(cursorDir(repo), "job", cursorUser("[acm job j_0123456789ab] A cursor chat asked for this"));
   utimesSync(job, 2000, 2000);
   caller = currentChat("cursor", repo, r, caller ?? undefined, null);
   assert.equal(caller?.chat, "mine");
@@ -314,7 +317,7 @@ test("a process keeps its chat when a worker's chat is newer, and moves only to 
   utimesSync(job, 4000, 4000);
   assert.equal(currentChat("cursor", repo, r, undefined, false)?.chat, "mine");
   // The user starts a new chat in the caller's window (/clear): the caller moves to it.
-  const fresh = cursorChat(slug(repo), "fresh", cursorUser("something new"));
+  const fresh = cursorChat(cursorDir(repo), "fresh", cursorUser("something new"));
   utimesSync(fresh, 5000, 5000);
   caller = currentChat("cursor", repo, r, caller ?? undefined, null);
   assert.equal(caller?.chat, "fresh");
@@ -326,7 +329,7 @@ test("a process keeps its chat when a worker's chat is newer, and moves only to 
 
 test("listing chats and finding the user's one chat read only the start of each file", () => {
   // A first message past the part that is read doesn't count; one inside it does, whatever follows it.
-  cursorChat(slug(repo), "big", cursorUser("the question"), cursorReply("x".repeat(600_000)), cursorUser("later"));
+  cursorChat(cursorDir(repo), "big", cursorUser("the question"), cursorReply("x".repeat(600_000)), cursorUser("later"));
   const listed = chats(db, session("codex", "x"), 5, roots()).chats;
   assert.equal(listed[0].first, "the question");
   assert.equal(resume(db, session("codex", "x"), { roots: roots() }).chat, "big");
