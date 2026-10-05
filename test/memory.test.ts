@@ -278,4 +278,66 @@ describe("search, holds, sweep", () => {
     assert.deepEqual(left, [caller.id]);
     assert.deepEqual(db.prepare("PRAGMA foreign_key_check").all(), []);
   });
+
+  test("holding another file keeps the ones already held; [] releases them all", () => {
+    const a = chat("claude", "a");
+    const b = chat("codex", "b");
+    context(db, a, { hold: ["a.ts"] });
+    context(db, a, { hold: ["b.ts"] });
+    assert.deepEqual(
+      (context(db, b, { hold: ["a.ts", "c.ts"] }).busy as { path: string }[]).map((x) => x.path),
+      ["a.ts"],
+    );
+    context(db, a, { hold: [] });
+    assert.equal(context(db, b, { hold: ["a.ts"] }).busy, undefined);
+  });
+});
+
+describe("seen marks", () => {
+  test("a note written while context reads is shown next time, not marked seen unshown", () => {
+    const a = chat("claude", "a");
+    const b = chat("codex", "b");
+    context(db, a);
+    const prepare = db.prepare.bind(db);
+    let wrote = false;
+    // Another agent writes a note in the middle of a's context call.
+    db.prepare = ((sql: string) => {
+      if (!wrote && sql.includes("FROM jobs WHERE project_id = ? AND seq >")) {
+        wrote = true;
+        noteAdd(db, b, { text: "Written mid-read by codex." });
+      }
+      return prepare(sql);
+    }) as typeof db.prepare;
+    try {
+      context(db, a);
+    } finally {
+      db.prepare = prepare;
+    }
+    assert.ok(wrote);
+    const next = context(db, a).notes as { body: string }[];
+    assert.ok(next.some((n) => n.body === "Written mid-read by codex."));
+  });
+
+  test("every job since the last call is shown, not just the newest five", () => {
+    const a = chat("claude", "a");
+    context(db, a);
+    for (let i = 0; i < 7; i++) {
+      db.prepare(
+        `INSERT INTO jobs (id, project_id, caller_session_id, folder, kind, agent_name, summary, task, prompt, state, started_at)
+         VALUES (?, ?, 'other', ?, 'codex', 'codex-x', 's', ?, '', 'done', '2026-01-01T00:00:00Z')`,
+      ).run(`j_${i}`, a.project_id, a.root, `task ${i}`);
+    }
+    assert.equal((context(db, a).jobs as string[]).length, 7);
+  });
+});
+
+test("a noted file is marked stale when it changes, and not while it is the same", () => {
+  // Unchanged size and modified time: the hash is reused, as make and git trust them.
+  const a = chat("claude", "a");
+  writeFileSync(join(repo, "plan.md"), "one\n");
+  noteAdd(db, a, { text: "The plan is in plan.md.", tier: "long" });
+  assert.equal(context(db, a).stale, undefined);
+  assert.equal(context(db, a).stale, undefined); // from the cache
+  writeFileSync(join(repo, "plan.md"), "two, and longer\n");
+  assert.deepEqual((context(db, a).stale as { files: string[] }[])[0].files, ["plan.md"]);
 });

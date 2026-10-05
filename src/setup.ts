@@ -114,20 +114,27 @@ function jsonConfig(
   return step === "add" ? "configured" : `updated (was: ${current?.join(" ")})`;
 }
 
-/** Point Codex's acm entry at a new command by rewriting only its command and args lines, so the tables under
- * it (per-tool approvals) stay. False when the entry isn't in that simple form. TOML takes JSON strings and arrays. */
-export function editCodexEntry(file: string, cmd: string[]): boolean {
+/** config.toml's lines, and where acm's [mcp_servers.acm] table starts and ends; null if the file or table isn't there. */
+function codexSection(file: string): { lines: string[]; start: number; end: number } | null {
   let text: string;
   try {
     text = readFileSync(file, "utf8");
   } catch {
-    return false;
+    return null;
   }
   const lines = text.split("\n");
   const start = lines.findIndex((l) => l.trim() === "[mcp_servers.acm]");
-  if (start < 0) return false;
+  if (start < 0) return null;
   const next = lines.findIndex((l, i) => i > start && /^\s*\[/.test(l));
-  const end = next < 0 ? lines.length : next;
+  return { lines, start, end: next < 0 ? lines.length : next };
+}
+
+/** Point Codex's acm entry at a new command by rewriting only its command and args lines, so the tables under
+ * it (per-tool approvals) stay. False when the entry isn't in that simple form. TOML takes JSON strings and arrays. */
+export function editCodexEntry(file: string, cmd: string[]): boolean {
+  const section = codexSection(file);
+  if (!section) return false;
+  const { lines, start, end } = section;
   const at = (re: RegExp) => lines.findIndex((l, i) => i > start && i < end && re.test(l));
   const command = at(/^\s*command\s*=/);
   const args = at(/^\s*args\s*=\s*\[.*\]\s*$/);
@@ -141,17 +148,9 @@ export function editCodexEntry(file: string, cmd: string[]): boolean {
 /** Let Codex run every acm tool without asking: one setting on acm's entry, which also covers tools acm adds
  * later. An approval setting already there, whatever its value, is the user's and stays. True if it was added. */
 export function approveCodexTools(file: string): boolean {
-  let text: string;
-  try {
-    text = readFileSync(file, "utf8");
-  } catch {
-    return false;
-  }
-  const lines = text.split("\n");
-  const start = lines.findIndex((l) => l.trim() === "[mcp_servers.acm]");
-  if (start < 0) return false;
-  const next = lines.findIndex((l, i) => i > start && /^\s*\[/.test(l));
-  const end = next < 0 ? lines.length : next;
+  const section = codexSection(file);
+  if (!section) return false;
+  const { lines, start, end } = section;
   if (lines.slice(start + 1, end).some((l) => /^\s*default_tools_approval_mode\s*=/.test(l))) return false;
   lines.splice(start + 1, 0, 'default_tools_approval_mode = "approve"');
   writeAtomic(file, lines.join("\n"));

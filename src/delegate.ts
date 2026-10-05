@@ -1,5 +1,5 @@
 /** Start other agents, send each a brief, and wait for them: in herdr panes if herdr is installed, else in the background. */
-import { execFile, spawn } from "node:child_process";
+import { execFile, spawn, spawnSync } from "node:child_process";
 import {
   closeSync,
   existsSync,
@@ -105,15 +105,23 @@ export function spawnJob(base: string, cmd: string[], folder: string): void {
     windowsHide: true,
     env: { ...process.env, ACM_DELEGATED: "1" },
   });
-  writeFileSync(`${base}.pid`, String(child.pid));
+  // A wrapper that can't start (out of processes, say) ends the job with that error instead of ending this server.
+  child.on("error", (err) => {
+    writeFileSync(`${base}.log`, `acm could not start the job: ${err.message}\n`, { flag: "a" });
+    writeFileSync(`${base}.exit`, "1\n");
+  });
+  writeFileSync(`${base}.pid`, String(child.pid ?? ""));
   child.unref();
 }
 
 export function defaultDeps(roots: Roots = {}): Deps {
   return {
     herdr: runHerdr,
+    // A server that can't start shows up as herdr still not answering, which ensureServer reports.
     startServer: () =>
-      spawn("herdr", ["--session", SESSION, "server"], { detached: true, stdio: "ignore", windowsHide: true }).unref(),
+      spawn("herdr", ["--session", SESSION, "server"], { detached: true, stdio: "ignore", windowsHide: true })
+        .on("error", () => {})
+        .unref(),
     useHerdr: () => which("herdr") !== null,
     spawnJob,
     installed: (binary) => which(binary) !== null,
@@ -213,7 +221,17 @@ export function agentName(kind: string, folder: string): string {
 
 async function agents(deps: Deps): Promise<Map<string, Json>> {
   if (!deps.useHerdr()) return new Map();
-  const list = await herdr(deps, "agent", "list");
+  let list: Json;
+  try {
+    list = await herdr(deps, "agent", "list");
+  } catch (err) {
+    if (!(err instanceof HerdrError)) throw err;
+    // The herdr server stopped (a reboot, herdr server stop): its agents went with it. Start it again, so the
+    // jobs are checked against what is left and reported, rather than every wait failing.
+    if (err.code !== "server_not_running") throw new AcmError("unavailable", `herdr: ${err.message}`);
+    await ensureServer(deps);
+    list = await herdr(deps, "agent", "list");
+  }
   const all = (Array.isArray(list.agents) ? list.agents : []).map(obj);
   return new Map(all.map((a) => [a.name ? text(a.name) : `pane:${text(a.pane_id)}`, a]));
 }
@@ -266,7 +284,11 @@ function cleanJobs(db: Db, home: string): void {
   const cutoff = Date.now() - JOB_FILE_DAYS * 86_400_000;
   for (const name of readdirSync(folder)) {
     const path = join(folder, name);
-    if (!open.has(name.split(".")[0]) && statSync(path).mtimeMs < cutoff) unlinkSync(path);
+    try {
+      if (!open.has(name.split(".")[0]) && statSync(path).mtimeMs < cutoff) unlinkSync(path);
+    } catch {
+      // another acm process cleaned it first
+    }
   }
 }
 
@@ -276,7 +298,7 @@ function headless(kind: string, folder: string, answer: string): string[] {
     codex: ["codex", "exec", ...FLAGS.codex, "--skip-git-repo-check", "--cd", folder, "-o", answer, "-"],
     claude: ["claude", "-p", ...FLAGS.claude, "--permission-prompts", "none"],
     cursor: ["cursor-agent", "-p", ...FLAGS.cursor],
-    opencode: ["opencode", "run", "--auto", "--dir", folder],
+    opencode: ["opencode", "run", ...FLAGS.opencode, "--dir", folder],
   }[kind] as string[];
 }
 
@@ -294,10 +316,12 @@ function stopJob(base: string): boolean {
   if (!pid) return false;
   try {
     if (process.platform === "win32") {
-      spawn("taskkill", ["/PID", String(pid), "/T", "/F"], { stdio: "ignore", windowsHide: true });
-    } else {
-      process.kill(-pid, "SIGKILL");
+      // Waited for: a taskkill that can't start is a result here, not an error event that ends this process.
+      // 128: no such process, so it is gone already.
+      const killed = spawnSync("taskkill", ["/PID", String(pid), "/T", "/F"], { stdio: "ignore", windowsHide: true });
+      return killed.status === 0 || killed.status === 128;
     }
+    process.kill(-pid, "SIGKILL");
     return true;
   } catch (err) {
     return (err as NodeJS.ErrnoException).code === "ESRCH";
@@ -381,9 +405,15 @@ function transcriptOf(deps: Deps, job: Json, agent: Json): string | null {
     return latest && chatBytes(kind, latest.path).includes(tag) ? latest.path : null;
   }
   const since = Date.parse(text(job.started_at)) - 5000;
-  for (const rel of readdirSync(base, { recursive: true }) as string[]) {
-    if (!rel.endsWith(".jsonl")) continue;
-    const path = join(base, rel);
+  // Claude Code and Cursor keep chats per project, so only this folder's are looked at. Codex keeps every
+  // project's by date: listing them all is cheaper than opening each to ask whose it is.
+  const paths =
+    kind === "codex"
+      ? (readdirSync(base, { recursive: true }) as string[])
+          .filter((p) => p.endsWith(".jsonl"))
+          .map((p) => join(base, p))
+      : READERS[kind].chats(base, text(job.folder)).map((c) => c.path);
+  for (const path of paths) {
     try {
       if (statSync(path).mtimeMs >= since && appended(path, tag, text(job.id))) return path;
     } catch {
@@ -394,29 +424,42 @@ function transcriptOf(deps: Deps, job: Json, agent: Json): string | null {
 }
 
 /**
- * The last answer of the turn the job's brief started, once that turn has ended; null while it is still working.
+ * How the turn the job's brief started ended, with its last answer; null while it is still working.
  * Only that turn: a later turn in the same chat (the user typing in the pane, the next job) is not this job's result.
  */
-function finished(kind: string, raw: Buffer, jobId: string): string | null {
+function finished(kind: string, raw: Buffer, jobId: string): [string, string] | null {
   const offset = raw.indexOf(marker(jobId));
   if (offset < 0) return null;
   let line = raw.indexOf(10, offset) + 1;
   if (line === 0) return null;
   let end = -1;
+  let failure = "";
   while (line < raw.length && end < 0) {
     const newline = raw.indexOf(10, line);
     const stop = newline < 0 ? raw.length : newline;
     try {
-      if (stop > line && READERS[kind].turnEnded(obj(JSON.parse(raw.subarray(line, stop).toString("utf8")))))
+      const record = stop > line ? obj(JSON.parse(raw.subarray(line, stop).toString("utf8"))) : {};
+      if (READERS[kind].turnEnded(record)) {
         end = stop;
+        failure = READERS[kind].turnError?.(record) ?? "";
+      }
     } catch {
       // partial line
     }
     line = stop + 1;
   }
   if (end < 0) return null;
-  const answers = parse(kind, raw.subarray(0, end + 1), offset).records.filter((r) => r.role === "assistant");
-  return answers.length ? answers[answers.length - 1].text : "";
+  // The whole turn, however long.
+  const answers = parse(kind, raw.subarray(0, end + 1), offset, end + 1).records.filter((r) => r.role === "assistant");
+  const answer = answers.length ? answers[answers.length - 1].text : "";
+  // The agent's own failure (its service timed out, say) is not a finished job, whatever it said first.
+  if (failure) {
+    return [
+      "gone",
+      `${kind} stopped with an error before it finished: ${failure}. Its last message: ${oneLine(answer, 200) || "(none)"}. Delegate the task again.`,
+    ];
+  }
+  return [ASKS.test(answer) ? "needs_approval" : "done", answer];
 }
 
 /**
@@ -479,8 +522,8 @@ async function check(
   if (!agent) {
     // The pane may have been closed after the agent finished: its chat still has the result.
     const path = transcriptOf(deps, job, {});
-    const answer = path ? finished(text(job.kind), chatBytes(text(job.kind), path), text(job.id)) : null;
-    if (answer !== null) return [ASKS.test(answer) ? "needs_approval" : "done", answer];
+    const ended = path ? finished(text(job.kind), chatBytes(text(job.kind), path), text(job.id)) : null;
+    if (ended) return ended;
     return [
       "gone",
       `The agent exited or its pane was closed. Last lines: ${(await paneTail(deps, text(job.pane))) || "(none)"}`,
@@ -492,11 +535,23 @@ async function check(
     if (!claim(db, job, "running")) return [text(job.state), null];
     return send(deps, name, text(job.prompt), text(job.pane));
   }
+  // No chat folder for this agent where acm looks (another config dir, an unconfirmed platform): a missing
+  // marker says nothing. Resending would make it do the work twice. Once it is idle, report its screen.
+  if (!existsSync(rootOf(text(job.kind), deps.roots))) {
+    if (status === "blocked") return ["blocked", await paneTail(deps, text(job.pane))];
+    if ((status === "idle" || status === "done") && age(job) > LIMITS.resendAfter) {
+      return [
+        "done",
+        `${name} finished, but acm can't read its chat (no ${rootOf(text(job.kind), deps.roots)}). Its pane shows: ${(await paneTail(deps, text(job.pane))) || "(nothing)"}`,
+      ];
+    }
+    return ["running", null];
+  }
   const path = transcriptOf(deps, job, agent);
   if (path && !job.transcript) db.prepare("UPDATE jobs SET transcript = ? WHERE id = ?").run(path, text(job.id));
   const raw = path ? chatBytes(text(job.kind), path) : Buffer.alloc(0);
-  const answer = raw.length ? finished(text(job.kind), raw, text(job.id)) : null;
-  if (answer !== null) return [ASKS.test(answer) ? "needs_approval" : "done", answer];
+  const ended = raw.length ? finished(text(job.kind), raw, text(job.id)) : null;
+  if (ended) return ended;
   if (status === "blocked") return ["blocked", await paneTail(deps, text(job.pane))];
   const idleWithout = (status === "idle" || status === "done") && !raw.includes(marker(job));
   // A freshly started agent can drop its first brief; send it once more.
@@ -525,7 +580,16 @@ async function check(
 /** Bring every given open job up to date: finished ones get their result, a timeline event, and free their files. */
 async function refresh(db: Db, deps: Deps, home: string, jobs: Json[], live: Map<string, Json>): Promise<void> {
   for (const job of jobs) {
-    const [state, result] = await check(db, deps, home, job, live);
+    let state: string;
+    let result: string | null;
+    try {
+      [state, result] = await check(db, deps, home, job, live);
+    } catch (err) {
+      // One job's failing herdr call (a rename, a prompt) leaves that job for the next refresh, not the others.
+      if (!(err instanceof HerdrError)) throw err;
+      debug(`check ${text(job.id)} failed: ${err.message}`, performance.now());
+      continue;
+    }
     if (state === job.state && result === null) continue;
     const done = FINISHED.includes(state);
     transaction(db, () => {
@@ -809,6 +873,7 @@ export async function delegate(
 
     for (const { j, state, result: failed, pane } of ready) {
       transaction(db, () => {
+        // started_at again: the job's clock (resend, lost brief, time limit) runs from the brief, not the reservation.
         db.prepare(
           "UPDATE jobs SET pane = ?, prompt = ?, state = ?, result = ?, started_at = ?, finished_at = ? WHERE id = ?",
         ).run(pane, j.prompt, state, failed, now(), FINISHED.includes(state) ? now() : null, j.id);
