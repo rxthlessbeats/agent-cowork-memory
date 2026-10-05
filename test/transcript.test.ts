@@ -7,6 +7,7 @@ import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, test } from "node:test";
 import { connect, type Db } from "../src/db.ts";
 import { context, noteAdd, sessionFor } from "../src/memory.ts";
+import { dashes, slug } from "../src/readers/index.ts";
 import { opencode } from "../src/readers/opencode.ts";
 import { chats, currentChat, resume } from "../src/transcript.ts";
 
@@ -18,7 +19,7 @@ let root: string;
 function gitRepo(path: string): string {
   mkdirSync(path, { recursive: true });
   execFileSync("git", ["-C", path, "init", "-q"]);
-  return realpathSync(path);
+  return realpathSync.native(path);
 }
 
 function write(path: string, ...lines: unknown[]): string {
@@ -27,8 +28,6 @@ function write(path: string, ...lines: unknown[]): string {
   return path;
 }
 
-const slug = (p: string) => p.replace(/^\/+/, "").replaceAll("/", "-");
-const dashes = (p: string) => p.replace(/[^A-Za-z0-9]/g, "-");
 const cursorUser = (text: string) => ({ role: "user", message: { content: [{ type: "text", text }] } });
 const cursorReply = (text: string) => ({ role: "assistant", message: { content: [{ type: "text", text }] } });
 const codexMsg = (role: string, text: string) => ({
@@ -54,7 +53,7 @@ beforeEach(() => {
 
 afterEach(() => {
   db.close();
-  rmSync(dir, { recursive: true, force: true });
+  rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 test("resume reads each agent's newest chat and continues its thread", () => {
