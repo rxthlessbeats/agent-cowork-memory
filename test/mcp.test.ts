@@ -63,12 +63,17 @@ beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), "acm-mcp-"));
   repo = join(dir, "repo");
   execFileSync("git", ["init", "-q", repo]);
-  repo = realpathSync(repo);
+  repo = realpathSync.native(repo);
 });
 
-afterEach(() => {
-  client?.close();
-  rmSync(dir, { recursive: true, force: true });
+afterEach(async () => {
+  if (client) {
+    const proc = client.proc;
+    const exited = new Promise((resolve) => proc.once("exit", resolve));
+    proc.kill();
+    await Promise.race([exited, new Promise((resolve) => setTimeout(resolve, 2000))]);
+  }
+  rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
 });
 
 test("seven tools; the agent comes from the client name; repo_path defaults to the working directory", async () => {

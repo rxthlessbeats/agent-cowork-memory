@@ -189,7 +189,7 @@ beforeEach(() => {
   db = connect(home);
   folder = join(dir, "work");
   mkdirSync(folder);
-  folder = realpathSync(folder);
+  folder = realpathSync.native(folder);
   const roots: Record<string, string> = {};
   for (const k of ["codex", "cursor", "claude", "opencode"]) {
     roots[k] = join(dir, "t", k);
@@ -204,7 +204,7 @@ beforeEach(() => {
 
 afterEach(() => {
   db.close();
-  rmSync(dir, { recursive: true, force: true });
+  rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 function run(tasks: Task[], summary = "Plan a Lisbon trip.", s: Session = caller, deps = fake.deps()) {
@@ -404,7 +404,7 @@ test("one pane per agent, two panes per tab, and OpenCode gets a tab to itself",
   fake = new FakeHerdr(fake.roots);
   fake.finish = false;
   mkdirSync(join(dir, "other"));
-  const elsewhere = realpathSync(join(dir, "other"));
+  const elsewhere = realpathSync.native(join(dir, "other"));
   const s = sessionFor(db, { harness: "cursor", chat: "c2", folder: elsewhere });
   await run(
     ["opencode", "claude", "codex", "cursor"].map((to) => ({ to, task: "x" })),
@@ -483,18 +483,22 @@ test("a stalled start doesn't shrink the others' budget; it stays starting and g
 test("briefs go out at once, so slow briefs don't add up", async () => {
   const deps = fake.deps();
   const herdrCall = deps.herdr;
+  const starts: number[] = [];
   deps.herdr = async (args, raw) => {
-    if (args[0] === "agent" && args[1] === "prompt") await new Promise((r) => setTimeout(r, 200));
+    if (args[0] === "agent" && args[1] === "prompt") {
+      starts.push(performance.now());
+      await new Promise((r) => setTimeout(r, 200));
+    }
     return herdrCall(args, raw);
   };
-  const t0 = performance.now();
   await run(
     ["codex", "claude", "cursor", "opencode"].map((to) => ({ to, task: "x" })),
     "Four.",
     caller,
     deps,
   );
-  assert.ok(performance.now() - t0 < 700, `four 200 ms briefs took ${Math.round(performance.now() - t0)} ms`);
+  const spread = Math.max(...starts) - Math.min(...starts);
+  assert.ok(spread < 150, `four briefs started ${Math.round(spread)} ms apart`);
   assert.equal(fake.prompts.length, 4);
 });
 
@@ -625,6 +629,15 @@ test("without herdr, agents run in the background with the brief on stdin", asyn
   );
 });
 
+const alive = (pid: number) => {
+  try {
+    process.kill(process.platform === "win32" ? pid : -pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 test("a background job still running at the limit is stopped, process tree and all", async () => {
   LIMITS.jobSeconds = -1;
   const pids: number[] = [];
@@ -632,10 +645,12 @@ test("a background job still running at the limit is stopped, process tree and a
     ...fake.deps(),
     useHerdr: () => false,
     spawnJob: (base, _cmd, cwd) => {
-      spawnJob(base, ["sleep", "30"], cwd);
+      // Windows has no sleep, and no process groups: a ping that stays up, checked by its own pid.
+      const hold = process.platform === "win32" ? ["ping", "-n", "31", "127.0.0.1"] : ["sleep", "30"];
+      spawnJob(base, hold, cwd);
       const pid = Number(readFileSync(`${base}.pid`, "utf8"));
       assert.ok(pid > 0);
-      process.kill(-pid, 0); // the job's process group is running before acm stops it
+      assert.ok(alive(pid), "the job is running before acm stops it");
       pids.push(pid);
     },
   };
@@ -644,14 +659,10 @@ test("a background job still running at the limit is stopped, process tree and a
   assert.match((stopped.jobs as Json[])[0].result as string, /no result.*approval/s);
   let gone = false;
   for (let i = 0; i < 40 && !gone; i++) {
-    try {
-      process.kill(-pids[0], 0);
-      await new Promise((r) => setTimeout(r, 50));
-    } catch {
-      gone = true;
-    }
+    if (!alive(pids[0])) gone = true;
+    else await new Promise((r) => setTimeout(r, 50));
   }
-  assert.ok(gone, "the job's process group is still there");
+  assert.ok(gone, "the job's process is still there");
 });
 
 test("the brief leaves out empty sections", () => {
@@ -688,7 +699,7 @@ test("wait: true behind a task in the same call is queued after it, with and wit
   // With herdr: B is not briefed until A's turn has ended.
   fake.finish = false;
   mkdirSync(join(dir, "second"));
-  const second = sessionFor(db, { harness: "claude", chat: "c", folder: realpathSync(join(dir, "second")) });
+  const second = sessionFor(db, { harness: "claude", chat: "c", folder: realpathSync.native(join(dir, "second")) });
   const inPanes = await run(
     [
       { to: "cursor", task: "A" },
