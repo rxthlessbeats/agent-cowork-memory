@@ -16,9 +16,13 @@ export function doctor(home: string) {
   } catch {
     writable = false;
   }
-  const db = connect(home);
-  const fts5 = Boolean(db.prepare("SELECT sqlite_compileoption_used('ENABLE_FTS5') AS on_").get()?.on_);
-  db.close();
+  // An unwritable home is what doctor is for: report it rather than fail opening the database there.
+  let fts5 = false;
+  if (writable) {
+    const db = connect(home);
+    fts5 = Boolean(db.prepare("SELECT sqlite_compileoption_used('ENABLE_FTS5') AS on_").get()?.on_);
+    db.close();
+  }
   return {
     version: VERSION,
     node: process.versions.node,
@@ -70,6 +74,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
     },
   });
   const home = homeDir(values.home);
+  process.env.ACM_HOME = home; // so debug.log, and the background jobs acm starts, use the same home
   const command = positionals[0];
   try {
     if (values.version) return print(VERSION);

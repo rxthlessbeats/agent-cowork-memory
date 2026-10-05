@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { test } from "node:test";
 import { backup, doctor, VERSION } from "../src/cli.ts";
+import { debug } from "../src/util.ts";
 
 test("doctor reports the install; backup copies a readable database", () => {
   const home = mkdtempSync(join(tmpdir(), "acm-"));
@@ -38,5 +39,26 @@ test("a home with 0.2's database keeps it untouched and starts a fresh one", asy
     again.close();
   } finally {
     rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("doctor reports a home it can't write instead of failing; a debug line never fails the work", () => {
+  const dir = mkdtempSync(join(tmpdir(), "acm-"));
+  try {
+    const file = join(dir, "not-a-folder");
+    writeFileSync(file, "");
+    assert.equal(doctor(join(file, "home")).writable, false);
+    const was = [process.env.ACM_DEBUG, process.env.ACM_HOME];
+    process.env.ACM_DEBUG = "1";
+    process.env.ACM_HOME = join(file, "home");
+    try {
+      assert.doesNotThrow(() => debug("tool context", performance.now()));
+    } finally {
+      [process.env.ACM_DEBUG, process.env.ACM_HOME] = was;
+      if (was[0] === undefined) delete process.env.ACM_DEBUG;
+      if (was[1] === undefined) delete process.env.ACM_HOME;
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 });

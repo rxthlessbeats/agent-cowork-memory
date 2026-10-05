@@ -3,6 +3,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { isAbsolute, join, relative, sep } from "node:path";
 import { type Db, transaction } from "./db.ts";
 import { canonical, projectRoot } from "./project.ts";
+import { samePath } from "./readers/index.ts";
 import { AcmError, daysAgo, inDays, newId, now, oneLine } from "./util.ts";
 
 export const OPEN_JOB = ["starting", "running", "blocked", "queued"]; // queued: waiting for its busy agent
@@ -17,7 +18,8 @@ const RECENT_JOBS = 5;
 const CHECK = 3; // notes returned by note_add's contradiction check
 const NOTE_FILES = 10;
 
-export type Session = {
+/** A sessions row, with the project's root. */
+type SessionRow = {
   id: string;
   project_id: string;
   root: string;
@@ -29,6 +31,11 @@ export type Session = {
   seen_event: number;
   seen_job: number;
   context_calls: number;
+};
+
+export type Session = SessionRow & {
+  /** False when the user started this chat, true when acm did for a job; unset when that can't be told. */
+  delegated?: boolean;
 };
 
 type Row = Record<string, unknown>;
@@ -67,12 +74,16 @@ export function sessionFor(db: Db, opts: { harness: string; chat: string; folder
   ).run(newId("s_"), project, opts.harness, opts.chat, folder, stamp, stamp);
   const row = db
     .prepare("SELECT * FROM sessions WHERE project_id = ? AND harness = ? AND chat = ?")
-    .get(project, opts.harness, opts.chat) as Session;
+    .get(project, opts.harness, opts.chat) as SessionRow;
   return { ...row, root };
 }
 
 function reload(db: Db, s: Session): Session {
-  return { ...(db.prepare("SELECT * FROM sessions WHERE id = ?").get(s.id) as Session), root: s.root };
+  return {
+    ...(db.prepare("SELECT * FROM sessions WHERE id = ?").get(s.id) as SessionRow),
+    root: s.root,
+    delegated: s.delegated,
+  };
 }
 
 export function addEvent(db: Db, threadId: string, sessionId: string | null, kind: string, text: string): void {
@@ -124,12 +135,16 @@ export function joinThread(db: Db, s: Session, threadId: string): void {
     });
   }
   // A delegated agent joins the thread its brief names: that links it to its open job. A reused agent is
-  // often on that thread already, so link first.
-  db.prepare(
-    `UPDATE jobs SET worker_session_id = ? WHERE seq = (
-       SELECT seq FROM jobs WHERE thread_id = ? AND kind = ? AND folder = ? AND worker_session_id IS NULL
-         AND state IN (${OPEN_SQL}) ORDER BY seq LIMIT 1)`,
-  ).run(s.id, threadId, s.harness, s.root);
+  // often on that thread already, so link first. Never the job's caller, and never a chat the user started:
+  // a user's second chat joining the thread is not the worker. sending: the brief is out, its row not yet updated.
+  if (s.delegated !== false) {
+    db.prepare(
+      `UPDATE jobs SET worker_session_id = ? WHERE seq = (
+         SELECT seq FROM jobs WHERE thread_id = ? AND kind = ? AND folder = ? AND worker_session_id IS NULL
+           AND state IN (${OPEN_SQL}, 'sending') AND caller_session_id != ?
+         ORDER BY seq LIMIT 1)`,
+    ).run(s.id, threadId, s.harness, s.root, s.id);
+  }
   reopen(db, threadId, s);
   if (s.thread_id === threadId) return;
   db.prepare("UPDATE sessions SET thread_id = ? WHERE id = ?").run(threadId, s.id);
@@ -145,9 +160,18 @@ function liveNote(db: Db, projectId: string, id: string): Note | undefined {
     | undefined;
 }
 
+// context checks every noted file on every call: hash one again only when its size or modified time changed.
+const hashes = new Map<string, { stamp: string; hash: string }>();
+
 function hashFile(path: string): string | null {
   try {
-    return createHash("sha256").update(readFileSync(path)).digest("hex");
+    const { size, mtimeMs } = statSync(path);
+    const stamp = `${size} ${mtimeMs}`;
+    const known = hashes.get(path);
+    if (known?.stamp === stamp) return known.hash;
+    const hash = createHash("sha256").update(readFileSync(path)).digest("hex");
+    hashes.set(path, { stamp, hash });
+    return hash;
   } catch {
     return null;
   }
@@ -325,19 +349,26 @@ export function relPath(path: string): string {
   return parts.join("/");
 }
 
-/** Replace this session's holds. Returns paths someone else holds, changing nothing then. */
+/**
+ * Add to this session's holds; [] releases them all. Returns paths someone else holds, changing nothing then.
+ * Adds, not replaces: a worker holds files as it comes to them, and must keep the ones it is still editing.
+ */
 export function claim(db: Db, s: Session, paths: string[]): string[] {
   const wanted = [...new Set(paths.map(relPath))];
   return transaction(db, () => {
-    const taken = new Set(
-      (
-        db.prepare("SELECT path FROM holds WHERE project_id = ? AND session_id != ?").all(s.project_id, s.id) as Row[]
-      ).map((r) => r.path as string),
-    );
-    const busy = wanted.filter((p) => taken.has(p));
-    if (!busy.length) {
+    if (!wanted.length) {
       db.prepare("DELETE FROM holds WHERE session_id = ?").run(s.id);
-      const insert = db.prepare("INSERT INTO holds (project_id, path, session_id, created_at) VALUES (?, ?, ?, ?)");
+      return [];
+    }
+    const taken = (
+      db.prepare("SELECT path FROM holds WHERE project_id = ? AND session_id != ?").all(s.project_id, s.id) as Row[]
+    ).map((r) => r.path as string);
+    // samePath: src/App.ts and src/app.ts are one file where the file system ignores case.
+    const busy = wanted.filter((p) => taken.some((t) => samePath(t, p)));
+    if (!busy.length) {
+      const insert = db.prepare(
+        "INSERT OR IGNORE INTO holds (project_id, path, session_id, created_at) VALUES (?, ?, ?, ?)",
+      );
       for (const path of wanted) insert.run(s.project_id, path, s.id, now());
     }
     return busy;
@@ -384,6 +415,16 @@ export function context(db: Db, given: Session, opts: { hold?: string[]; thread?
   }
   const busy = opts.hold !== undefined ? claim(db, s, opts.hold) : [];
   s = reload(db, s);
+  // Read up to these marks, and record them as seen: whatever another agent writes after this is shown next time.
+  const maxNote = Number(
+    (db.prepare("SELECT MAX(seq) AS m FROM notes WHERE project_id = ?").get(s.project_id) as Row).m ?? 0,
+  );
+  const maxEvent = s.thread_id
+    ? Number((db.prepare("SELECT MAX(id) AS m FROM events WHERE thread_id = ?").get(s.thread_id) as Row).m ?? 0)
+    : 0;
+  const maxJob = Number(
+    (db.prepare("SELECT MAX(seq) AS m FROM jobs WHERE project_id = ?").get(s.project_id) as Row).m ?? 0,
+  );
   // A chat's first call, or its first look at a thread it just joined, gets the full picture.
   const first = s.context_calls === 0 || switching;
   const stamp = now();
@@ -394,8 +435,8 @@ export function context(db: Db, given: Session, opts: { hold?: string[]; thread?
 
   // Notes: this thread's and every long note in full; other threads' short notes one line each.
   const notes = db
-    .prepare(`SELECT * FROM notes WHERE project_id = ? AND ${LIVE} AND seq > ? ORDER BY seq DESC`)
-    .all(s.project_id, stamp, first ? 0 : s.seen_note)
+    .prepare(`SELECT * FROM notes WHERE project_id = ? AND ${LIVE} AND seq > ? AND seq <= ? ORDER BY seq DESC`)
+    .all(s.project_id, stamp, first ? 0 : s.seen_note, maxNote)
     // After the first call, "new" means new from someone else: a chat knows what it wrote itself.
     .filter((n) => first || (n as Note).session_id !== s.id) as Note[];
   const mine = notes.filter((n) => n.tier === "long" || (n.thread_id && n.thread_id === s.thread_id));
@@ -418,11 +459,13 @@ export function context(db: Db, given: Session, opts: { hold?: string[]; thread?
   if (s.thread_id) {
     const events = first
       ? (db
-          .prepare("SELECT * FROM events WHERE thread_id = ? ORDER BY id DESC LIMIT ?")
-          .all(s.thread_id, FIRST_EVENTS) as Row[])
+          .prepare("SELECT * FROM events WHERE thread_id = ? AND id <= ? ORDER BY id DESC LIMIT ?")
+          .all(s.thread_id, maxEvent, FIRST_EVENTS) as Row[])
       : (db
-          .prepare("SELECT * FROM events WHERE thread_id = ? AND id > ? AND session_id IS NOT ? ORDER BY id DESC")
-          .all(s.thread_id, s.seen_event, s.id) as Row[]);
+          .prepare(
+            "SELECT * FROM events WHERE thread_id = ? AND id > ? AND id <= ? AND session_id IS NOT ? ORDER BY id DESC",
+          )
+          .all(s.thread_id, s.seen_event, maxEvent, s.id) as Row[]);
     if (events.length) out.timeline = events.reverse().map(eventLine);
   }
 
@@ -447,9 +490,10 @@ export function context(db: Db, given: Session, opts: { hold?: string[]; thread?
     }
   }
 
+  // The first call shows the recent few; later calls every job since, so none is marked seen unshown.
   const jobs = db
-    .prepare("SELECT * FROM jobs WHERE project_id = ? AND seq > ? ORDER BY seq DESC LIMIT ?")
-    .all(s.project_id, first ? 0 : s.seen_job, RECENT_JOBS) as Row[];
+    .prepare("SELECT * FROM jobs WHERE project_id = ? AND seq > ? AND seq <= ? ORDER BY seq DESC LIMIT ?")
+    .all(s.project_id, first ? 0 : s.seen_job, maxJob, first ? RECENT_JOBS : -1) as Row[];
   if (jobs.length) out.jobs = jobs.map(oneLineJob);
 
   const working = (
@@ -467,15 +511,6 @@ export function context(db: Db, given: Session, opts: { hold?: string[]; thread?
     out.busy = busy.map((path) => ({ path, agent: owners.get(path) }));
   }
 
-  const maxNote = Number(
-    (db.prepare("SELECT MAX(seq) AS m FROM notes WHERE project_id = ?").get(s.project_id) as Row).m ?? 0,
-  );
-  const maxEvent = s.thread_id
-    ? Number((db.prepare("SELECT MAX(id) AS m FROM events WHERE thread_id = ?").get(s.thread_id) as Row).m ?? 0)
-    : 0;
-  const maxJob = Number(
-    (db.prepare("SELECT MAX(seq) AS m FROM jobs WHERE project_id = ?").get(s.project_id) as Row).m ?? 0,
-  );
   db.prepare(
     "UPDATE sessions SET seen_note = ?, seen_event = ?, seen_job = ?, context_calls = context_calls + 1 WHERE id = ?",
   ).run(maxNote, maxEvent, maxJob, s.id);

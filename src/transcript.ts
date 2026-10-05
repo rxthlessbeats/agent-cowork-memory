@@ -172,6 +172,19 @@ function clip(message: string, size: number): string {
 /** The chat an acm server process is in, and the chats that existed when it settled there. */
 export type Pin = { chat: string; known: Set<string>; jobs: Map<string, boolean> };
 
+// A chat file's id never changes once its first lines are written, so it is read from the file once.
+const chatIds = new Map<string, string>();
+
+function chatId(harness: string, c: { path: string; mtime: number }): string {
+  const key = `${harness} ${c.path}`;
+  const known = chatIds.get(key);
+  if (known) return known;
+  const id = READERS[harness].nativeId(c.path);
+  // A file touched in the last minute may not have its id line yet: ask again next time.
+  if (Date.now() / 1000 - c.mtime > 60) chatIds.set(key, id);
+  return id;
+}
+
 /**
  * Which chat a call comes from, for agents that don't say (all but Codex). An agent keeps one acm server
  * across its chats, so "the newest chat" would be wrong as soon as another chat of that agent is written to,
@@ -197,7 +210,7 @@ export function currentChat(
   const all = reader
     .chats(base, repoRoot)
     .sort((a, b) => b.mtime - a.mtime)
-    .map((c) => ({ ...c, id: reader.nativeId(c.path) }));
+    .map((c) => ({ ...c, id: chatId(harness, c) }));
   if (!all.length) return null;
   const jobs = pin?.jobs ?? new Map<string, boolean>();
   const isJob = (c: { id: string; path: string }) => {
