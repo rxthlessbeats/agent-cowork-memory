@@ -20,7 +20,7 @@ test("doctor reports the install; backup copies a readable database", () => {
     assert.equal((copy.prepare("PRAGMA user_version").get() as { user_version: number }).user_version, 1);
     copy.close();
   } finally {
-    rmSync(home, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
   }
 });
 
@@ -38,7 +38,7 @@ test("a home with 0.2's database keeps it untouched and starts a fresh one", asy
     assert.equal((again.prepare("PRAGMA user_version").get() as { user_version: number }).user_version, 6);
     again.close();
   } finally {
-    rmSync(home, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
   }
 });
 
@@ -59,6 +59,6 @@ test("doctor reports a home it can't write instead of failing; a debug line neve
       if (was[1] === undefined) delete process.env.ACM_HOME;
     }
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
   }
 });

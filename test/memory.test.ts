@@ -20,7 +20,7 @@ function gitRepo(path: string): string {
   mkdirSync(path, { recursive: true });
   git(path, "init", "-q");
   git(path, "-c", "user.email=a@b", "-c", "user.name=t", "commit", "-q", "--allow-empty", "-m", "init");
-  return realpathSync(path);
+  return realpathSync.native(path);
 }
 
 function chat(harness: string, id: string, folder = repo): Session {
@@ -39,7 +39,7 @@ beforeEach(() => {
 
 afterEach(() => {
   db.close();
-  rmSync(dir, { recursive: true, force: true });
+  rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 describe("projects and sessions", () => {
@@ -55,7 +55,7 @@ describe("projects and sessions", () => {
     assert.equal(projectRoot(join(repo, "sub")), repo);
     const plain = join(dir, "plain");
     mkdirSync(plain);
-    assert.equal(projectRoot(plain), realpathSync(plain));
+    assert.equal(projectRoot(plain), realpathSync.native(plain));
     git(repo, "worktree", "add", "-q", join(dir, "wt"));
     assert.equal(projectRoot(join(dir, "wt")), repo);
     assert.equal(chat("claude", "x", join(dir, "wt")).project_id, chat("codex", "y").project_id);

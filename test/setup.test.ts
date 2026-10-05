@@ -87,7 +87,7 @@ beforeEach(() => {
   codexEntry = null;
 });
 
-afterEach(() => rmSync(home, { recursive: true, force: true }));
+afterEach(() => rmSync(home, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 }));
 
 test("setup configures all four agents through npx, keeps other servers, and a second run changes nothing", () => {
   mkdirSync(join(home, ".cursor"));
@@ -271,10 +271,12 @@ test("a symlinked config is written at its target, keeping its permissions", () 
   const link = join(home, "opencode.json");
   writeFileSync(target, "{}");
   chmodSync(target, 0o644);
+  const mode = statSync(target).mode & 0o777;
   symlinkSync(target, link);
   writeJson(link, { mcp: {} });
   assert.deepEqual(JSON.parse(readFileSync(target, "utf8")), { mcp: {} });
-  assert.equal(statSync(target).mode & 0o777, 0o644);
+  // Windows only keeps the write bit, so 0o644 may come back as 0o666. What matters is the rewrite didn't change it.
+  assert.equal(statSync(target).mode & 0o777, mode);
 });
 
 test("ours is any agent-cowork-memory or acm mcp entry; Windows starts npx through cmd", () => {
