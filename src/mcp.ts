@@ -2,16 +2,16 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
 import { connect, type Db } from "./db.ts";
-import { card, type Deps, defaultDeps, delegate, delegateWait, type Task } from "./delegate.ts";
+import { card, type Deps, defaultDeps, delegate, delegateWait, HerdrError, type Task } from "./delegate.ts";
 import { context, noteAdd, noteSearch, type Session, sessionFor } from "./memory.ts";
 import { projectRoot } from "./project.ts";
 import { obj, text } from "./readers/index.ts";
-import { chats, currentChat, HARNESSES, type Pin, resume } from "./transcript.ts";
+import { chats, currentChat, HARNESSES, opening, type Pin, READERS, resume, rootOf } from "./transcript.ts";
 import { AcmError, debug } from "./util.ts";
 import { VERSION } from "./version.ts";
 
 const CONTEXT =
-  "Call before working and before you edit a file. Returns your thread (related work across chats and agents) with its timeline, the project's notes (after the first call, only what's new), open threads, recent jobs, who is working, and held files. hold: repo-relative paths to claim before writing; a path in busy is someone else's, leave it; [] releases yours. thread: join that thread (from open_threads or your brief). done: true closes your thread. stale lists notes whose files changed: re-check each with note_add.";
+  "Call before working and before you edit a file. Returns your thread (related work across chats and agents) with its timeline, the project's notes (after the first call, only what's new), open threads, recent jobs, who is working, and held files. hold: repo-relative paths to claim before writing, added to what you hold; a path in busy is someone else's, leave it; [] releases yours. thread: join that thread (from open_threads or your brief). done: true closes your thread. stale lists notes whose files changed: re-check each with note_add.";
 const NOTE_ADD =
   "Save a note every agent in this project sees. tier long: stays true (decisions, conventions, gotchas, the user's preferences); short (default): progress and findings, kept 7 days. If the result has check, those notes are on the same topic: if yours makes one false, call again with supersedes set to its id. supersedes also confirms (same text) or corrects a stale note. Job results are saved already.";
 const NOTE_SEARCH = "Search this project's notes and delegated job results.";
@@ -95,13 +95,26 @@ export function buildServer(opts: ServerOptions, db: Db = connect(opts.home)): M
 
   // The chat this process is in, per agent and project; see currentChat.
   const pins = new Map<string, Pin>();
+  // Codex chats by id: true if the chat opens with an acm brief. A chat's opening never changes.
+  const startedByAcm = new Map<string, boolean>();
 
   /** This chat's session. Codex says which chat it is; for the others this process remembers its chat. */
   function session(ctx: Ctx, repo?: string): Session {
     const harness = harnessOf(ctx);
     const folder = repo || process.cwd();
     let chat = harness === "codex" ? text(obj(ctx.mcpReq._meta?.["x-codex-turn-metadata"]).session_id) : "";
-    if (!chat) {
+    // Whether acm started this chat for a job: only such a chat can be a job's worker.
+    let started: boolean | undefined;
+    if (chat) {
+      started = startedByAcm.get(chat);
+      if (started === undefined) {
+        const path = READERS.codex.find(rootOf("codex", roots), chat);
+        if (path) {
+          started = opening("codex", path).job !== null;
+          startedByAcm.set(chat, started);
+        }
+      }
+    } else {
       const root = projectRoot(folder);
       const key = `${harness} ${root}`;
       // Claude Code and OpenCode pass acm's variable on to the servers they start; Cursor and Codex strip it.
@@ -109,8 +122,9 @@ export function buildServer(opts: ServerOptions, db: Db = connect(opts.home)): M
       const pin = currentChat(harness, root, roots, pins.get(key), delegated);
       if (pin) pins.set(key, pin);
       chat = pin?.chat ?? `proc:${process.pid}`;
+      started = delegated ?? pin?.jobs.get(chat);
     }
-    return sessionFor(db, { harness, chat, folder });
+    return { ...sessionFor(db, { harness, chat, folder }), delegated: started };
   }
 
   async function run(tool: string, fn: () => Result | Promise<Result>): Promise<Result> {
@@ -125,6 +139,7 @@ export function buildServer(opts: ServerOptions, db: Db = connect(opts.home)): M
           "acm can't write its database: this acm runs inside a sandbox. Use the acm tools your agent already has instead of starting acm yourself.",
         );
       }
+      if (err instanceof HerdrError) err = new AcmError("unavailable", `herdr: ${err.message}`);
       if (err instanceof AcmError) {
         return {
           content: [{ type: "text", text: JSON.stringify({ error: err.code, ...err.payload }) }],

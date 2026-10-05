@@ -7,6 +7,7 @@
  * nativeId(path)         the agent's own id for a chat file
  * visible(obj)           ["message" | "skip" | "unknown", messages]
  * turnEnded(obj)         true for the record that closes an agent turn
+ * turnError(obj)         optional: for a closing record, the agent's own error if the turn failed, else ""
  *
  * Readers whose chats are not one jsonl file also have read(path) -> jsonl bytes and exists(path).
  */
@@ -25,6 +26,7 @@ export interface Reader {
   nativeId(path: string): string;
   visible(obj: Json): Visible;
   turnEnded(obj: Json): boolean;
+  turnError?(obj: Json): string;
   read?(path: string): Buffer;
   exists?(path: string): boolean;
 }

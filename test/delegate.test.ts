@@ -861,3 +861,94 @@ test("a worker that joins while its job is being checked still has its files fre
   await delegateWait(db, caller, { home, deps });
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM holds").get()?.n, 0);
 });
+
+test("herdr's server stopped: a wait starts it again and reports, rather than failing", async () => {
+  fake.finish = false;
+  await run([{ to: "codex", task: "Outlive the server" }]);
+  fake.running = false;
+  const before = fake.started;
+  const out = await delegateWait(db, caller, { home, deps: fake.deps() });
+  assert.equal(fake.started, before + 1);
+  assert.ok(Array.isArray(out.jobs));
+});
+
+test("one job's failing herdr call doesn't stop another job from being reported", async () => {
+  fake.stuckStart.add("codex"); // codex comes up unnamed: acm renames it once it's ready
+  fake.finish = false;
+  await run([
+    { to: "codex", task: "Slow start" },
+    { to: "claude", task: "Quick" },
+  ]);
+  for (const a of fake.agents.values()) if (a.pane_id && !a.name) a.agent_status = "idle";
+  fake.complete(...(fake.prompts.find(([n]) => n === "claude-work") as [string, string]));
+  const deps = fake.deps();
+  const herdr = deps.herdr;
+  deps.herdr = async (args, raw) => {
+    if (args[0] === "agent" && args[1] === "rename") throw new HerdrError("agent_not_found", "rename failed");
+    return herdr(args, raw);
+  };
+  const out = await delegateWait(db, caller, { home, deps });
+  assert.deepEqual(states(out), [
+    ["codex-work", "starting"],
+    ["claude-work", "done"],
+  ]);
+});
+
+test("an agent whose chats acm can't find is reported from its pane, not briefed twice", async () => {
+  fake.finish = false;
+  const deps = fake.deps();
+  deps.roots = { ...deps.roots, codex: join(dir, "no-such-folder") };
+  await run([{ to: "codex", task: "Invisible chat" }], undefined, undefined, deps);
+  const sent = fake.prompts.length;
+  (fake.agents.get("codex-work") as Json).agent_status = "idle";
+  LIMITS.resendAfter = -1;
+  LIMITS.lostAfter = -1;
+  const out = await delegateWait(db, caller, { home, deps });
+  assert.equal(fake.prompts.length, sent);
+  assert.deepEqual(states(out), [["codex-work", "done"]]);
+  assert.match((out.jobs as Json[])[0].result as string, /can't read its chat/);
+});
+
+test("a user's own chat joining the thread is not taken for the worker", async () => {
+  // delegated false: the user started this chat, as acm's server works out for each chat.
+  const mine = { ...sessionFor(db, { harness: "codex", chat: "my-own-codex-chat", folder }), delegated: false };
+  fake.finish = false;
+  const got = await run([{ to: "codex", task: "Real worker's job" }]);
+  context(db, mine, { thread: got.thread as string });
+  assert.equal(db.prepare("SELECT worker_session_id FROM jobs").get()?.worker_session_id, null);
+  const worker = sessionFor(db, { harness: "codex", chat: "codex-chat", folder });
+  context(db, worker, { thread: got.thread as string });
+  assert.equal(db.prepare("SELECT worker_session_id FROM jobs").get()?.worker_session_id, worker.id);
+});
+
+test("a codex turn that ended with codex's own error is gone, not done", async () => {
+  fake.finish = false;
+  await run([{ to: "codex", task: "Fail on the way" }]);
+  const [name, brief] = fake.prompts.find(([n]) => n === "codex-work") as [string, string];
+  fake.complete(name, brief, "I'll start by reading the file.");
+  const path = join(fake.roots.codex, "2026", "rollout-x-codex-work-session.jsonl");
+  const lines = readFileSync(path, "utf8").trimEnd().split("\n");
+  lines[lines.length - 1] = JSON.stringify({
+    type: "event_msg",
+    payload: {
+      type: "task_complete",
+      last_agent_message: null,
+      error: { message: "workspace routing discovery timed out" },
+    },
+  });
+  writeFileSync(path, `${lines.join("\n")}\n`);
+  const out = await delegateWait(db, caller, { home, deps: fake.deps() });
+  assert.deepEqual(states(out), [["codex-work", "gone"]]);
+  assert.match(
+    (out.jobs as Json[])[0].result as string,
+    /stopped with an error.*routing discovery timed out.*start by reading/,
+  );
+});
+
+test("a job's clock starts when its brief goes out, so a slow start doesn't make it look late", async () => {
+  fake.finish = false;
+  const before = Date.now();
+  await run([{ to: "codex", task: "Timed from the brief" }]);
+  const started = Date.parse(db.prepare("SELECT started_at FROM jobs").get()?.started_at as string);
+  assert.ok(started >= before - 1000);
+});

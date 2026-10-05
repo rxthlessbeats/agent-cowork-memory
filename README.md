@@ -2,6 +2,8 @@
 
 Tired of copying a chat into the next agent? Pick up the same task where you left off, or tell one agent to put the others to work.
 
+[Demo](https://acm-website-sand.vercel.app/)
+
 ![GitHub Release](https://img.shields.io/github/v/release/rxthlessbeats/agent-cowork-memory?style=flat&color=blue)
 ![npm](https://img.shields.io/npm/v/agent-cowork-memory?style=flat&color=blue)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat)
@@ -26,6 +28,8 @@ npx -y agent-cowork-memory setup
 ```
 
 Setup adds ACM to Cursor, and to Codex, Claude Code, and OpenCode when they are installed; it says which it skipped. Installed one later? Run setup again. Restart your agents, and ACM is available in every project. Each agent starts ACM through npx, which runs the latest release whenever the npm registry answers within 3 seconds, so there is nothing to update.
+
+Coming from 0.2? 0.3 starts a fresh database (`~/.agent-cowork-memory/acm.sqlite3`); 0.2's notes stay in `state.sqlite3`, untouched, and are not carried over.
 
 Tested for real on Linux and WSL. macOS and Windows pass CI; real runs welcome.
 

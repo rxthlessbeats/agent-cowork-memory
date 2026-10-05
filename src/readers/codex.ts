@@ -56,6 +56,8 @@ export const codex: Reader = {
 
   turnEnded: (o) => o.type === "event_msg" && obj(o.payload).type === "task_complete",
 
+  turnError: (o) => text(obj(obj(o.payload).error).message),
+
   visible(o) {
     const kind = text(o.type);
     if (SKIP_TYPES.has(kind)) return ["skip", []];
