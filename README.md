@@ -1,35 +1,40 @@
 # Agent Cowork Memory (ACM)
 
-Tired of copying a chat into the next agent? Pick up the same task where you left off, or tell one agent to put the others to work.
+```
+ █████╗  ██████╗███╗   ███╗
+██╔══██╗██╔════╝████╗ ████║
+███████║██║     ██╔████╔██║
+██╔══██║██║     ██║╚██╔╝██║
+██║  ██║╚██████╗██║ ╚═╝ ██║
+╚═╝  ╚═╝ ╚═════╝╚═╝     ╚═╝
+```
 
-[Demo](https://acm-website-sand.vercel.app/)
+Shared memory, persistant memory. No need to copy your prompt ever again. Pick up the same task where you left off, or tell one agent to put the others to work.
 
 ![GitHub Release](https://img.shields.io/github/v/release/rxthlessbeats/agent-cowork-memory?style=flat&color=blue)
 ![npm](https://img.shields.io/npm/v/agent-cowork-memory?style=flat&color=blue)
+![CI](https://img.shields.io/github/actions/workflow/status/rxthlessbeats/agent-cowork-memory/ci.yml?branch=main&style=flat&label=ci)
 ![License](https://img.shields.io/badge/license-MIT-green?style=flat)
 ![M8ven Score](https://m8ven.ai/badge/mcp/rxthlessbeats-agent-cowork-memory-1jq2qu)
 ![Agents supported](https://img.shields.io/badge/agents_supported-4-orange?style=flat)
 ![Node](https://img.shields.io/badge/node-24%2B-green?style=flat)
 ![MCP supported](https://img.shields.io/badge/MCP-supported-lightgrey?style=flat)
 ![CLI supported](https://img.shields.io/badge/CLI-supported-lightgrey?style=flat)
-
 ![Codex icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/codex-color.svg) Codex  ·  ![Claude Code icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/claudecode-color.svg) Claude Code  ·  ![Cursor icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/cursor.svg) Cursor  ·  ![OpenCode icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/opencode.svg) OpenCode
 
 ## Demo
 
-[ACM official site](https://acm-website-sand.vercel.app/)
+Check out [ACM official site](https://acm-website-sand.vercel.app/)
 
 ## Install
 
 With [Node 24](https://nodejs.org) or newer:
 
 ```sh
-npx -y agent-cowork-memory setup
+npx agent-cowork-memory setup
 ```
 
-Setup adds ACM to Cursor, and to Codex, Claude Code, and OpenCode when they are installed; it says which it skipped. Installed one later? Run setup again. Restart your agents, and ACM is available in every project. Each agent starts ACM through npx, which runs the latest release whenever the npm registry answers within 3 seconds, so there is nothing to update.
-
-Coming from 0.2? 0.3 starts a fresh database (`~/.agent-cowork-memory/acm.sqlite3`); 0.2's notes stay in `state.sqlite3`, untouched, and are not carried over.
+Setup adds ACM to Cursor, and to Codex, Claude Code, and OpenCode when they are installed; Installed one later? Run setup again. Restart your agents, and ACM is available in every project.
 
 Tested for real on Linux and WSL. macOS and Windows pass CI; real runs welcome.
 
@@ -53,7 +58,7 @@ Every agent can see every chat in the project. If there is more than one, the ag
 
 Related work goes together in a **thread**: continuing a chat, or delegating from it, keeps the work on one thread, and a new chat can join one of the project's open threads. ACM keeps each thread's timeline as things happen (chats joining, jobs starting and finishing, notes added), so any agent can see where the work stands.
 
-Ask your agent to remember a decision, and every agent in the project sees it. Notes stay true: when a new note may contradict an old one, the agent is shown the old one and replaces it if it's wrong, and when a file a note mentions changes, the note is marked to re-check.
+Ask your agent to remember a decision, and every agent in the project sees it. Notes stay true.
 
 ### Delegate to other agents
 
@@ -62,8 +67,6 @@ Any agent can hand work to the others:
 > Tell codex to write plan.md, and claude to write packing.md.
 
 Each agent gets a brief, joins the thread it was sent from, claims the files it edits so they don't collide, and reports back. Agents run in the background. With [herdr](https://herdr.dev) installed, each one gets its own pane you can watch (`herdr session attach acm`).
-
-Delegated agents run in each agent's auto mode: Codex `--approve-for-me`, Claude Code `--permission-mode auto`, and Cursor `--auto-review` (with `--trust --approve-mcps`, so it opens the project and ACM without asking). Safe actions run on their own. When auto mode denies an action, the agent stops, and ACM reports the job as `needs_approval` to the chat that delegated it. A background job still running after 15 minutes is stopped and reported the same way. Approve it there, and that agent runs the step or delegates again. If an agent asks a question in its herdr pane instead, ACM reports the job as `blocked` until you answer it there.
 
 ## MCP tools
 
