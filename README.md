@@ -19,7 +19,7 @@ Shared memory, persistant memory. No need to copy your prompt ever again. Pick u
 ![Agents supported](https://img.shields.io/badge/agents_supported-4-orange?style=flat)
 ![Node](https://img.shields.io/badge/node-24%2B-green?style=flat)
 ![MCP supported](https://img.shields.io/badge/MCP-supported-lightgrey?style=flat)
-![CLI supported](https://img.shields.io/badge/CLI-supported-lightgrey?style=flat)
+![CLI supported](https://img.shields.io/badge/CLI-supported-lightgrey?style=flat)<br>
 ![Codex icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/codex-color.svg) Codex  ·  ![Claude Code icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/claudecode-color.svg) Claude Code  ·  ![Cursor icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/cursor.svg) Cursor  ·  ![OpenCode icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/opencode.svg) OpenCode
 
 ## Demo
