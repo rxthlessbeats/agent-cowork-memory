@@ -24,11 +24,27 @@ jobs:
         run: test "v$(node -p 'require("./package.json").version')" = "$GITHUB_REF_NAME"
       - run: npm ci
       - run: npm run build
-      - run: npm publish --provenance --access public
+      - name: publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          version=$(node -p 'require("./package.json").version')
+          published=$(npm view "agent-cowork-memory@${version}" version 2>/dev/null || true)
+          if [ "$published" = "$version" ]; then
+            echo "agent-cowork-memory@${version} is already on npm"
+          else
+            npm publish --provenance --access public
+          fi
       - name: publish to the MCP Registry
         run: |
+          version=$(node -p 'require("./package.json").version')
+          name=$(node -p 'require("./server.json").name')
+          encoded=$(node -e 'process.stdout.write(encodeURIComponent(process.argv[1]))' "$name")
+          code=$(curl -s -o /dev/null -w '%{http_code}' "https://registry.modelcontextprotocol.io/v0/servers/${encoded}/versions/${version}")
+          if [ "$code" = "200" ]; then
+            echo "${name}@${version} is already in the MCP Registry"
+            exit 0
+          fi
           curl -sL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
           ./mcp-publisher login github-oidc
           ./mcp-publisher publish
