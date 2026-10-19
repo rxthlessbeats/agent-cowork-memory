@@ -1,5 +1,14 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  utimesSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, test } from "node:test";
@@ -7,6 +16,7 @@ import { connect, type Db } from "../src/db.ts";
 import {
   buildPrompt,
   card,
+  cleanJobs,
   type Deps,
   delegate,
   delegateWait,
@@ -962,4 +972,21 @@ test("a job's clock starts when its brief goes out, so a slow start doesn't make
   await run([{ to: "codex", task: "Timed from the brief" }]);
   const started = Date.parse(db.prepare("SELECT started_at FROM jobs").get()?.started_at as string);
   assert.ok(started >= before - 1000);
+});
+
+test("cleanJobs drops a finished job's old files and keeps an open job's", () => {
+  const jobs = join(home, "jobs");
+  mkdirSync(jobs, { recursive: true });
+  const old = new Date(Date.now() - 8 * 86_400_000);
+  for (const name of ["j_old.log", "j_old.exit", "j_open.log", "acm_j_v02.out"]) {
+    writeFileSync(join(jobs, name), "");
+    utimesSync(join(jobs, name), old, old);
+  }
+  writeFileSync(join(jobs, "j_new.log"), "");
+  db.prepare(
+    `INSERT INTO jobs (id, project_id, caller_session_id, folder, kind, agent_name, summary, task, prompt, state, started_at)
+     VALUES ('j_open', ?, ?, ?, 'codex', 'codex-work', 's', 't', '', 'running', ?)`,
+  ).run(caller.project_id, caller.id, folder, old.toISOString());
+  cleanJobs(db, home);
+  assert.deepEqual(readdirSync(jobs).sort(), ["j_new.log", "j_open.log"]);
 });

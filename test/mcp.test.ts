@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { type ChildProcessWithoutNullStreams, execFileSync, spawn } from "node:child_process";
-import { mkdtempSync, realpathSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
 import { afterEach, beforeEach, test } from "node:test";
+import { dashes, slug } from "../src/readers/index.ts";
 
 const CLI = join(import.meta.dirname, "..", "src", "cli.ts");
 type Msg = { id?: number; result?: Record<string, unknown>; error?: unknown };
@@ -14,8 +15,11 @@ class Client {
   proc: ChildProcessWithoutNullStreams;
   waiting = new Map<number, (m: Msg) => void>();
   next = 1;
-  constructor(args: string[], cwd: string, home: string) {
-    this.proc = spawn(process.execPath, [CLI, "mcp", ...args], { cwd, env: { ...process.env, ACM_HOME: home } });
+  constructor(args: string[], cwd: string, home: string, env: Record<string, string> = {}) {
+    this.proc = spawn(process.execPath, [CLI, "mcp", ...args], {
+      cwd,
+      env: { ...process.env, ACM_HOME: home, ...env },
+    });
     createInterface({ input: this.proc.stdout }).on("line", (line) => {
       const msg = JSON.parse(line) as Msg;
       if (msg.id !== undefined) this.waiting.get(msg.id)?.(msg);
@@ -99,6 +103,30 @@ test("seven tools; the agent comes from the client name; repo_path defaults to t
   assert.equal(seen.json.thread.id, added.json.thread);
   const again = await client.call("context");
   assert.deepEqual(again.json.notes, []);
+});
+
+test("resume brings what context would show, so a continuation can skip its first context call", async () => {
+  const transcripts = join(dir, "cursor");
+  const folder = process.platform === "win32" ? dashes(repo).replace(/^-+|-+$/g, "") : slug(repo);
+  const chat = join(transcripts, folder, "agent-transcripts", "c1", "c1.jsonl");
+  mkdirSync(join(chat, ".."), { recursive: true });
+  const line = (role: string, text: string) => JSON.stringify({ role, message: { content: [{ type: "text", text }] } });
+  writeFileSync(chat, `${line("user", "plan the trip")}\n${line("assistant", "Lisbon")}\n`);
+  client = new Client([], repo, join(dir, "home"), { CURSOR_TRANSCRIPTS: transcripts });
+  await client.init("claude-code");
+  await client.call("note_add", { text: "use pnpm, not npm", tier: "long" });
+  const resumed = await client.call("resume", { source: "cursor" });
+  assert.deepEqual(
+    resumed.json.messages.map((m: { text: string }) => m.text),
+    ["plan the trip", "Lisbon"],
+  );
+  assert.equal(resumed.json.context.thread.id, resumed.json.thread);
+  assert.deepEqual(
+    resumed.json.context.notes.map((n: { body: string }) => n.body),
+    ["use pnpm, not npm"],
+  );
+  // Seen there, so the next context shows only what's new.
+  assert.deepEqual((await client.call("context")).json.notes, []);
 });
 
 test("errors carry the JSON payload; an unknown client is refused", async () => {

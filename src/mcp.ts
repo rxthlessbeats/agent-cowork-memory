@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod";
 import { connect, type Db } from "./db.ts";
-import { card, type Deps, defaultDeps, delegate, delegateWait, HerdrError, type Task } from "./delegate.ts";
+import { card, cleanJobs, type Deps, defaultDeps, delegate, delegateWait, HerdrError, type Task } from "./delegate.ts";
 import { context, noteAdd, noteSearch, type Session, sessionFor } from "./memory.ts";
 import { projectRoot } from "./project.ts";
 import { obj, text } from "./readers/index.ts";
@@ -11,14 +11,14 @@ import { AcmError, debug } from "./util.ts";
 import { VERSION } from "./version.ts";
 
 const CONTEXT =
-  "Call before working and before you edit a file. Returns your thread (related work across chats and agents) with its timeline, the project's notes (after the first call, only what's new), open threads, recent jobs, who is working, and held files. hold: repo-relative paths to claim before writing, added to what you hold; a path in busy is someone else's, leave it; [] releases yours. thread: join that thread (from open_threads or your brief). done: true closes your thread. stale lists notes whose files changed: re-check each with note_add.";
+  "Call before working, unless resume already gave you its result. Returns your thread (related work across chats and agents) with its timeline, the project's notes (after the first call, only what's new), open threads, recent jobs, who is working, and held files. If working or held shows other agents, call it again before you edit a file, with hold: repo-relative paths to claim before writing, added to what you hold; a path in busy is someone else's, leave it; [] releases yours. thread: join that thread (from open_threads or your brief). done: true closes your thread. stale lists notes whose files changed: re-check each with note_add.";
 const NOTE_ADD =
-  "Save a note every agent in this project sees. tier long: stays true (decisions, conventions, gotchas, the user's preferences); short (default): progress and findings, kept 7 days. If the result has check, those notes are on the same topic: if yours makes one false, call again with supersedes set to its id. supersedes also confirms (same text) or corrects a stale note. Job results are saved already.";
+  "Save a note every agent in this project sees, when something was decided or found that others will need later; not for routine progress. tier long: stays true (decisions, conventions, gotchas, the user's preferences); short (default): findings that matter this week, kept 7 days. If the result has check, those notes are on the same topic: if yours makes one false, call again with supersedes set to its id. supersedes also confirms (same text) or corrects a stale note. Job results are saved already.";
 const NOTE_SEARCH = "Search this project's notes and delegated job results.";
 const CHATS =
   "List recent chats in this project from every agent, newest first: agent, chat id, updated, folder, thread, first message, and job (when acm started the chat). Pass the chat the user picks to resume.";
 const RESUME =
-  "Call when the user says continue, or wants a chat from another agent. source: one agent (codex, cursor, claude, opencode); chat: one chat id (from chats). Without chat, if several match the result has choose: show it to the user, ask which, and call again with its chat; never pick for them. Otherwise it returns the recent messages and puts you on that chat's thread: carry on from the last user message.";
+  "Call when the user says continue, or wants a chat from another agent. source: one agent (codex, cursor, claude, opencode); chat: one chat id (from chats). Without chat, if several match the result has choose: show it to the user, ask which, and call again with its chat; never pick for them. Otherwise it returns the recent messages, the user's earlier messages, the thread's other chats with what the user said in each, and what context returns (no need to call it first), and puts you on that chat's thread: carry on from the last user message there. The user's request now comes first: a hold in that chat (\"don't start yet\", \"I'll come back\") ends when they ask you to continue or finish.";
 const DELEGATE =
   "Call when the user asks other agents (codex, claude, cursor, opencode) to do something. Each starts in this project with your brief, in a herdr pane if herdr is installed, else in the background; one agent per kind per folder. summary: the problem, for someone who hasn't seen this chat. tasks: [{to, task, done_when?, context?}]. If the result has next, call delegate_wait until no job is running. A busy agent comes back busy with the free ones: ask the user whether to wait (same task, wait: true) or reassign; never choose for them. The result starts with a card (lines beginning 'acm · delegate'): copy it into your reply as-is in a code block, then report each job. Never answer a blocked agent or approve a needs_approval for the user.";
 const DELEGATE_WAIT =
@@ -226,9 +226,12 @@ export function buildServer(opts: ServerOptions, db: Db = connect(opts.home)): M
       }),
     },
     (args, ctx) =>
-      run("resume", () =>
-        json(resume(db, session(ctx, args.repo_path), { source: args.source, chat: args.chat, roots })),
-      ),
+      run("resume", () => {
+        const s = session(ctx, args.repo_path);
+        const out = resume(db, s, { source: args.source, chat: args.chat, roots });
+        // A continuation's first look at the project comes with it, so it can skip a context call.
+        return json(out.messages ? { ...out, context: context(db, s, {}) } : out);
+      }),
   );
 
   const task = z.object({
@@ -278,5 +281,6 @@ export async function serve(home: string, harness?: string): Promise<void> {
   if (harness && !HARNESSES.includes(harness))
     throw new AcmError("invalid", `--harness must be one of ${HARNESSES.join(", ")}`);
   const db = connect(home);
+  cleanJobs(db, home); // the folder tidies itself whenever an agent starts acm, not only on a delegate
   serveStdio(() => buildServer({ home, harness }, db));
 }

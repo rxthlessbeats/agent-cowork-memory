@@ -131,12 +131,73 @@ test("the user's one chat is resumed over job chats, even when a client note com
   assert.equal(resume(db, session("codex", "x"), { roots: roots() }).chat, "c1");
 });
 
+test("the user's earlier messages come along when the newest messages have moved past them", () => {
+  const later = Array.from({ length: 40 }, (_, i) =>
+    i % 2 ? cursorReply(`done ${i}`) : cursorUser(`small thing ${i}`),
+  );
+  later[4] = cursorUser("Change of plan: dates as DD/MM/YYYY");
+  cursorChat(cursorDir(repo), "c1", cursorUser("Step 2, for later: pages count from 1"), ...later);
+  const got = resume(db, session("codex", "x"), { source: "cursor", roots: roots() });
+  // The opening request and the correction, from before the 30 newest messages; only replies are left out.
+  assert.deepEqual(got.earlier_user_messages, [
+    "Step 2, for later: pages count from 1",
+    "small thing 0",
+    "small thing 2",
+    "Change of plan: dates as DD/MM/YYYY",
+    "small thing 6",
+    "small thing 8",
+  ]);
+  const messages = got.messages as { text: string }[];
+  assert.equal(messages.length, 30);
+  assert.equal(messages.at(-1)?.text, "done 39");
+  assert.equal(got.omitted_messages, 5);
+
+  // In a short chat they are among the messages already.
+  cursorChat(cursorDir(repo), "c2", cursorUser("plan the trip"), cursorReply("Lisbon"));
+  const short = resume(db, session("codex", "x"), { source: "cursor", chat: "c2", roots: roots() });
+  assert.equal(short.earlier_user_messages, undefined);
+  assert.equal((short.messages as unknown[]).length, 2);
+});
+
+test("resuming a chat names the thread's other chats, with what the user said in each", () => {
+  cursorChat(
+    cursorDir(repo),
+    "a1",
+    cursorUser("Plan: semicolons, oldest first"),
+    cursorReply("ok"),
+    cursorUser("and dates as DD/MM/YYYY"),
+  );
+  cursorChat(cursorDir(repo), "b1", cursorUser("continue it; also add a header"), cursorReply("noted"));
+  // Chat b1 continued a1 with acm, so both are on one thread.
+  resume(db, session("cursor", "b1"), { source: "cursor", chat: "a1", roots: roots() });
+  const got = resume(db, session("codex", "x"), { source: "cursor", chat: "b1", roots: roots() });
+  const others = got.thread_chats as { agent: string; chat: string; first: string; user_messages: string[] }[];
+  assert.deepEqual(
+    others.map((c) => [c.agent, c.chat, c.first]),
+    [["cursor", "a1", "Plan: semicolons, oldest first"]],
+  );
+  // a1's requests come along, so an agent that never resumes a1 still has them.
+  assert.deepEqual(others[0].user_messages, ["Plan: semicolons, oldest first", "and dates as DD/MM/YYYY"]);
+  assert.ok(String(got.thread_chats_next).includes("resume it too"));
+
+  // A chat with nothing else on its thread names none.
+  cursorChat(cursorDir(repo), "c1", cursorUser("unrelated"));
+  assert.equal(
+    resume(db, session("codex", "y"), { source: "cursor", chat: "c1", roots: roots() }).thread_chats,
+    undefined,
+  );
+});
+
 test("the one chat in the repo wins over chats in a folder above; long messages are clipped", () => {
   cursorChat(cursorDir(repo), "c1", cursorUser("x".repeat(30_000)), cursorUser("y".repeat(2_000)));
   cursorChat(cursorDir(dirname(repo)), "c2", cursorUser("home chat"));
   const got = resume(db, session("codex", "x"), { roots: roots() });
   assert.equal(got.chat, "c1");
-  assert.equal(got.omitted_messages, 1);
+  // The opening request no longer fits beside the newest message: it comes along cut to half the budget.
+  const [opening] = got.earlier_user_messages as string[];
+  assert.ok(opening.length < 6_100 && opening.includes("characters cut"));
+  assert.equal(got.omitted_messages, 0);
+  assert.equal(got.clipped_messages, 1);
 
   const huge = `start ${"x".repeat(50_000)} end`;
   const odd = gitRepo(join(dir, "my_app.v2"));
@@ -226,6 +287,52 @@ test("OpenCode chats from old files and SQLite, newest first", () => {
   assert.deepEqual(
     (reordered.choose as { chat: string }[]).map((c) => c.chat),
     ["ses_old", "ses_new"],
+  );
+});
+
+test("OpenCode 2 chats from session_v2 and session_message, with tool calls left out", () => {
+  const base = join(root, "opencode");
+  mkdirSync(base, { recursive: true });
+  const db2 = new DatabaseSync(join(base, "opencode.db"));
+  db2.exec(`CREATE TABLE session_v2 (id TEXT, directory TEXT, time_updated INTEGER, parent_id TEXT);
+    CREATE TABLE session_message (id TEXT, session_id TEXT, type TEXT, seq INTEGER, data TEXT);`);
+  const add = db2.prepare("INSERT INTO session_v2 VALUES (?, ?, ?, ?)");
+  add.run("ses_a", repo, 1_010_000, null);
+  add.run("ses_b", repo, 1_020_000, null);
+  add.run("ses_sub", repo, 1_030_000, "ses_b"); // a subagent's session: never a chat of its own
+  const msg = db2.prepare("INSERT INTO session_message VALUES (?, ?, ?, ?, ?)");
+  msg.run("m1", "ses_b", "user", 1, JSON.stringify({ time: { created: 1 }, text: "make it red" }));
+  const tool = { type: "tool", name: "read", state: { status: "completed", input: { path: "a.py" } } };
+  msg.run(
+    "m2",
+    "ses_b",
+    "assistant",
+    2,
+    JSON.stringify({ finish: "tool-calls", time: { completed: 2 }, content: [tool] }),
+  );
+  const done = { finish: "stop", time: { completed: 3 }, content: [{ type: "text", text: "made it red" }] };
+  msg.run("m3", "ses_b", "assistant", 3, JSON.stringify(done));
+  msg.run("m4", "ses_b", "idle", 4, JSON.stringify({ outcome: "succeeded" }));
+  db2.close();
+  const asked = resume(db, session("cursor", "x"), { source: "opencode", roots: roots() });
+  assert.deepEqual(
+    (asked.choose as { chat: string }[]).map((c) => c.chat),
+    ["ses_b", "ses_a"],
+  );
+  const got = resume(db, session("cursor", "x"), { source: "opencode", chat: "ses_b", roots: roots() });
+  assert.deepEqual(
+    (got.messages as { role: string; text: string }[]).map((m) => [m.role, m.text]),
+    [
+      ["user", "make it red"],
+      ["assistant", "made it red"],
+    ],
+  );
+  assert.equal(
+    opencode
+      .read?.(join(base, "session", "ses_b.json"))
+      .toString()
+      .split("turn_ended").length,
+    2,
   );
 });
 
