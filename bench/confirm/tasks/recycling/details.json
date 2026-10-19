@@ -1,0 +1,19 @@
+{
+  "chat_free_up_to_78kg": {
+    "value": [
+      "\\b78 ?(kg|kilos?|kilograms?)\\b",
+      "(up to|under|below|at most|no more than|first|<=|≤) ?78\\b",
+      "\\bload ?(<=|≤|>) ?78\\b"
+    ]
+  },
+  "chat_flat_494": {
+    "value": ["£ ?4\\.94\\b", "\\b4\\.94\\b", "\\b494 ?(p|pence)\\b"]
+  },
+  "chat_vans_fridays_only": {
+    "value": [
+      "\\bvans?\\b[^.\\n]{0,60}\\b(fridays?|fri)\\b",
+      "\\b(fridays?|fri)\\b[^.\\n]{0,60}\\bvans?\\b",
+      "weekday\\(\\) ?(==|!=) ?4\\b"
+    ]
+  }
+}

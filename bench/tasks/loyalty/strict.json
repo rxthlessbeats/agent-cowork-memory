@@ -1,0 +1,26 @@
+{
+  "mutants": {
+    "docstring_rule": {
+      "breaks": ["chat_point_per_full_2_50", "chat_nothing_under_10", "chat_tuesday_double"],
+      "stale": ["stale_point_per_euro"],
+      "why": "lost the new programme rules and follows the module docstring: one point per euro, no minimum, no Tuesdays"
+    },
+    "per_euro": {
+      "breaks": ["chat_point_per_full_2_50"],
+      "stale": ["stale_point_per_euro"],
+      "why": "keeps the minimum and Tuesdays but takes the rate from the docstring: one point per euro"
+    },
+    "rounds_to_nearest": {
+      "breaks": ["chat_point_per_full_2_50"],
+      "why": "rounds to the nearest 2.50 instead of counting only full ones"
+    },
+    "threshold_inclusive": {
+      "breaks": ["chat_nothing_under_10"],
+      "why": "gives nothing for exactly 10.00 too: 10.00 or less instead of under 10.00"
+    },
+    "isoweekday_tuesday": {
+      "breaks": ["chat_point_per_full_2_50", "chat_tuesday_double"],
+      "why": "takes Tuesday as weekday() == 2 (counting Monday as 1), so it doubles Wednesdays"
+    }
+  }
+}

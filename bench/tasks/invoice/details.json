@@ -1,0 +1,16 @@
+{
+  "chat_vat_17": {
+    "value": ["\\b17 ?%", "(?<![\\d.])0?\\.17\\b", "\\b(17|seventeen) ?per ?cent"]
+  },
+  "chat_vat_rounded_down": {
+    "value": [
+      "\\bround(ed|s|ing)?([ _-]\\w+)?[ _-]down\\b",
+      "\\btruncat",
+      "\\b(round_)?floor\\b",
+      "\\bnever (be )?(round(ed|s)? )?up\\b"
+    ]
+  },
+  "chat_small_order_fee": {
+    "value": ["\\b4[.,]95\\b"]
+  }
+}

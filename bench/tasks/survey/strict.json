@@ -1,0 +1,27 @@
+{
+  "mutants": {
+    "q1_counts_double": {
+      "breaks": ["changed_q8_counts_double"],
+      "stale": ["stale_q1_double"],
+      "why": "doubles q1, the first plan the chat moved to q8"
+    },
+    "q1_and_q8_double": {
+      "breaks": ["changed_q8_counts_double"],
+      "stale": ["stale_q1_double"],
+      "why": "doubles q8 but keeps q1 double too, reading the move as an addition"
+    },
+    "docstring_equal_weights": {
+      "breaks": ["changed_q8_counts_double"],
+      "stale": ["stale_equal_weights"],
+      "why": "follows the module docstring: every question counts the same"
+    },
+    "six_answers_off_by_one": {
+      "breaks": ["chat_six_answers_needed"],
+      "why": "off by one: needs more than 6 answers, so a response with exactly 6 gets no score"
+    },
+    "no_flip": {
+      "breaks": ["chat_flip_q3_q6"],
+      "why": "averages q3 and q6 as answered, without flipping them"
+    }
+  }
+}

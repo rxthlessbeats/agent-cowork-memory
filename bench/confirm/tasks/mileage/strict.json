@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "commute_57": {
+      "breaks": ["changed_commute_37"],
+      "stale": ["stale_commute_57"],
+      "why": "takes 57 miles off each trip, the first plan, which turn 4 changed to 37"
+    },
+    "paid_next_friday": {
+      "breaks": ["chat_paid_next_thursday"],
+      "why": "guesses the usual Friday payday: the first Friday after the claim instead of the first Thursday"
+    },
+    "thursday_same_day": {
+      "breaks": ["chat_paid_next_thursday"],
+      "why": "off by one: a claim submitted on a Thursday is paid that day instead of a week later"
+    },
+    "parking_in_full": {
+      "breaks": ["chat_parking_up_to_7_96"],
+      "why": "forgets the 7.96 cap and pays all the parking back"
+    }
+  }
+}

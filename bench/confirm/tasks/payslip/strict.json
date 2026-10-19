@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "paid_last_friday": {
+      "breaks": ["chat_paid_last_thursday"],
+      "why": "guesses the usual Friday payday: the last Friday of the month instead of the last Thursday"
+    },
+    "calendar_month": {
+      "breaks": ["chat_period_23rd_to_22nd"],
+      "why": "pays each calendar month's shifts, the 1st to the last day, instead of the 23rd of the month before to the 22nd"
+    },
+    "pension_over_1561": {
+      "breaks": ["chat_pension_from_1561"],
+      "why": "off by one: no pension at exactly 1561.00 gross, only above it"
+    },
+    "paid_on_22nd": {
+      "breaks": ["chat_period_23rd_to_22nd", "chat_paid_last_thursday"],
+      "why": "mixes up the two dates: pays on the 22nd, the look-alike cut-off day, and keeps calendar months"
+    }
+  }
+}

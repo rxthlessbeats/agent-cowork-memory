@@ -1,0 +1,15 @@
+{
+  "chat1_student_40": {
+    "value": [
+      "\\b40\\s?(%|percent|per cent)",
+      "students?\\b[^.\\n]{0,40}\\b40\\b",
+      "\\b0?\\.6\\b[^.\\n]{0,30}\\b(adult|price)"
+    ]
+  },
+  "chat1_fee_24": {
+    "value": ["(€|eur\\s?)\\s?0?[.,]24\\b", "\\b0[.,]24\\b", "\\b24\\s?(cents|c)\\b", "\\bfee\\b[^.\\n]{0,30}\\b24\\b"]
+  },
+  "chat2_close_13": {
+    "value": ["\\b13\\s?(min|minutes|mins)\\b", "\\b20:13\\b", "\\b13\\b[^.\\n]{0,30}\\bafter\\b[^.\\n]{0,30}\\bstart"]
+  }
+}

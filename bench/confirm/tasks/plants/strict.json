@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "dry_under_30": {
+      "breaks": ["chat_dry_under_39"],
+      "why": "guesses a round dryness threshold, under 30% moisture, instead of the chat's 39%"
+    },
+    "thirty_minutes": {
+      "breaks": ["chat_46_minutes"],
+      "why": "guesses a round half hour on the drip instead of the chat's 46 minutes"
+    },
+    "dry_at_39": {
+      "breaks": ["chat_dry_under_39"],
+      "why": "off by one: waters a bed at exactly 39%, where only beds under 39% get water"
+    },
+    "no_water_tuesday": {
+      "breaks": ["chat_no_water_thursday"],
+      "why": "a look-alike day: skips watering on Tuesdays instead of Thursdays"
+    }
+  }
+}

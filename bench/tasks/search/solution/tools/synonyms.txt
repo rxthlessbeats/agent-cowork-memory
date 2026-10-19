@@ -1,0 +1,7 @@
+# Synonym groups, one group per line, words separated by commas.
+# Searching for any word of a group finds the documents with any of them.
+rug, carpet, mat
+lamp, light
+bench, seat
+kettle, jug
+couch, sofa, settee

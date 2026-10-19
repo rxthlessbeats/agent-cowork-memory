@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "battery_80": {
+      "breaks": ["changed_battery_62"],
+      "stale": ["stale_battery_80"],
+      "why": "keeps turn 1's 80% battery health, which turn 4 brought down to 62%"
+    },
+    "thirty_days": {
+      "breaks": ["chat_bought_within_91_days"],
+      "why": "guesses the usual 30-day window instead of 91 days"
+    },
+    "battery_over_62": {
+      "breaks": ["changed_battery_62"],
+      "why": "off by one: turns away a phone at exactly 62% battery health"
+    },
+    "pays_40_percent": {
+      "breaks": ["chat_cracked_40_off"],
+      "why": "pays 40% of the offer for a cracked screen instead of taking 40% off it"
+    }
+  }
+}

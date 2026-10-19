@@ -1,0 +1,27 @@
+{
+  "chat_fee_8_23": {
+    "value": ["\\b8[.,]23\\b", "\\b823\\b"]
+  },
+  "chat_free_from_60": {
+    "value": [
+      "\\b60([.,]00)? (or more|and (over|up|above)|\\+)",
+      "\\b(from|over|above|at least|orders of) 60\\b",
+      "(>=|≥) ?60(00)?\\b",
+      "free[^.\\n]{0,40}\\b60\\b",
+      "\\b6000\\b"
+    ]
+  },
+  "changed_no_tuesday": {
+    "value": [
+      "\\btuesdays?\\b[^.\\n;]{0,60}(day off|no deliver|wednesday|skip|garage)",
+      "\\bday off\\b[^.\\n;()]{0,25}\\btuesdays?\\b",
+      "\\bno (deliveries|van)( on)? tuesdays?\\b",
+      "\\bskip\\w* tuesdays?\\b"
+    ],
+    "stale": [
+      "\\bmondays?\\b[^.\\n;]{0,40}(day off|no deliver)",
+      "(day off|no deliveries)[^.\\n;()]{0,25}(?<!not |from )\\bmondays?\\b",
+      "\\bmonday\\b[^.\\n]{0,40}\\btuesday instead\\b"
+    ]
+  }
+}

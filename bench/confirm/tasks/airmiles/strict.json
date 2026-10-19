@@ -1,0 +1,26 @@
+{
+  "keep": [
+    { "file": "README.md", "text": "Every flight earns at least 500 miles." },
+    { "file": "README.md", "text": "Business class earns 50% more than economy." },
+    { "file": "README.md", "text": "Flights on a Saturday earn double miles." }
+  ],
+  "mutants": {
+    "readme_rule": {
+      "breaks": ["chat_minimum_911", "chat_business_18", "chat_double_sunday"],
+      "stale": ["stale_minimum_500", "stale_business_50", "stale_double_saturday"],
+      "why": "follows the out-of-date README: at least 500 miles, business 50% more, double miles on Saturdays"
+    },
+    "business_double": {
+      "breaks": ["chat_business_18"],
+      "why": "guesses business class earns double, not 18% more"
+    },
+    "sunday_is_0": {
+      "breaks": ["chat_double_sunday"],
+      "why": "off by one in the weekday: takes Sunday as weekday() 0, as cron counts, so Mondays earn double"
+    },
+    "minimum_900": {
+      "breaks": ["chat_minimum_911"],
+      "why": "a look-alike value: rounds the minimum to 900 miles, not 911"
+    }
+  }
+}

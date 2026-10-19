@@ -1,0 +1,23 @@
+{
+  "chat_dollars": {
+    "value": [
+      "\\$ ?(\\d[\\d,]*|x+)\\.(\\d\\d|xx)\\b",
+      "\\b(two|2)[ -]?decimal",
+      ":\\.2f\\b",
+      "dollar sign|\\$ sign",
+      "\\b(as|in|into|to) dollars\\b"
+    ]
+  },
+  "chat_biggest_first": {
+    "value": [
+      "\\b(biggest|largest|highest|greatest)( (sales )?totals?| amounts?| sums?| categor(y|ies)| sales| revenue)? first|\\bmost (sales|revenue|money) first",
+      "\\b(by|on) (the )?(category )?(totals?|amounts?|sums?|sales),? (in )?(descending|desc\\b|decreasing|highest|largest|biggest)",
+      "\\b(descending|decreasing) (order )?(of |by )(the )?(totals?|amounts?|sums?|sales)",
+      "\\b(sort|order)\\w* (\\w+ ){0,3}(descending|desc\\b|decreasing|from (the )?(high|large|bigg)\\w* to)",
+      "reverse ?= ?true"
+    ]
+  },
+  "chat_top": {
+    "value": ["--top\\b", "\\btop[ -]n\\b", "\\bfirst n (lines|categor\\w*|rows|entries|results|items)"]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "chat1_final_counts_half": {
+    "value": [
+      "final( exam)?\\W{1,3}(counts? |weighs? |weighted |worth |is )?(for |at |as )?(=|:)?\\s?(50 ?%|half\\b|0?\\.50?\\b)",
+      "\\b25 ?%.{0,60}\\b25 ?%.{0,60}\\b50 ?%",
+      "\\b50 ?%.{0,25}\\bfinal",
+      "\\b25 ?/ ?25 ?/ ?50\\b|\\b50 ?/ ?25 ?/ ?25\\b",
+      "\\b0\\.25\\b.{0,40}\\b0\\.25\\b.{0,40}\\b0\\.50?\\b|\\b0\\.50? ?\\*.{0,20}final|final\\w*(['\"]\\])? ?\\* ?0\\.50?\\b"
+    ],
+    "stale": [
+      "\\bthirds\\b",
+      "\\b(count|weigh)\\w* (all )?equal(ly)?\\b",
+      "equal(ly)? weight",
+      "\\b33(\\.3+)? ?%|\\b1 ?/ ?3\\b"
+    ]
+  },
+  "chat1_lowest_homework_dropped": {
+    "value": [
+      "(drop|discard|ignor|remov|exclud|skip|throw\\w* (out|away)|leav\\w* out|omit)\\w* (each |every )?(student['’]?s['’]? |the |their |a student['’]?s |one )?(single )?(lowest|worst)",
+      "(lowest|worst) (homework |hw )?(score|grade|mark|result|one)?\\s?(is |gets |are |get )?(dropped|discarded|ignored|removed|excluded|thrown out|left out|omitted|not counted)",
+      "(minus|without|except|excluding|drop(ping)?) (the )?(min|minimum|worst)( homework| hw)?( score)?\\b",
+      "sorted\\([^)]*\\)\\[1:\\]|remove\\(min\\("
+    ]
+  },
+  "chat2_no_d": {
+    "value": [
+      "\\bno ['\"`]?d['\"`]?( grade| letter| band)?\\b(?!['’])",
+      "(under|below|less than|<) ?70\\b.{0,30}\\bf\\b",
+      "\\bf\\b.{0,30}(under|below|less than|<) ?70\\b",
+      "(drop|remov|delet|eliminat|scrap)\\w* (the )?(['\"`]?d['\"`]?( grade| letter| band| cutoff| entry| tier)?\\b(?!['’])|\\(60, ?['\"]d['\"]\\))"
+    ]
+  },
+  "chat2_final_under_45_fails": {
+    "value": [
+      "(under|below|less than|<) ?45\\b",
+      "(at least|minimum( of)?|min\\.?|>=|≥) ?45\\b",
+      "\\b45\\b.{0,20}\\bfinal|\\bfinal\\b.{0,30}\\b45\\b"
+    ]
+  }
+}

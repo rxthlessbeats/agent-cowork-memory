@@ -1,0 +1,33 @@
+{
+  "chat1_high_normal_low": {
+    "value": [
+      "high\\W{0,3}(>|→|->|before|ahead of|over|then)\\W{0,3}normal",
+      "high[^.]{0,30}\\bthen\\b[^.]{0,15}\\bnormal\\b[^.]{0,30}\\bthen\\b[^.]{0,15}\\blow\\b",
+      "priorit\\w*\\W{1,4}(order\\W{1,4})?high\\W{1,4}normal\\W{1,4}low",
+      "high[- ]priority (jobs? )?(go |goes |run |runs )?first"
+    ],
+    "stale": ["plain FIFO", "only shown on the dashboard", "never change the order"]
+  },
+  "changed_shortest_estimate_first": {
+    "value": [
+      "short\\w*\\W{1,3}estimate",
+      "(smallest|smaller|lowest|lower|least|quickest)\\W{1,3}estimate",
+      "estimate\\W{0,3}(ascending|asc\\b)",
+      "(shortest|quickest) (jobs? )?first"
+    ],
+    "stale": [
+      "oldest[- ](job |one )?(goes |runs )?first",
+      "earliest[- ]queued",
+      "order they were queued",
+      "(within|in) (a|each|the same) priority\\W{0,3}(the )?oldest",
+      "FIFO (with)?in (a|each|the same) priority"
+    ]
+  },
+  "chat2_urgent_first": {
+    "value": [
+      "urgent[^.]{0,40}(ahead|before|first|above|top|jump|everything|outrank)",
+      "(new|add\\w*|extra)[^.]{0,20}\\burgent\\b",
+      "urgent\\W{0,3}(>|→|->)\\W{0,3}high"
+    ]
+  }
+}

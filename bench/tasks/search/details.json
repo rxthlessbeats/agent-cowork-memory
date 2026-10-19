@@ -1,0 +1,8 @@
+{
+  "found_synonyms_updated": {
+    "value": ["tools/synonyms\\.txt"]
+  },
+  "found_index_rebuilt": {
+    "value": ["build_index", "index/words\\.json"]
+  }
+}

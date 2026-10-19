@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "hour_ahead": {
+      "breaks": ["chat1_81_minutes_ahead"],
+      "why": "guesses a round hour between placing an order and its pickup instead of 81 minutes"
+    },
+    "ten_percent": {
+      "breaks": ["chat2_trade_12_percent_off"],
+      "why": "guesses the usual 10% off for trade orders instead of the 12% agreed with them"
+    },
+    "more_than_81": {
+      "breaks": ["chat1_81_minutes_ahead"],
+      "why": "off by one: refuses a pickup exactly 81 minutes after the order, though at least 81 minutes is enough"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_81_minutes_ahead", "chat1_no_friday_pickups"],
+      "why": "knows only chat 2: gives trade 12% off, but takes any pickup after the order, Fridays included"
+    }
+  }
+}

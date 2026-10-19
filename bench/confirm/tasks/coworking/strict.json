@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "friday_closed": {
+      "breaks": ["changed_wednesday_closed"],
+      "stale": ["stale_friday_closed"],
+      "why": "keeps chat 1's Friday as the day that can't be booked, which chat 2 moved to Wednesday"
+    },
+    "sixty_days_ahead": {
+      "breaks": ["chat1_56_days_ahead"],
+      "why": "lets bookings go a round 60 days ahead instead of 56"
+    },
+    "under_73_minutes": {
+      "breaks": ["chat1_73_minutes"],
+      "why": "off by one: allows only bookings under 73 minutes, so exactly 73 is refused"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_73_minutes", "chat1_56_days_ahead"],
+      "why": "knows only chat 2: Wednesdays closed, but guesses an hour at most and 30 days ahead"
+    }
+  }
+}

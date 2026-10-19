@@ -1,0 +1,32 @@
+{
+  "chat_back_row_first": {
+    "value": [
+      "\\brow H\\b\\W+(\\w+\\W+)?(first|then)\\b",
+      "\\bH\\W{0,4}G\\W{0,4}[EF]|\\bH,? (then|before) G\\b",
+      "\\bback[- ]to[- ]front\\b|\\bfrom the back\\b|\\b(back|rear|last) rows? first\\b",
+      "\\b(start\\w*|begin\\w*)\\W+(\\w+\\W+){0,2}?(row H\\b|H1\\b)",
+      "\\breversed\\(\\s*ROWS\\b|\\bROWS\\[::-1\\]"
+    ]
+  },
+  "chat_never_seat_7": {
+    "value": [
+      "\\bseats? (number(ed)? |no\\.? |#)?7\\b",
+      "\\b(never|skip\\w*|exclud\\w*|avoid\\w*|without)\\W+(\\w+\\W+){0,4}?(number\\W+|#)?7\\b",
+      "\\bpillar\\b[^.\\n]{0,60}?\\b7\\b|\\b7\\b[^.\\n]{0,60}?\\bpillar",
+      "\\b(number|num|n|seat)\\s*(!=|==)\\s*7\\b",
+      "\\b7(th)? (seat|in every row|in each row)"
+    ]
+  },
+  "changed_row_f_for_board": {
+    "value": [
+      "\\b(free|board|reserv\\w*|empty|block\\w*|skip\\w*|never|keep\\w*|kept|exclud\\w*|unused|leave|hold)\\W+(\\w+\\W+){0,3}?rows? F\\b",
+      "\\brows? F\\b\\W+(\\w+\\W+){0,3}?(free|board|reserved|empty|blocked|skipped|never|kept|unused|excluded|off[- ]limits|held)",
+      "\\brow\\s*!=\\s*[\"']F[\"']|\\bHGEDCBA\\b"
+    ],
+    "stale": [
+      "\\b(free|board|reserv\\w*|empty|block\\w*|skip\\w*|never|keep\\w*|kept|exclud\\w*|unused|leave|hold)\\W+(\\w+\\W+){0,3}?rows? D\\b",
+      "\\brows? D\\b\\W+(\\w+\\W+){0,3}?(free|board|reserved|empty|blocked|skipped|never|kept|unused|excluded|off[- ]limits|held)",
+      "\\brow\\s*!=\\s*[\"']D[\"']|\\bHGFECBA\\b"
+    ]
+  }
+}

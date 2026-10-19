@@ -1,0 +1,27 @@
+{
+  "keep": [
+    {
+      "file": "README.md",
+      "text": "An unpaid invoice gets its first reminder once it is 14 days overdue. Reminders go out on Mondays, one a week, until the invoice is paid. Once an invoice is 90 days overdue it goes to the collections agency instead."
+    }
+  ],
+  "mutants": {
+    "readme_rules": {
+      "breaks": ["chat_first_reminder_10_days", "chat_thursday_reminders", "chat_collections_62_days"],
+      "stale": ["stale_first_reminder_14_days", "stale_monday_reminders", "stale_collections_90_days"],
+      "why": "follows the out-of-date README.md: the first reminder at 14 days, reminders on Mondays, collections at 90 days"
+    },
+    "collections_60": {
+      "breaks": ["chat_collections_62_days"],
+      "why": "rounds two months to 60 days: hands invoices to collections at 60 days overdue instead of 62"
+    },
+    "reminder_after_10": {
+      "breaks": ["chat_first_reminder_10_days"],
+      "why": "off by one: reminders start once an invoice is more than 10 days overdue, so not at exactly 10"
+    },
+    "tuesday_reminders": {
+      "breaks": ["chat_thursday_reminders"],
+      "why": "sends the reminders on Tuesdays instead of Thursdays"
+    }
+  }
+}

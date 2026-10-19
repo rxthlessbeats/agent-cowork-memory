@@ -1,0 +1,4 @@
+[mail]
+from = "orders@corner.example"
+host = "mail.corner.example"
+port = 587

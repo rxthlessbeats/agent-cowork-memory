@@ -1,0 +1,34 @@
+{
+  "keep": [
+    {
+      "file": "validators.py",
+      "text": "Usernames are 3 to 20 characters, letters and digits only"
+    }
+  ],
+  "mutants": {
+    "repo_rule": {
+      "breaks": ["chat1_min_4", "chat1_underscore", "chat1_unique_ignoring_case", "changed_max_24", "chat2_dots"],
+      "stale": ["stale_3_chars", "stale_max_20", "stale_no_underscore", "stale_no_dots", "stale_case_sensitive"],
+      "why": "follows the out-of-date docstring: 3 to 20 letters and digits, case-sensitive"
+    },
+    "chat1_only": {
+      "breaks": ["changed_max_24", "chat2_dots"],
+      "stale": ["stale_max_16", "stale_no_dots"],
+      "why": "knows only chat 1: 4 to 16 letters, digits and underscores, so no 24 and no dots"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_min_4", "chat1_underscore", "chat1_unique_ignoring_case"],
+      "stale": ["stale_3_chars", "stale_no_underscore", "stale_case_sensitive"],
+      "why": "knows only chat 2 (up to 24, dots too) and takes the rest from the docstring: 3 at least, no underscores, case-sensitive"
+    },
+    "max_off_by_one": {
+      "breaks": ["changed_max_24"],
+      "why": "len(name) in range(4, 24), which refuses a name of exactly 24"
+    },
+    "half_casefold": {
+      "breaks": ["chat1_unique_ignoring_case"],
+      "stale": ["stale_case_sensitive"],
+      "why": "lowercases the new name but not the taken ones, so alice is free while Alice is taken"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "chat1_dots_report_first": {
+    "value": [
+      "\\b(sales|stock|returns|report)[}>]?\\.[^\\s.]+\\.[^\\s.]+\\.csv\\b",
+      "\\b(join\\w*|separat\\w*|delimit\\w*)\\W+(\\w+\\W+){0,3}?(with|by)\\W+(a\\W+)?(dots?|periods?|full stops?|[\"'`]\\.[\"'`])",
+      "\\b(dot|period)[- ]separated\\b",
+      "\\breport( name| type)?,? (comes )?first\\b",
+      "[\"'`]\\.[\"'`]\\.join\\("
+    ]
+  },
+  "chat1_ddmmyyyy": {
+    "value": ["\\bddmmyyyy\\b", "%d%m%Y", "\\b(02032026|31122026)\\b"]
+  },
+  "chat2_client_number": {
+    "value": [
+      "\\b(000042|001503|000007)\\b",
+      "\\b(pad\\w*|zero-?fill\\w*|zfill)\\W+(\\w+\\W+){0,4}?(6|six)\\b",
+      "\\b(6|six)[- ]digits?\\b",
+      "[:%]06d\\b|:06\\}"
+    ],
+    "stale": [
+      "\\bacmecorp\\b",
+      "\\bnames? in (capitals|caps|upper ?case)",
+      "\\bupper\\w*\\W+(\\w+\\W+)?(client\\W+)?names?\\b"
+    ]
+  }
+}

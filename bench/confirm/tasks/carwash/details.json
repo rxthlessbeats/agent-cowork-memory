@@ -1,0 +1,15 @@
+{
+  "chat1_15p_per_started_minute": {
+    "value": ["\\b15 ?p\\b", "£ ?0?\\.15\\b", "\\b15 ?(pence|p) (a|per|an|each) (started )?min", "\\b0\\.15\\b"]
+  },
+  "chat1_cap_22_minutes": {
+    "value": ["\\b22 ?(min|minutes|mins)\\b", "\\b1320 ?(s|sec|secs|seconds)\\b"]
+  },
+  "chat2_free_under_30s": {
+    "value": [
+      "(under|less than|below|shorter than|fewer than|<) ?30 ?(s|sec|secs|seconds)\\b",
+      "\\b30 ?(s|sec|secs|seconds)\\b[^.\\n]{0,40}\\bfree\\b",
+      "\\bfree\\b[^.\\n]{0,60}\\b30 ?(s|sec|secs|seconds)\\b"
+    ]
+  }
+}

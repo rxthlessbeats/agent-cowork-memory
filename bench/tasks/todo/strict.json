@@ -1,0 +1,22 @@
+{
+  "mutants": {
+    "docstring_rule": {
+      "breaks": ["chat_due_date_first", "chat_no_due_is_seven_days", "chat_low_only_if_overdue"],
+      "stale": ["stale_priority_first"],
+      "why": "lost the team's rules and follows the module docstring: priority first, undated last, low todos listed"
+    },
+    "priority_first": {
+      "breaks": ["chat_due_date_first"],
+      "stale": ["stale_priority_first"],
+      "why": "keeps the 7-day and low rules but sorts by priority before due date, as the docstring says"
+    },
+    "undated_last": {
+      "breaks": ["chat_no_due_is_seven_days"],
+      "why": "puts todos with no due date last instead of counting them as due 7 days after today"
+    },
+    "drops_all_low": {
+      "breaks": ["chat_low_only_if_overdue"],
+      "why": "leaves out every low-priority todo, missing the exception for overdue ones"
+    }
+  }
+}

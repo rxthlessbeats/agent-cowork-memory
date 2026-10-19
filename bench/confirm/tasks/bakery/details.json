@@ -1,0 +1,16 @@
+{
+  "chat1_81_minutes_ahead": {
+    "value": ["\\b81 ?(min|mins|minutes|m)\\b", "\\b81-minute", "minutes ?= ?81\\b"]
+  },
+  "chat1_no_friday_pickups": {
+    "value": [
+      "\\bno (pre-?orders?|pickups?|pick-ups?|collections?|orders?)\\b[^.\\n]{0,30}\\bfridays?\\b",
+      "\\bfridays?\\b[^.\\n]{0,40}\\b(market|no pickups?|closed|refus\\w*|not allowed|blocked|excluded)\\b",
+      "\\b(refus|reject|block|disallow|exclud|never|not on)\\w*[^.\\n]{0,30}\\bfridays?\\b",
+      "weekday\\(\\) ?(==|!=) ?4\\b|isoweekday\\(\\) ?(==|!=) ?5\\b"
+    ]
+  },
+  "chat2_trade_12_percent_off": {
+    "value": ["\\b12 ?(%|percent|per cent)", "\\b0?\\.88\\b", "\\b88 ?(%|percent|per cent)"]
+  }
+}

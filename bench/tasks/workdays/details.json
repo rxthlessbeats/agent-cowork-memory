@@ -1,0 +1,30 @@
+{
+  "chat_end_counts_not_start": {
+    "value": [
+      "\\bstart (day |date )?(does not|doesn[’']t|is not|isn[’']t|won[’']t|never|not) (count|includ)",
+      "\\b(exclud\\w*|not counting|skip\\w*|without) (the )?start (day|date)|\\bstart[ -](day |date )?exclusive|\\bexclusive of (the )?start",
+      "\\bend[ -](day |date )?(does count|counts|is counted|is included|included|inclusive)",
+      "(?<!(not|n[’']t) )\\b(includ\\w*|counting) (the )?end (day|date)\\b",
+      "\\(start, ?end\\]"
+    ]
+  },
+  "chat_christmas_closure": {
+    "value": [
+      "\\b24(th)?\\.? ?(of )?dec",
+      "\\bdec(ember)?\\.? ?24(th)?\\b",
+      "\\b12[-/]24\\b|\\b12, ?24\\b",
+      "\\b24\\.12\\b",
+      "christmas eve[^\\n]{0,30}new year"
+    ],
+    "stale": ["public holidays?"]
+  },
+  "chat_negative": {
+    "value": [
+      "\\bnegative (count|result|workdays|days)",
+      "\\b(return|give|yield)\\w* (a |the )?(negative|negated|minus)",
+      "\\bnegat(ed|e) (the )?(count|result|value|total)",
+      "-\\s*workdays\\(",
+      "\\b(anti-?symmetric|sign[- ]flip)"
+    ]
+  }
+}

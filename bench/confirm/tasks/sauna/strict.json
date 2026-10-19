@@ -1,0 +1,27 @@
+{
+  "keep": [
+    { "file": "README.md", "text": "The heater can be set to anything up to 100 °C." },
+    { "file": "README.md", "text": "A session lasts 90 minutes." },
+    { "file": "README.md", "text": "The sauna is closed on Mondays for cleaning." }
+  ],
+  "mutants": {
+    "readme_rule": {
+      "breaks": ["chat_heater_96", "chat_session_76_minutes", "chat_closed_wednesday"],
+      "stale": ["stale_100c", "stale_90_minutes", "stale_closed_monday"],
+      "why": "follows the out-of-date README.md: the heater up to 100 °C, 90-minute sessions, closed on Mondays"
+    },
+    "hour_sessions": {
+      "breaks": ["chat_session_76_minutes"],
+      "why": "guesses the usual one-hour session"
+    },
+    "heater_95": {
+      "breaks": ["chat_heater_96"],
+      "why": "off by one: keeps the heater below 96 °C instead of letting it reach 96"
+    },
+    "closed_monday_and_wednesday": {
+      "breaks": ["chat_closed_wednesday"],
+      "stale": ["stale_closed_monday"],
+      "why": "knows only part of the change: closes on Wednesdays as well as on README.md's Mondays"
+    }
+  }
+}

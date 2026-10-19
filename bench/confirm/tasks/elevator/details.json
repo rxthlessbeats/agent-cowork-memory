@@ -1,0 +1,21 @@
+{
+  "chat_no_mondays": {
+    "value": [
+      "\\bno (bookings?|moves?|reservations?)\\b[^.\\n]{0,20}\\bmondays?\\b",
+      "\\bmondays?\\b[^.\\n]{0,40}\\b(service\\w*|maintenance|closed|blocked|refused|not allowed|unavailable|off[- ]limits)\\b",
+      "\\b(refus|reject|block|disallow|forbid|exclud|never|not on)\\w*[^.\\n]{0,30}\\bmondays?\\b",
+      "weekday\\(\\) ?(==|!=) ?0\\b|isoweekday\\(\\) ?(==|!=) ?1\\b"
+    ]
+  },
+  "chat_26_minutes_apart": {
+    "value": ["\\b26 ?(min|mins|minutes|m)\\b", "\\b26-minute"]
+  },
+  "chat_10_days_ahead": {
+    "value": [
+      "\\b(10|ten) days\\b",
+      "\\b(10|ten)-day\\b",
+      "\\bup to the 11th\\b",
+      "\\bdays_ahead\\b[^\\n]{0,10}\\b10\\b"
+    ]
+  }
+}

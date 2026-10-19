@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "free_to_100kg": {
+      "breaks": ["chat_free_up_to_78kg"],
+      "why": "guesses a round free allowance, loads up to 100 kg, instead of the chat's 78 kg"
+    },
+    "vans_any_day": {
+      "breaks": ["chat_vans_fridays_only"],
+      "why": "the natural default: lets vans in any day, instead of only on Fridays"
+    },
+    "free_under_78kg": {
+      "breaks": ["chat_free_up_to_78kg"],
+      "why": "off by one: a load of exactly 78 kg pays, where loads up to 78 kg go free"
+    },
+    "fee_449": {
+      "breaks": ["chat_flat_494"],
+      "why": "a look-alike fee: £4.49 for a paying load, not £4.94"
+    }
+  }
+}

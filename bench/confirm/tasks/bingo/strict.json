@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "turn1_34_calls": {
+      "breaks": ["changed_jackpot_32"],
+      "stale": ["stale_jackpot_34"],
+      "why": "keeps the first plan's 34 calls for the jackpot, which the chat changed to 32"
+    },
+    "prize_half": {
+      "breaks": ["chat_prize_44"],
+      "why": "guesses the full-house prize is half the card sales, not 44%"
+    },
+    "under_32_calls": {
+      "breaks": ["changed_jackpot_32"],
+      "why": "off by one: a full house in exactly 32 calls doesn't win the jackpot"
+    },
+    "no_jackpot_thursday": {
+      "breaks": ["chat_no_jackpot_tuesday"],
+      "why": "a look-alike day: no jackpot on Thursdays instead of Tuesdays"
+    }
+  }
+}

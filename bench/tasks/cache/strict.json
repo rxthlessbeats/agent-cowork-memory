@@ -1,0 +1,26 @@
+{
+  "keep": [
+    { "file": "DESIGN.md", "text": "in a JSON file at the path it is given" },
+    { "file": "DESIGN.md", "text": "An entry expires one hour after it is written" }
+  ],
+  "mutants": {
+    "design_doc": {
+      "breaks": ["chat_ten_minutes", "chat_deletes_expired"],
+      "stale": ["stale_one_hour"],
+      "why": "follows the out-of-date DESIGN.md: entries live an hour, and get only skips an expired one"
+    },
+    "one_hour": {
+      "breaks": ["chat_ten_minutes"],
+      "stale": ["stale_one_hour"],
+      "why": "keeps DESIGN.md's one-hour expiry, which the chat changed to 10 minutes"
+    },
+    "keeps_expired": {
+      "breaks": ["chat_deletes_expired"],
+      "why": "returns None for an expired entry but leaves it in the table"
+    },
+    "sliding": {
+      "breaks": ["chat_ten_minutes"],
+      "why": "restarts an entry's 10 minutes on every read: expires 10 minutes after its last use, not after its write"
+    }
+  }
+}

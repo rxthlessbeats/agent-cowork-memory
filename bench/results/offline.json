@@ -1,0 +1,119 @@
+{
+ "date": "2026-10-17T02:10:15.095Z",
+ "handoff": [
+  {
+   "messages": 10,
+   "chars_each": 356,
+   "opening": 4,
+   "middle": 4,
+   "latest": 4
+  },
+  {
+   "messages": 40,
+   "chars_each": 356,
+   "opening": 4,
+   "middle": 4,
+   "latest": 4
+  },
+  {
+   "messages": 160,
+   "chars_each": 356,
+   "opening": 4,
+   "middle": 0,
+   "latest": 4
+  },
+  {
+   "messages": 10,
+   "chars_each": 1780,
+   "opening": 4,
+   "middle": 4,
+   "latest": 4
+  },
+  {
+   "messages": 40,
+   "chars_each": 1780,
+   "opening": 4,
+   "middle": 0,
+   "latest": 4
+  },
+  {
+   "messages": 160,
+   "chars_each": 1780,
+   "opening": 4,
+   "middle": 0,
+   "latest": 4
+  }
+ ],
+ "search": {
+  "notes": 40,
+  "keywords": 21,
+  "questions": 0
+ },
+ "contradictions": {
+  "notes": 40,
+  "caught": 30,
+  "unrelated_shown": 19,
+  "related_shown": 20
+ },
+ "stale": [
+  {
+   "mention": "src/db/pool.ts",
+   "edited": true,
+   "deleted": true,
+   "touched": false
+  },
+  {
+   "mention": "./src/db/pool.ts",
+   "edited": true,
+   "deleted": true,
+   "touched": false
+  },
+  {
+   "mention": "`src/db/pool.ts`",
+   "edited": true,
+   "deleted": true,
+   "touched": false
+  },
+  {
+   "mention": "src/db/pool.ts:42",
+   "edited": true,
+   "deleted": true,
+   "touched": false
+  },
+  {
+   "mention": "absolute path",
+   "edited": true,
+   "deleted": true,
+   "touched": false
+  },
+  {
+   "mention": "pool.ts (file name only)",
+   "edited": false,
+   "deleted": false,
+   "touched": false
+  }
+ ],
+ "schema_chars": 4927,
+ "context": [
+  {
+   "long_notes": 0,
+   "first": 186,
+   "later": 12
+  },
+  {
+   "long_notes": 10,
+   "first": 3356,
+   "later": 12
+  },
+  {
+   "long_notes": 40,
+   "first": 11439,
+   "later": 12
+  },
+  {
+   "long_notes": 160,
+   "first": 44859,
+   "later": 12
+  }
+ ]
+}

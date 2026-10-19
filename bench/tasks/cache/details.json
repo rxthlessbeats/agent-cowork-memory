@@ -1,0 +1,12 @@
+{
+  "chat_ten_minutes": {
+    "value": ["\\b(10|ten)[ -]?min", "\\b600 ?(s|sec)"],
+    "stale": ["\\b(an|one|1)[ -]?hour", "\\b3600\\b"]
+  },
+  "chat_deletes_expired": {
+    "value": [
+      "(delet|remov|purg|drop)\\w* (the |an |any |that )?(stale |old )?expired",
+      "expired \\w+ (is|are|gets?|get) (deleted|removed|purged|dropped)"
+    ]
+  }
+}

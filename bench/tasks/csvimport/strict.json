@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "task_only": {
+      "breaks": ["chat_nordic_only", "chat_min_age_16", "chat_bracket_format"],
+      "why": "lost the rules and validates from TASK.md alone: any two-letter country, any whole-number age, 'email: ...'"
+    },
+    "scandinavia": {
+      "breaks": ["chat_nordic_only"],
+      "why": "takes the Nordics for Scandinavia: SE, NO and DK, leaving out FI"
+    },
+    "over_16": {
+      "breaks": ["chat_min_age_16"],
+      "why": "boundary off by one: refuses a 16-year-old (over 16 instead of 16 or older)"
+    },
+    "colon_format": {
+      "breaks": ["chat_bracket_format"],
+      "why": "writes the usual 'email: ...' instead of the column name in square brackets"
+    }
+  }
+}

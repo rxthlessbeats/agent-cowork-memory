@@ -1,0 +1,16 @@
+{
+  "chat_increment_372": {
+    "value": ["\\b3[.,]72\\b", "\\b372\\b"]
+  },
+  "chat_opening_bid_48": {
+    "value": [
+      "\\b48[.,]00\\b",
+      "\\b4800\\b",
+      "(under|below|less than|at least|minimum( of)?|min\\.?|>=|<) ?(€|eur |\\$)?48\\b"
+    ]
+  },
+  "changed_closes_after_109_minutes": {
+    "value": ["\\b109\\b[\\s-]*(min|minutes)\\b", "\\b6540\\b"],
+    "stale": ["\\b(2|two)[ -]?hours?\\b", "\\b120 ?min", "\\b7200\\b"]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "chat1_no_wednesdays": {
+    "value": ["\\bwednesdays?\\b", "\\bweekday\\(\\) ?(==|!=) ?2\\b"]
+  },
+  "chat1_285_minutes_a_week": {
+    "value": ["\\b285\\b"]
+  },
+  "chat2_55_minute_gap": {
+    "value": [
+      "\\b55[- ]?(minutes?|mins?)\\b",
+      "\\b55\\b[^.\\n]{0,40}\\b(between|gap|break|travel)",
+      "\\b(gap|break|travel\\w*|between)\\b[^.\\n]{0,40}\\b55\\b"
+    ]
+  }
+}

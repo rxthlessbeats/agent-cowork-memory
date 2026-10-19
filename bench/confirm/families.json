@@ -1,0 +1,8 @@
+{
+  "one short chat": ["lockers", "tipping", "recycling", "bikeshare", "library", "vending", "carpool", "giftwrap"],
+  "one long chat": ["minibar", "busfare", "plants", "petclinic", "taxbands", "payslip", "elevator", "ferry"],
+  "spread over two chats": ["warehouse", "museum", "carwash", "gym", "tutoring", "laundry", "bakery", "cinema"],
+  "changed in a later chat": ["kennel", "florist", "printing", "coworking", "skipass", "roster", "dental", "pool"],
+  "corrected mid-chat": ["auction", "catering", "courier", "raffle", "buyback", "mileage", "hostel", "bingo"],
+  "contradicted by the repo": ["energy", "sauna", "barcode", "timeclock", "dunning", "wifi", "rubric", "airmiles"]
+}

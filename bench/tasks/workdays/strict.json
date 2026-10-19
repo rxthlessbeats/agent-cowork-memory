@@ -1,0 +1,22 @@
+{
+  "mutants": {
+    "docstring_rule": {
+      "breaks": ["chat_end_counts_not_start"],
+      "stale": ["stale_start_counts"],
+      "why": "follows the repo's docstring: the start day counts and the end day doesn't"
+    },
+    "public_holidays": {
+      "breaks": [],
+      "stale": ["stale_public_holidays"],
+      "why": "also skips public holidays, which payroll doesn't"
+    },
+    "closure_to_31": {
+      "breaks": ["chat_christmas_closure"],
+      "why": "closes 24 to 31 December and opens on 1 January, reading the closure's end as exclusive"
+    },
+    "reversed_zero": {
+      "breaks": ["chat_negative"],
+      "why": "keeps the old loop's 0 when end is before start instead of a negative count"
+    }
+  }
+}

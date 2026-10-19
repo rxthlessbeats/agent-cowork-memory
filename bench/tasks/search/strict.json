@@ -1,0 +1,24 @@
+{
+  "mutants": {
+    "top_synonyms": {
+      "breaks": ["goal_sofa_and_settee", "found_synonyms_updated", "found_index_rebuilt"],
+      "stale": ["stale_top_synonyms_edited"],
+      "why": "adds the couch group to the synonyms.txt at the top, which build_index never reads"
+    },
+    "not_rebuilt": {
+      "breaks": ["goal_sofa_and_settee", "found_index_rebuilt"],
+      "stale": ["stale_index_not_rebuilt"],
+      "why": "adds the couch group to tools/synonyms.txt but never runs tools/build_index.py --write"
+    },
+    "index_by_hand": {
+      "breaks": ["found_synonyms_updated"],
+      "stale": ["stale_index_hand_edited"],
+      "why": "types sofa and settee into the generated index/words.json and leaves tools/synonyms.txt as it was"
+    },
+    "decoy_wired_in": {
+      "breaks": ["found_synonyms_updated", "found_index_rebuilt"],
+      "stale": ["stale_top_synonyms_edited", "stale_synonyms_at_query_time"],
+      "why": "adds the couch group to the top synonyms.txt and makes find expand queries with it, bypassing the index"
+    }
+  }
+}

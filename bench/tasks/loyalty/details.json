@@ -1,0 +1,28 @@
+{
+  "chat_point_per_full_2_50": {
+    "value": [
+      "(?<![\\d.,])2[.,]50(?!\\d)|(€ ?|\\beur ?)2[.,]5(?!\\d)|(?<![\\d.,])2[.,]5 ?(€|eur|euros?)",
+      "\\b250 ?(cents?|c)\\b",
+      "(//|\\bdiv\\w*( by)?|\\bper|\\bevery|\\beach) ?(full |whole )?(€ ?|eur ?)?(250\\b|2[.,]50?(?!\\d))"
+    ],
+    "stale": [
+      "\\b((one|1|a) |points? )+(for |per |every |each |a )+(single |full |whole )?(euro|eur\\b|€)(?! ?\\d)",
+      "\\bpoints? per (€ ?|eur ?)1([.,]00)?(?![.,]?\\d)"
+    ]
+  },
+  "chat_nothing_under_10": {
+    "value": [
+      "\\b(under|below|less than|beneath)\\s?(€ ?|eur ?)?(10([.,]0{1,2})?|1000)(?![.,]?\\d)",
+      "(<|>=|≥)\\s?(€ ?|eur ?)?(10([.,]0{1,2})?|1000)(?![.,]?\\d)",
+      "\\b(at least|minimum|min\\.?|threshold|from)( (purchase|spend|total|amount|order))?( of| is|:)?\\s?((€ ?|eur ?)(10([.,]0{1,2})?|1000)|10[.,]0{1,2}|1000)(?![.,]?\\d)|\\b(minimum|min\\.?) (purchase|spend|total|amount|order)( of| is|:)?\\s?10(?![.,]?\\d)",
+      "\\b(10([.,]0{1,2})?|1000) ?(€|eur|euros?|cents)? ?(minimum|threshold)"
+    ]
+  },
+  "chat_tuesday_double": {
+    "value": [
+      "tuesday[^\\n]{0,40}(double|twice|2x|x2|×2|two times)",
+      "(double|twice|2x|x2|×2|two times)[^\\n]{0,40}tuesday",
+      "weekday\\(\\)\\s*==\\s*1\\b"
+    ]
+  }
+}

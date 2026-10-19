@@ -1,0 +1,22 @@
+{
+  "chat_tax_4_38": {
+    "value": ["\\b4\\.38\\b", "\\b438\\b"]
+  },
+  "chat_sunday_17_off": {
+    "value": ["\\b17 ?(%|percent|per cent)", "\\b0?\\.83\\b", "\\b83 ?(%|percent|per cent)"]
+  },
+  "changed_tax_free_from_45": {
+    "value": [
+      "\\b45\\+? ?nights?\\b",
+      "\\b45-night",
+      "\\b45 (or more|and over|and up|or longer)\\b",
+      "nights ?>= ?45\\b"
+    ],
+    "stale": [
+      "\\b58\\+? ?nights?\\b",
+      "\\b58-night",
+      "\\b58 (or more|and over|and up|or longer)\\b",
+      "nights ?>= ?58\\b"
+    ]
+  }
+}

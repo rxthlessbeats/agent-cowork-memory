@@ -1,0 +1,17 @@
+{
+  "chat_58_per_buyer": {
+    "value": [
+      "\\b58\\b[^.\\n]{0,30}\\b(tickets?|per (person|buyer|head)|each)\\b",
+      "\\b(more|over) than 58\\b",
+      "<= ?58\\b",
+      "\\b(at most|max(imum)?|cap\\w*( at| of)?|up to|limit\\w*( of| to)?) 58\\b"
+    ]
+  },
+  "chat_3580_total": {
+    "value": ["\\b3,?580\\b"]
+  },
+  "changed_65_minutes": {
+    "value": ["\\b65\\b[- ]?min", "\\b65\\)? ?minutes", ">= ?65\\b"],
+    "stale": ["\\b30\\b[- ]?min", "\\b30\\)? ?minutes"]
+  }
+}

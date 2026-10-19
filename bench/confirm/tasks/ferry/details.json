@@ -1,0 +1,21 @@
+{
+  "chat_long_over_4631": {
+    "value": ["\\b4[ ,.]?631\\s?mm\\b", "\\b4631\\b", "\\b4[.,]631\\s?m\\b"]
+  },
+  "chat_check_in_64": {
+    "value": [
+      "\\b64\\s?(min|minutes|mins)\\b",
+      "\\b64\\b[^.\\n]{0,40}\\b(before|prior)",
+      "check-?in[^.\\n]{0,40}\\b64\\b",
+      "minutes\\s?=\\s?64\\b"
+    ]
+  },
+  "chat_harbour_fee_82": {
+    "value": [
+      "(€|eur\\s?)\\s?0?[.,]82\\b",
+      "\\b0[.,]82\\b",
+      "\\b82\\s?(cents|c)\\b",
+      "\\b82\\b[^.\\n]{0,40}\\b(passenger|head|person|adult)"
+    ]
+  }
+}

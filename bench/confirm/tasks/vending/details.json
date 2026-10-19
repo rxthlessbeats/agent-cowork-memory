@@ -1,0 +1,11 @@
+{
+  "chat_low_under_26_percent": {
+    "value": ["\\b26 ?(%|percent)", "(below|under|less than|<) ?26\\b", "\\b0?\\.26\\b"]
+  },
+  "chat_coins_full_from_810": {
+    "value": ["\\b810\\b"]
+  },
+  "chat_offline_after_48_minutes": {
+    "value": ["\\b48 ?(m|mins?|minutes)\\b", "\\b48\\b[^.\\n]{0,30}\\bminutes?\\b", "\\b2,?880 ?(s|secs?|seconds)\\b"]
+  }
+}

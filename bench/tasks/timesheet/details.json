@@ -1,0 +1,25 @@
+{
+  "chat1_after_7_5_hours": {
+    "value": ["\\b7\\.5\\b", "\\b7 ?½", "seven and a half", "\\b450 ?min"]
+  },
+  "chat1_overtime_1_4": {
+    "value": [
+      "\\b1\\.40?(?!\\d)",
+      "\\b140 ?%",
+      "\\b40 ?(%|percent)\\W+(\\w+\\W+)?(extra|more|premium|on top|uplift|bonus|higher|surcharge)"
+    ]
+  },
+  "chat2_saturday_double": {
+    "value": [
+      "\\bsaturdays?\\b[^.;\\n]{0,40}?(double|2x|2×|twice|x ?2\\b|× ?2\\b)",
+      "\\b(double|2x|2×|twice)[^.;\\n]{0,30}?\\bsaturdays?\\b",
+      "\\bpremium\\b[^.;\\n]{0,20}?\\bsaturdays?\\b",
+      "\\bweekday\\(\\)\\s*==\\s*5\\b|\\bisoweekday\\(\\)\\s*==\\s*6\\b"
+    ],
+    "stale": [
+      "\\bsundays?\\b[^.;\\n]{0,40}?(double|2x|2×|twice|x ?2\\b|× ?2\\b)",
+      "\\b(double|2x|2×|twice)[^.;\\n]{0,30}?\\bsundays?\\b",
+      "\\bweekday\\(\\)\\s*==\\s*6\\b|\\bisoweekday\\(\\)\\s*==\\s*7\\b"
+    ]
+  }
+}

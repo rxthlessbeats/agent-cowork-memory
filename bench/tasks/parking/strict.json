@@ -1,0 +1,22 @@
+{
+  "mutants": {
+    "cap_13_60": {
+      "breaks": ["changed_cap_16_80"],
+      "stale": ["stale_cap_13_60"],
+      "why": "caps a session at 13.60, the first plan the chat raised to 16.80"
+    },
+    "docstring_hourly": {
+      "breaks": ["chat_twenty_minute_blocks"],
+      "stale": ["stale_per_started_hour"],
+      "why": "follows the module docstring: 2.40 per started hour instead of 80 cents per started 20 minutes"
+    },
+    "sunday_is_day_0": {
+      "breaks": ["chat_sunday_free"],
+      "why": "takes Sunday as weekday() 0, as cron and JavaScript do, so Mondays park free and Sundays pay"
+    },
+    "block_off_by_one": {
+      "breaks": ["chat_twenty_minute_blocks"],
+      "why": "off by one: counts started blocks as minutes // 20 + 1, so exactly 20 minutes costs two"
+    }
+  }
+}

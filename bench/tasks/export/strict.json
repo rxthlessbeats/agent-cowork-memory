@@ -1,0 +1,25 @@
+{
+  "mutants": {
+    "comma": {
+      "breaks": ["chat_semicolons", "chat_header"],
+      "stale": ["stale_comma"],
+      "why": "keeps csv's default comma, which the chat said not to use"
+    },
+    "iso_dates": {
+      "breaks": ["chat_uk_dates"],
+      "why": "writes the dates as they come (2024-03-25) instead of DD/MM/YYYY"
+    },
+    "signup_header": {
+      "breaks": ["chat_header"],
+      "why": "names the date column signup, after the field, instead of signup_date"
+    },
+    "newest_first": {
+      "breaks": ["chat_oldest_first"],
+      "why": "sorts by signup date the wrong way: newest first"
+    },
+    "write_csv": {
+      "breaks": ["chat_export_csv", "chat_semicolons", "chat_header", "chat_uk_dates", "chat_oldest_first"],
+      "why": "lost the function's name and calls it write_csv instead of export_csv"
+    }
+  }
+}

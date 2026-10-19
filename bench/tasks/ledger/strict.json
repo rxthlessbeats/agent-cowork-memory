@@ -1,0 +1,33 @@
+{
+  "keep": [
+    {
+      "file": "ledger.py",
+      "text": "rounded half up to whole"
+    }
+  ],
+  "mutants": {
+    "docstring_rule": {
+      "breaks": ["chat_half_even", "chat_parentheses", "chat_thousands"],
+      "stale": ["stale_half_up", "stale_leading_minus", "stale_no_commas"],
+      "why": "follows ledger.py's out-of-date docstring: round_half_up, a leading minus, no thousands separator"
+    },
+    "half_up": {
+      "breaks": ["chat_half_even"],
+      "stale": ["stale_half_up"],
+      "why": "rounds ties up, like the docstring's round_half_up, instead of half to even"
+    },
+    "minus_in_parens": {
+      "breaks": ["chat_parentheses"],
+      "why": "puts negatives in parentheses but keeps their minus: (-12.50)"
+    },
+    "no_commas": {
+      "breaks": ["chat_thousands"],
+      "stale": ["stale_no_commas"],
+      "why": "leaves out the thousands separator, as in the docstring's -1234.50"
+    },
+    "float_format": {
+      "breaks": ["chat_half_even"],
+      "why": "formats through a float, so a tie rounds by its binary value: 2.345 comes out 2.35"
+    }
+  }
+}

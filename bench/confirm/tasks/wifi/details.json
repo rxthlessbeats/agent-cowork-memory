@@ -1,0 +1,14 @@
+{
+  "chat_92_minutes": {
+    "value": ["\\b92 ?(m|mins?|minutes)\\b", "\\b92\\b[^.\\n]{0,40}\\bfirst use"],
+    "stale": ["\\b60 ?(m|mins?|minutes)\\b", "\\b(one|an|1) hour\\b"]
+  },
+  "chat_6_devices": {
+    "value": ["\\b(6|six) devices\\b", "\\bup to (6|six)\\b", "\\b(max|maximum|limit|at most)\\w*( of)? (6|six)\\b"],
+    "stale": ["\\b(3|three) devices\\b", "\\bup to (3|three)\\b"]
+  },
+  "chat_2965_mb": {
+    "value": ["\\b2,?965\\b"],
+    "stale": ["\\b1,?000 ?MB\\b", "\\b1 ?GB\\b"]
+  }
+}

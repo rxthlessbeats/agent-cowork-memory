@@ -1,0 +1,53 @@
+{
+  "chat1_min_4": {
+    "value": [
+      "\\b(4|four)\\s*(-|–|—|to|\\.\\.)\\s*(16|24)\\b",
+      "\\bbetween (4|four) and (16|24)\\b",
+      "\\bat least (4|four)\\b",
+      "\\bmin(imum)?\\b[^.\\d\\n]{0,20}\\b(4|four)\\b",
+      "\\{4,(16|24)\\}"
+    ],
+    "stale": [
+      "\\b(3|three)\\s*(-|–|—|to|\\.\\.)\\s*(20|twenty)\\b",
+      "\\bat least (3|three) (characters|chars)\\b",
+      "\\bmin(imum)?\\b[^.\\d\\n]{0,20}\\b(3|three)\\b"
+    ]
+  },
+  "chat1_underscore": {
+    "value": ["underscores?", "0-9\\.?_", "\\\\w[{.\\]]"],
+    "stale": ["letters and digits only", "(only|just) letters and digits\\b"]
+  },
+  "chat1_unique_ignoring_case": {
+    "value": ["(ignor\\w*|regardless of|irrespective of) (the )?(letter )?case", "case[- ]insensitiv\\w*", "casefold"],
+    "stale": ["\\bcase-sensitive", "two different users"]
+  },
+  "changed_max_24": {
+    "value": [
+      "\\b(4|four)\\s*(-|–|—|to|\\.\\.)\\s*24\\b",
+      "\\bbetween (4|four) and 24\\b",
+      "\\b(up to|at most|no more than) (24|twenty-four)\\b",
+      "\\bmax(imum)?\\b[^.\\d\\n]{0,20}\\b(24|twenty-four)\\b",
+      "\\b(24|twenty-four)[ -](characters?|chars?)\\b",
+      "\\{4,24\\}"
+    ],
+    "stale": [
+      "\\b(4|four)\\s*(-|–|—|to|\\.\\.)\\s*16\\b",
+      "\\bbetween (4|four) and 16\\b",
+      "\\b(up to|at most|no more than) (16|sixteen)\\b",
+      "\\bmax(imum)?\\b[^.\\d\\n]{0,20}\\b(16|sixteen)\\b",
+      "\\b(16|sixteen)[ -](characters?|chars?)\\b",
+      "\\{4,16\\}",
+      "\\b(3|three)\\s*(-|–|—|to|\\.\\.)\\s*(20|twenty)\\b"
+    ]
+  },
+  "chat2_dots": {
+    "value": [
+      "\\bdots?\\b[^.\\n]{0,30}\\b(allowed|too|also|as well)\\b",
+      "\\b(allow\\w*|plus|also|and)\\b[^.\\n]{0,30}\\b(dots?|periods?|full stops?)\\b",
+      "underscores?\\W{1,5}(and\\s+)?(dots?|periods?|full stops?)\\b",
+      "0-9(_\\.|\\._)",
+      "\\[\\\\w\\.\\]",
+      "jo\\.smith"
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "chat_only_429_503": {
+    "value": ["\\b429\\b[^\\d\\n]{1,60}\\b503\\b", "\\b503\\b[^\\d\\n]{1,60}\\b429\\b"]
+  },
+  "chat_four_attempts": {
+    "value": [
+      "(?<![\\d.,])\\b(4|four) (total |overall )?(attempts|tries|calls|requests|times)\\b",
+      "(attempts|tries)\\W{1,4}(at most |max(imum)? |up to |≤ ?|<= ?)?(4|four)\\b(?![.,]\\d)",
+      "\\b(at most|up to|max(imum)?( of)?|no more than) (4|four)\\b(?![.,]\\d)",
+      "\\b(3|three) retries|\\bretr\\w* (up to |at most )?(3|three) (more )?times"
+    ]
+  },
+  "chat_backoff": {
+    "value": [
+      "(?<![\\d.])0?\\.5(?!\\d)[^\\n]{0,40}?(?<![\\d.])1(\\.0)?(?!\\.?\\d)[^\\n]{0,40}?(?<![\\d.])2(\\.0)?(?!\\.?\\d)",
+      "\\b500 ?ms\\b",
+      "(doubl\\w*|exponential)[^\\n]{0,40}(?<![\\d.])0?\\.5(?!\\d)|(?<![\\d.])0?\\.5(?!\\d)[^\\n]{0,40}doubl",
+      "\\bhalf a second\\b"
+    ]
+  }
+}

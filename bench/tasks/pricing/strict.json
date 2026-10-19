@@ -1,0 +1,29 @@
+{
+  "keep": [{ "file": "pricing.py", "text": "def apply_coupon_float(price, coupon):" }],
+  "mutants": {
+    "docstring_rule": {
+      "breaks": ["chat_decimal_exact", "chat_floor_1", "chat_percent_cap_50"],
+      "stale": ["stale_float", "stale_floor_zero", "stale_uncapped"],
+      "why": "builds on apply_coupon_float and follows its docstring: floats, a floor of zero, any percentage up to 100%"
+    },
+    "float_math": {
+      "breaks": ["chat_decimal_exact"],
+      "stale": ["stale_float"],
+      "why": "gets the floor and the cap right but computes in floats, so 10% off 19.95 is 17.95"
+    },
+    "floor_zero": {
+      "breaks": ["chat_floor_1"],
+      "stale": ["stale_floor_zero"],
+      "why": "keeps the old docstring's floor of zero instead of 1.00"
+    },
+    "uncapped": {
+      "breaks": ["chat_percent_cap_50"],
+      "stale": ["stale_uncapped"],
+      "why": "takes the whole percentage off, as the old docstring allows, instead of at most 50%"
+    },
+    "floor_amounts_only": {
+      "breaks": ["chat_floor_1"],
+      "why": "floors only amount coupons at 1.00, so 45% off 1.80 leaves 0.99"
+    }
+  }
+}

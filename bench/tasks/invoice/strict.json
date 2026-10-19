@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "nearest_cent": {
+      "breaks": ["chat_vat_rounded_down"],
+      "stale": ["stale_rounds_up"],
+      "why": "rounds VAT to the nearest cent (Decimal's default), so it can round up, which the chat ruled out"
+    },
+    "vat_20": {
+      "breaks": ["chat_vat_17", "chat_vat_rounded_down"],
+      "why": "lost Luxembourg's 17% and uses a typical 20% VAT"
+    },
+    "fee_at_50": {
+      "breaks": ["chat_small_order_fee"],
+      "why": "boundary off by one: charges the fee at exactly 50.00 too (up to 50, not under 50)"
+    },
+    "fee_after_vat": {
+      "breaks": ["chat_small_order_fee"],
+      "why": "adds the handling fee to the gross after VAT, not to the net before it"
+    }
+  }
+}

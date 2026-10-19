@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "keep_4_minutes_free": {
+      "breaks": ["changed_last_6_minutes_free"],
+      "stale": ["stale_4_minutes_free"],
+      "why": "keeps the last 4 minutes of the shift free, the first plan the chat changed to 6"
+    },
+    "no_time_kept_free": {
+      "breaks": ["changed_last_6_minutes_free"],
+      "why": "fills the whole shift, keeping no time free for the closing announcement"
+    },
+    "three_per_artist": {
+      "breaks": ["chat_two_per_artist"],
+      "why": "off by one: lets an artist play three times"
+    },
+    "whole_minutes_limit": {
+      "breaks": ["chat_no_track_over_7_minutes"],
+      "why": "compares whole minutes, so a 7:30 track counts as 7 and gets in"
+    }
+  }
+}

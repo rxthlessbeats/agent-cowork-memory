@@ -1,0 +1,21 @@
+{
+  "chat_twenty_minute_blocks": {
+    "value": [
+      "(\\b80 ?(c\\b|cents?|¢)|\\b0[.,]80\\b).{0,40}\\b(20|twenty)[ -]?min",
+      "\\b(20|twenty)[ -]?min.{0,40}(\\b80 ?(c\\b|cents?|¢)|\\b0[.,]80\\b)",
+      "/ ?20\\b.{0,12}\\* ?80\\b|\\b80 ?\\*.{0,30}/ ?20\\b"
+    ],
+    "stale": ["by the hour", "(per|every|each|/) ?(started )?hour\\b", "\\b2[.,]40\\b"]
+  },
+  "chat_sunday_free": {
+    "value": [
+      "sundays?\\b[^.\\n]{0,40}\\b(free|no charge|nothing|zero|costs? 0|fee (is )?0)\\b",
+      "\\b(free|no charge|nothing|zero|0 cents)\\b[^.\\n]{0,40}\\bsundays?",
+      "weekday\\(\\) ?== ?6\\b|isoweekday\\(\\) ?== ?7\\b"
+    ]
+  },
+  "changed_cap_16_80": {
+    "value": ["\\b16[.,]80\\b", "\\b1680\\b"],
+    "stale": ["\\b13[.,]60\\b", "\\b1360\\b"]
+  }
+}

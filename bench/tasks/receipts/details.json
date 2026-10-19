@@ -1,0 +1,28 @@
+{
+  "chat1_year_starts_1_april": {
+    "value": [
+      "\\b(1|1st|first) (of )?apr(il)?\\b",
+      "\\bapr(il)? (1|1st|first)\\b",
+      "(year|fy)\\w* (starts?|begins?|starting|beginning|runs? from|resets?|rolls? over) (on |in |at )?(the )?(1st |first )?(of )?apr",
+      "month ?(>=|<) ?4\\b|-04-01\\b|\\b31 mar(ch)?\\b|\\bmar(ch)? 31(st)?\\b"
+    ]
+  },
+  "chat1_five_digit_counter": {
+    "value": [
+      "\\b(5|five)[ -]?digits?\\b",
+      "\\b\\d{4}-\\d{5}\\b",
+      "(:|%)05d|\\{:05\\}|zfill\\(5\\)",
+      "pad\\w* (it |the counter |counters )?(to|with) (5|five)\\b"
+    ],
+    "stale": ["\\b(4|four)[ -]?digits?\\b", "not (4|four)\\b", "(:|%)04d|\\{:04\\}|zfill\\(4\\)"]
+  },
+  "chat2_no_13": {
+    "value": [
+      "(skip|avoid|exclud|omit|jump|never)\\w* (\\w+ ){0,4}['\"`]?13\\b",
+      "\\b13['\"`]? (in (it|them|the (counter|number))|anywhere)\\b",
+      "['\"`]13['\"`]|\\bno ['\"`]?13s?\\b",
+      "\\b12,? (→|->|=>|then|comes|goes to|is followed by|jumps to|skips to) 14\\b|\\b12 ?(→|->|=>) ?14\\b",
+      "\\b129,? (→|->|=>|then|comes|goes to|is followed by|jumps to|skips to) 140\\b|\\b129 ?(→|->|=>) ?140\\b"
+    ]
+  }
+}

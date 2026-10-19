@@ -1,0 +1,26 @@
+{
+  "chat_hotfix_above": {
+    "value": [
+      "hotfix\\S*\\s+(\\w+ ){0,2}(above|higher|newer|greater|over|outranks?|beats?|wins?|(sorts?|comes?|ranks?|counts?) after)\\b",
+      "\\b(above|higher than|newer than|greater than|outranks?|beats?) (the |its )?(same|plain|base|bare|unsuffixed|un-suffixed|non-hotfix|suffixless|suffix-less)\\b",
+      "hotfix\\S*\\s*>",
+      "<\\s*\\S*-hotfix"
+    ]
+  },
+  "chat_calendar_below": {
+    "value": [
+      "(calendar|two[ -]part|2[ -]part|calver|yyyy\\.n|2023\\.4)[^\\n]{0,60}?\\b(below|lower|lowest|under|older|less than|loses?|beneath)\\b",
+      "\\b(below|lower than|older than|less than|under|beneath) (every|all|any) (\\w+[ -]){0,2}(three[ -]part|3[ -]part|x\\.y\\.z|semver|semantic)",
+      "\\b(three|3)[ -]part (\\w+ ){0,3}(always )?(ranks? |sorts? |counts? |are |is )?(above|over|higher|newer|beats?|outranks?|wins?)\\b"
+    ]
+  },
+  "chat_v_prefix": {
+    "value": [
+      "\\bv\\d+\\.\\d+",
+      "\\b(prefix|prepend)\\w*( it| the (result|winner|output|version|string))?( with)? (an? |the )?[\"'`]?v\\b",
+      "(^|[^\\w])[\"'`]?v[\"'`]? ?(-|\\s)?(prefix|in front)",
+      "\\bleading [\"'`]?v\\b",
+      "[\"'`]v[\"'`] ?\\+|\\bf[\"']v\\{"
+    ]
+  }
+}

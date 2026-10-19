@@ -1,0 +1,22 @@
+{
+  "mutants": {
+    "zero_based": {
+      "breaks": ["chat_one_based", "chat_out_of_range"],
+      "stale": ["stale_zero_based"],
+      "why": "keeps page() counting from 0, as the code had it, and only adds the range check"
+    },
+    "no_lower_bound": {
+      "breaks": ["chat_out_of_range"],
+      "why": "counts from 1 but leaves the range to slicing, so page -1 wraps round to items from the end"
+    },
+    "raises": {
+      "breaks": ["chat_out_of_range"],
+      "stale": ["stale_raises"],
+      "why": "raises IndexError for a page out of range, where the chat said it never raises"
+    },
+    "last_page_dropped": {
+      "breaks": ["chat_one_based"],
+      "why": "off by one at the top: treats the last page as past the end"
+    }
+  }
+}

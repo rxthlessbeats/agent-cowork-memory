@@ -1,0 +1,32 @@
+{
+  "chat_no_track_over_7_minutes": {
+    "value": [
+      "(longer than|over|more than|exceed\\w*|above|>|past) ?(7|seven)[ -]?min",
+      "(at most|max(imum)?|up to|<=|≤|no more than|under|within|limit of|cap of) ?(7|seven)[ -]?min",
+      "\\b(7|seven)[ -]?min\\w* (max|maximum|limit|cap|ceiling)",
+      "(>|<=|<|over|above|exceed\\w*|max\\w*|at most|longer than|more than) ?420\\b|\\b420 ?(s|sec|seconds)\\b"
+    ]
+  },
+  "chat_two_per_artist": {
+    "value": [
+      "artist\\w*\\W+(\\w+\\W+){0,4}(more than|at most|max(imum)?|up to|only|limit(ed)? to|capped at) (twice|2 times|two times)\\b",
+      "(at most|max(imum)?|up to|no more than|<=|≤) ?(2|two) (tracks? |songs? )?(per|by|from|for each|of each|each|for any) (the same |one |any |a single |an? )?artist",
+      "\\b(2|two) (tracks? |songs? )?per artist"
+    ]
+  },
+  "changed_last_6_minutes_free": {
+    "value": [
+      "(last|final|reserv\\w*|keep\\w*|leav\\w*) (the )?(last |final )?(6|six)[ -]?min",
+      "\\b(6|six)[ -]?min\\w* (free|left free|reserved|kept free|spare|buffer|of buffer|for the (closing )?announcement|at the end|off)",
+      "minus (6|six)\\b|\\b(minutes|shift\\w*) ?- ?6\\b",
+      "\\b360 ?(s|sec|seconds)\\b|- ?360\\b"
+    ],
+    "stale": [
+      "(last|final|reserv\\w*|keep\\w*|leav\\w*) (the )?(last |final )?(4|four)[ -]?min",
+      "\\b(4|four)[ -]?min\\w* (free|left free|reserved|kept free|spare|buffer|of buffer|for the (closing )?announcement|at the end|off)",
+      "minus (4|four)\\b|\\b(minutes|shift\\w*) ?- ?4\\b",
+      "not (4|four)\\b",
+      "\\b240 ?(s|sec|seconds)\\b|- ?240\\b"
+    ]
+  }
+}

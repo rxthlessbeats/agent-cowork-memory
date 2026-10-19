@@ -1,0 +1,30 @@
+{
+ "X-03": {
+  "name": "Watering can",
+  "weight_g": 900
+ },
+ "X-08": {
+  "name": "Trowel",
+  "weight_g": 300
+ },
+ "X-12": {
+  "name": "Claw hammer",
+  "weight_g": 600
+ },
+ "X-17": {
+  "name": "Hedge shears",
+  "weight_g": 25000
+ },
+ "X-21": {
+  "name": "Garden kneeler",
+  "weight_g": 450
+ },
+ "X-30": {
+  "name": "Spirit level",
+  "weight_g": 750
+ },
+ "X-41": {
+  "name": "Cordless drill",
+  "weight_g": 1600
+ }
+}

@@ -1,0 +1,25 @@
+{
+  "mutants": {
+    "chat1_only": {
+      "breaks": ["chat2_client_number"],
+      "stale": ["stale_client_name"],
+      "why": "knows only chat 1: the client's name in capitals, ACMECORP, which chat 2 replaced with the padded number"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_dots_report_first", "chat1_ddmmyyyy"],
+      "why": "knows only chat 2's padded client number: keeps the repo's client-first order and ISO date, joined with underscores"
+    },
+    "iso_date": {
+      "breaks": ["chat1_ddmmyyyy"],
+      "why": "keeps the repo's ISO date, 2026-03-02, instead of DDMMYYYY"
+    },
+    "client_first": {
+      "breaks": ["chat1_dots_report_first"],
+      "why": "joins with dots but keeps the repo's order, client first, then report, then date"
+    },
+    "unpadded_number": {
+      "breaks": ["chat2_client_number"],
+      "why": "uses the client number but doesn't pad it to six digits: sales.42.02032026.csv"
+    }
+  }
+}

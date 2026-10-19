@@ -1,0 +1,19 @@
+{
+  "mutants": {
+    "edited_dev": {
+      "breaks": ["goal_db_log", "found_prod_ini"],
+      "stale": ["stale_dev_db_log"],
+      "why": "configures the db logger in logconf/dev.ini, the fuller file, which the service doesn't start with"
+    },
+    "dev_made_default": {
+      "breaks": ["found_prod_ini"],
+      "stale": ["stale_dev_db_log", "stale_dev_ini_live"],
+      "why": "configures the db logger in dev.ini, then makes APP_ENV default to dev so the live service loads it"
+    },
+    "db_log_in_code": {
+      "breaks": ["found_prod_ini"],
+      "stale": ["stale_db_log_in_code"],
+      "why": "sets the db logger's level and db.log handler in setup_logging's code instead of in the live prod.ini"
+    }
+  }
+}

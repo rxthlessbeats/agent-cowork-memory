@@ -1,0 +1,27 @@
+{
+  "keep": [
+    { "file": "README.md", "text": "Hours past 8 in one shift are overtime, paid at time and a half." },
+    { "file": "README.md", "text": "Sunday shifts pay double." },
+    { "file": "README.md", "text": "Shifts longer than 6 hours get a 5.00 meal allowance." }
+  ],
+  "mutants": {
+    "readme_rules": {
+      "breaks": ["chat_overtime_33_percent", "chat_saturday_double", "chat_meal_2_39"],
+      "stale": ["stale_time_and_a_half", "stale_sunday_double", "stale_meal_5"],
+      "why": "follows the out-of-date README: overtime at time and a half, Sunday double, a 5.00 meal allowance"
+    },
+    "weekend_double": {
+      "breaks": ["chat_saturday_double"],
+      "stale": ["stale_sunday_double"],
+      "why": "pays both weekend days double, reading Saturday as an addition to the README's Sunday"
+    },
+    "meal_from_6_hours": {
+      "breaks": ["chat_meal_2_39"],
+      "why": "off by one: gives the 2.39 allowance to a shift of exactly 6 hours, not only to longer ones"
+    },
+    "overtime_a_third": {
+      "breaks": ["chat_overtime_33_percent"],
+      "why": "pays overtime a third extra (4/3) instead of 33% extra (1.33)"
+    }
+  }
+}

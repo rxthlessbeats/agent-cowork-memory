@@ -1,0 +1,16 @@
+{
+  "mutants": {
+    "rate_per_second": {
+      "breaks": ["chat_refill_every_1_5s"],
+      "why": "reads one token every 1.5 seconds as 1.5 tokens a second"
+    },
+    "burst_10": {
+      "breaks": ["chat_burst_of_8"],
+      "why": "a bucket of 10, the usual default, instead of the contract's 8"
+    },
+    "internal_limited": {
+      "breaks": ["chat_internal_unlimited"],
+      "why": "limits internal- keys like any other"
+    }
+  }
+}

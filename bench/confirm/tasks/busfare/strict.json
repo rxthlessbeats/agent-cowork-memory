@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "no_cap": {
+      "breaks": ["chat_cap_7_43"],
+      "why": "the natural default without the cap: every tap pays, however much the day has cost"
+    },
+    "half_price_thursdays": {
+      "breaks": ["chat_thursday_quarter_off"],
+      "why": "guesses the usual half price for Thursdays instead of 25% off"
+    },
+    "cap_after_full_fare": {
+      "breaks": ["chat_cap_7_43"],
+      "why": "off by one ride: the tap that crosses 7.43 still pays its full fare, and only the taps after it are free"
+    },
+    "stop_4727_free": {
+      "breaks": ["chat_stop_4772_free"],
+      "why": "a look-alike stop: 4727, the hospital's digits swapped, is free instead of 4772"
+    }
+  }
+}

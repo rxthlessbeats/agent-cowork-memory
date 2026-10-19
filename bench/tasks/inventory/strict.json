@@ -1,0 +1,24 @@
+{
+  "mutants": {
+    "guessed_rules": {
+      "breaks": ["chat_safety_buffer", "chat_cover_21_days", "chat_cap_500", "chat_skip_x"],
+      "why": "lost the purchasing rules and guesses: reorder under the lead time, order a month's use, no cap, x- items too"
+    },
+    "no_safety_buffer": {
+      "breaks": ["chat_safety_buffer"],
+      "why": "reorders only when the days left fall under the lead time, without the 3-day buffer"
+    },
+    "order_21_days_flat": {
+      "breaks": ["chat_cover_21_days"],
+      "why": "orders 21 days of use without taking off what is on hand"
+    },
+    "no_cap": {
+      "breaks": ["chat_cap_500"],
+      "why": "forgets the store room's cap of 500 units per delivery"
+    },
+    "reorders_x": {
+      "breaks": ["chat_skip_x"],
+      "why": "forgets that x- items are being phased out and reorders them"
+    }
+  }
+}

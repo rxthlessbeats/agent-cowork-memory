@@ -1,0 +1,15 @@
+{
+  "chat_period_23rd_to_22nd": {
+    "value": [
+      "\\b23(rd)?\\b[^.\\n]{0,80}\\b22(nd)?\\b",
+      "(up to|through|until|till|to|ends? on|ending on|cut-?off( is| on)?|closes? on)( and including)?( the)? 22(nd)?\\b",
+      "\\b22(nd)?\\b[^.\\n]{0,40}(cut-?off|pay period)"
+    ]
+  },
+  "chat_pension_from_1561": {
+    "value": ["\\b1,?561(\\.00)?\\b"]
+  },
+  "chat_paid_last_thursday": {
+    "value": ["(last|final) thursday", "thursday[^.\\n]{0,20}\\b(of|in) (the|each|every) month"]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "mutants": {
+    "chat2_only": {
+      "breaks": ["chat1_warn_from_88", "chat1_percent_rounded_up"],
+      "stale": ["stale_warn_from_80"],
+      "why": "knows only chat 2: the repo's 80% WARN_AT, and the percentage rounded to the nearest whole number"
+    },
+    "chat1_only": {
+      "breaks": ["chat2_warn_under_1gb_free", "chat2_no_warnings_from_1tb"],
+      "why": "knows only chat 1: no warning for under 1 GB free, and company accounts of 1 TB or more still warned"
+    },
+    "warn_from_80": {
+      "breaks": ["chat1_warn_from_88"],
+      "stale": ["stale_warn_from_80"],
+      "why": "keeps the repo's WARN_AT of 0.80 instead of 88%"
+    },
+    "rounded_nearest": {
+      "breaks": ["chat1_percent_rounded_up"],
+      "why": "rounds the percentage to the nearest whole number, so 90.2% shows as 90%, not 91%"
+    }
+  }
+}

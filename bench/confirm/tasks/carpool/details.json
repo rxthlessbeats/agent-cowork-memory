@@ -1,0 +1,21 @@
+{
+  "chat_cap_9_26": {
+    "value": [
+      "\\b9\\.26\\b",
+      "\\b926 ?(c|cents)\\b",
+      "\\b(cap|max|at most|more than|limit)\\w*\\W+(\\w+\\W+){0,3}?926\\b"
+    ]
+  },
+  "chat_free_under_4175_m": {
+    "value": ["\\b4,?175 ?(m|metres|meters)\\b", "\\b4\\.175 ?km\\b", "\\b4,?175\\b"]
+  },
+  "chat_due_first_tuesday": {
+    "value": [
+      "\\b(due|paid|pay|payable|settle\\w*|payday)\\b[^.\\n]{0,40}\\btuesdays?\\b",
+      "\\btuesdays?\\b[^.\\n]{0,30}\\b(payday|due|pay)\\b",
+      "\\bfirst tuesday\\b",
+      "\\bnext tuesday\\b",
+      "isoweekday\\(\\) ?(==|!=) ?2\\b|weekday\\(\\) ?(==|!=) ?1\\b"
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "changed_battery_62": {
+    "value": [
+      "\\b62 ?(%|percent)",
+      "\\bbatter\\w*\\b[^.\\n]{0,40}\\b62\\b",
+      "\\b62\\b[^.\\n]{0,30}\\bbatter",
+      "(>=|≥|<) ?62\\b"
+    ],
+    "stale": [
+      "\\b80 ?(%|percent)",
+      "\\bbatter\\w*\\b[^.\\n]{0,40}\\b80\\b",
+      "\\b80\\b[^.\\n]{0,30}\\bbatter",
+      "(>=|≥|<) ?80\\b"
+    ]
+  },
+  "chat_bought_within_91_days": {
+    "value": ["\\b91\\b", "\\b92 days\\b"]
+  },
+  "chat_cracked_40_off": {
+    "value": [
+      "\\b40 ?(%|percent)[^.\\n]{0,20}\\b(off|less|lower|reduc\\w*|discount\\w*|deduct\\w*)",
+      "\\bcrack\\w*\\b[^.\\n]{0,40}\\b40 ?(%|percent)",
+      "\\b40 ?(%|percent)[^.\\n]{0,40}\\bcrack",
+      "\\b(0\\.60?|60 ?%) of\\b|\\* ?0\\.60?\\b"
+    ]
+  }
+}

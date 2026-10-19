@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "chat1_discount": {
+      "breaks": ["changed_31_percent_off"],
+      "stale": ["stale_25_percent_off"],
+      "why": "gives every dog after the first chat 1's 25% off, which chat 2 changed to 31%"
+    },
+    "meds_once": {
+      "breaks": ["chat1_meds_743_a_night"],
+      "why": "charges the 7.43 for medication once a stay instead of every night"
+    },
+    "late_from_10": {
+      "breaks": ["chat1_late_after_10_minutes"],
+      "why": "charges another night for a dog collected exactly 10 minutes after checkout"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_late_after_10_minutes", "chat1_meds_743_a_night"],
+      "why": "knows only chat 2's 31%: no extra night for a late collection, and guesses 5.00 a night for medication"
+    }
+  }
+}

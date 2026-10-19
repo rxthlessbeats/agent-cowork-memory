@@ -1,0 +1,21 @@
+{
+  "chat_allowance_4145": {
+    "value": ["\\b4,?145\\b"]
+  },
+  "chat_under_18_exempt": {
+    "value": [
+      "\\b(under|below|younger than|less than)\\W+(the age of |age )?18\\b",
+      "\\b18\\b[^.\\n]{0,30}\\b(no tax|exempt|nothing|tax-free|zero)\\b",
+      "\\b(no tax|exempt|tax-free)\\b[^.\\n]{0,30}\\b18\\b",
+      "\\bage ?(<|<=|≤) ?1[78]\\b"
+    ]
+  },
+  "chat_half_from_65": {
+    "value": [
+      "\\b65\\b[^.\\n]{0,40}\\b(half|halve\\w*|50 ?%)",
+      "\\b(half|halve\\w*|50 ?%)[^.\\n]{0,40}\\b65\\b",
+      "\\b65 or (over|older|above)\\b|\\b65\\+",
+      "\\bage ?(>=|≥) ?65\\b"
+    ]
+  }
+}

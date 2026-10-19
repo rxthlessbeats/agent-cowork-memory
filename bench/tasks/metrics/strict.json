@@ -1,0 +1,19 @@
+{
+  "mutants": {
+    "edited_example": {
+      "breaks": ["goal_region_label", "found_labels_ini"],
+      "stale": ["stale_example_edited"],
+      "why": "changes labels.example.ini at the top, which the exporter never reads, instead of exporter/labels.ini"
+    },
+    "example_wired_in": {
+      "breaks": ["found_labels_ini"],
+      "stale": ["stale_example_edited", "stale_labels_not_from_ini"],
+      "why": "changes labels.example.ini and points main.labels() at it, leaving exporter/labels.ini as it was"
+    },
+    "labels_in_code": {
+      "breaks": ["found_labels_ini"],
+      "stale": ["stale_labels_not_from_ini"],
+      "why": "drops host and adds region in main.labels()'s code instead of in exporter/labels.ini"
+    }
+  }
+}

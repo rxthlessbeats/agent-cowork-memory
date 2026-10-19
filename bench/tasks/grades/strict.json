@@ -1,0 +1,32 @@
+{
+  "mutants": {
+    "docstring_rule": {
+      "breaks": [
+        "chat1_final_counts_half",
+        "chat1_lowest_homework_dropped",
+        "chat2_no_d",
+        "chat2_final_under_45_fails"
+      ],
+      "stale": ["stale_equal_thirds", "stale_d_grade"],
+      "why": "lost both chats and follows the repo: equal thirds, every homework counted, CUTOFFS' D, no final-exam rule"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_final_counts_half", "chat1_lowest_homework_dropped"],
+      "stale": ["stale_equal_thirds"],
+      "why": "knows only chat 2 (no D, final under 45 fails) and keeps the docstring's equal thirds with every homework"
+    },
+    "chat1_only": {
+      "breaks": ["chat2_no_d", "chat2_final_under_45_fails"],
+      "stale": ["stale_d_grade"],
+      "why": "knows only chat 1 (25/25/50, lowest homework dropped) and keeps CUTOFFS' D, with no final-exam rule"
+    },
+    "final_45_fails": {
+      "breaks": ["chat2_final_under_45_fails"],
+      "why": "fails a final of exactly 45 too: 45 or less instead of under 45"
+    },
+    "keeps_lowest_homework": {
+      "breaks": ["chat1_lowest_homework_dropped"],
+      "why": "forgets to drop each student's lowest homework score before averaging"
+    }
+  }
+}

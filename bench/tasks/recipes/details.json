@@ -1,0 +1,33 @@
+{
+  "chat_round_up_to_25": {
+    "value": [
+      "\\bmultiples? of 25\\b",
+      "\\b1210\\b[\\s\\S]{0,20}?\\b1225\\b",
+      "\\b(round\\w*\\W+(\\w+\\W+){0,3}?up|ceil\\w*)\\W+(\\w+\\W+){0,5}?25s?\\b",
+      "\\b25 ?(g|ml)?[- ]?(steps|increments)\\b|\\b(steps|increments) of 25\\b|\\b25s\\b",
+      "\\bceil\\([^)]*\\/\\s*25\\b"
+    ]
+  },
+  "chat_salt_and_pepper_fixed": {
+    "value": [
+      "\\bsalt\\W+(\\w+\\W+){0,2}?pepper\\b[^.\\n]{0,40}?\\b(don.t|do not|never|not|aren.t|unscaled|unchanged|fixed|stay|kept|keep|as[- ]is|exactly|untouched|constant)",
+      "\\b(except|excluding|but not|apart from|other than|besides)\\W+(\\w+\\W+){0,2}?salt\\b",
+      "\\b(keep|leave|exempt|skip)\\w*\\W+(\\w+\\W+){0,2}?salt\\W+(\\w+\\W+){0,2}?pepper",
+      "\\b(don.t|do not|never|not) scal\\w*\\W+(\\w+\\W+){0,2}?salt",
+      "[{(\\[]\\s*[\"']salt[\"']\\s*,\\s*[\"']pepper[\"']"
+    ]
+  },
+  "changed_at_least_12_guests": {
+    "value": [
+      "\\b(at least|minimum( of)?|min|fewer than|less than|smallest batch( is)?|no fewer than|floor\\w*( of| at)?)\\b\\W*(\\w+\\W+){0,2}?(12|twelve)\\b",
+      "\\b(12|twelve)[- ](guests?|people|portions|servings|covers)\\W+(\\w+\\W+){0,2}?(minimum|at least|min\\b|or more)",
+      "\\bmax\\(\\s*(\\w+\\s*,\\s*12|12\\s*,)"
+    ],
+    "stale": [
+      "\\b(at least|minimum( of)?|min|fewer than|less than|smallest batch( is)?|no fewer than|floor\\w*( of| at)?)\\b\\W*(\\w+\\W+){0,2}?(10|ten)\\b",
+      "\\b(10|ten)[- ](guests?|people|portions|servings|covers)\\W+(\\w+\\W+){0,2}?(minimum|at least|min\\b|or more)",
+      "\\bmax\\(\\s*(\\w+\\s*,\\s*10|10\\s*,)",
+      "\\b(not|instead of|rather than|previously|formerly)\\W+(10|ten)\\b(?!\\s*%)"
+    ]
+  }
+}

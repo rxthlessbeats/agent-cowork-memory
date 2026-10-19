@@ -1,0 +1,26 @@
+{
+  "mutants": {
+    "most_stock_first": {
+      "breaks": ["changed_priciest_first"],
+      "stale": ["stale_most_stock_first"],
+      "why": "shows the most units in stock first, the first plan the chat changed to price"
+    },
+    "cheapest_first": {
+      "breaks": ["changed_priciest_first"],
+      "why": "sorts by price the default way, cheapest first, instead of most expensive first"
+    },
+    "docstring_tags": {
+      "breaks": ["chat_names_not_tags"],
+      "stale": ["stale_matches_tags"],
+      "why": "follows the module docstring and matches the query against tags as well as names"
+    },
+    "in_stock_only": {
+      "breaks": ["chat_hide_under_3_in_stock"],
+      "why": "reuses in_stock, hiding only products with no units instead of fewer than 3"
+    },
+    "hide_3_or_fewer": {
+      "breaks": ["chat_hide_under_3_in_stock"],
+      "why": "off by one: hides products with exactly 3 units too"
+    }
+  }
+}

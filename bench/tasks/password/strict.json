@@ -1,0 +1,22 @@
+{
+  "mutants": {
+    "generic_policy": {
+      "breaks": ["chat_two_digits", "chat_no_company_name", "chat_no_trailing_digit"],
+      "stale": ["stale_needs_uppercase", "stale_needs_symbol"],
+      "why": "lost the signed-off rules and writes the usual policy: an uppercase letter, a digit and a symbol"
+    },
+    "usual_extras": {
+      "breaks": [],
+      "stale": ["stale_needs_uppercase", "stale_needs_symbol"],
+      "why": "adds the usual uppercase and symbol requirements on top, which the chat ruled out"
+    },
+    "one_digit": {
+      "breaks": ["chat_two_digits"],
+      "why": "asks for a digit, not two"
+    },
+    "case_sensitive_name": {
+      "breaks": ["chat_no_company_name"],
+      "why": "refuses the company name only as written, Brightwell, not in any letter case"
+    }
+  }
+}

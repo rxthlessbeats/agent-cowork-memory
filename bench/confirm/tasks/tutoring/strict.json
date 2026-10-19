@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "five_hours_a_week": {
+      "breaks": ["chat1_285_minutes_a_week"],
+      "why": "guesses five hours, 300 minutes, a week instead of 285"
+    },
+    "hour_between": {
+      "breaks": ["chat2_55_minute_gap"],
+      "why": "guesses an hour between a tutor's sessions instead of 55 minutes"
+    },
+    "cap_below_285": {
+      "breaks": ["chat1_285_minutes_a_week"],
+      "why": "off by one: refuses the session that brings a student's week to exactly 285 minutes"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_no_wednesdays", "chat1_285_minutes_a_week"],
+      "why": "knows only chat 2: the 55 minutes between a tutor's sessions, but books Wednesdays and has no weekly limit"
+    }
+  }
+}

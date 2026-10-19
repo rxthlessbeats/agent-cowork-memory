@@ -1,0 +1,19 @@
+{
+  "mutants": {
+    "edited_decoy": {
+      "breaks": ["goal_overtime_after_38", "found_live_rule"],
+      "stale": ["stale_decoy_edited"],
+      "why": "moves the threshold to 38 in payroll/overtime.py, which nothing imports, not in payroll/rules/overtime.py"
+    },
+    "decoy_wired_in": {
+      "breaks": ["found_live_rule"],
+      "stale": ["stale_decoy_edited", "stale_rules_bypassed"],
+      "why": "moves payroll/overtime.py to 38 and rewrites pay to use it, bypassing the rules registry"
+    },
+    "overtime_in_pay": {
+      "breaks": ["found_live_rule"],
+      "stale": ["stale_rules_bypassed"],
+      "why": "works the 38-hour overtime out in pay itself instead of finding which overtime.py runs"
+    }
+  }
+}

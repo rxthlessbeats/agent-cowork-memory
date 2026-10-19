@@ -1,0 +1,28 @@
+{
+  "changed_seniors_from_61": {
+    "value": [
+      "\\b61\\b[^.\\n]{0,40}\\b(senior|half|older|over|and up)",
+      "\\b(senior|half)\\w*\\b[^.\\n]{0,40}\\b61\\b",
+      "(>=|≥) ?61\\b|\\b61\\+"
+    ],
+    "stale": [
+      "\\b65\\b[^.\\n]{0,40}\\b(senior|half|older|over|and up)",
+      "\\b(senior|half)\\w*\\b[^.\\n]{0,40}\\b65\\b",
+      "(>=|≥) ?65\\b|\\b65\\+"
+    ]
+  },
+  "chat1_free_from_82": {
+    "value": [
+      "\\b82\\b[^.\\n]{0,40}\\b(free|nothing|no charge)",
+      "\\b(free|nothing|no charge)\\b[^.\\n]{0,40}\\b82\\b",
+      "(>=|≥) ?82\\b|\\b82\\+"
+    ]
+  },
+  "chat1_thursday_26_off": {
+    "value": [
+      "\\bthursdays?\\b[^.\\n]{0,40}\\b26 ?(%|percent)",
+      "\\b26 ?(%|percent)[^.\\n]{0,40}\\bthursdays?\\b",
+      "\\b0\\.74\\b"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "chat_dry_under_39": {
+    "value": [
+      "(under|below|less than|lower than|drier than|<) ?39\\b",
+      "\\b39 ?%[^.\\n]{0,30}(moist|dry|damp|water|threshold)",
+      "(moist|dry|damp|water|threshold)\\w*[^.\\n]{0,30}\\b39 ?%",
+      "moisture ?(>=|≥|<) ?39\\b"
+    ]
+  },
+  "chat_46_minutes": {
+    "value": ["\\b46 ?(min|minutes|mins)\\b", "\\b46m\\b"]
+  },
+  "chat_no_water_thursday": {
+    "value": [
+      "\\b(no|never|skip|not|don'?t|without|except)\\w*[^.\\n]{0,40}\\b(thursdays?|thurs|thu)\\b",
+      "\\b(thursdays?|thurs|thu)\\b[^.\\n]{0,40}\\b(no|never|skip|off|feed|dry)\\w*",
+      "weekday\\(\\) ?(==|!=) ?3\\b|isoweekday\\(\\) ?(==|!=) ?4\\b"
+    ]
+  }
+}

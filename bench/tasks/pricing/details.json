@@ -1,0 +1,26 @@
+{
+  "chat_decimal_exact": {
+    "value": [
+      "decimal\\.decimal",
+      "\\b(use|uses|using|with|in|as|returns?|returning|takes?|via) (a |an |the |python'?s )?decimals?\\b(?! (places?|points?|digits?|separators?))",
+      "\\bdecimals?,? (not|instead of|rather than) floats?",
+      "\\bdecimal([- ]based| arithmetic| math| type| module| class)\\b"
+    ],
+    "stale": ["\\bfloats?\\b", "apply_coupon_float"]
+  },
+  "chat_floor_1": {
+    "value": [
+      "\\b(below|under|less than|lower than|beneath|at least|min(imum)?( price)?( of| is)?|floor(ed)?( of| at| is| to)?|clamp(ed|s)?( to| at)?) (€|\\$|£)?1(\\.00)?(?![%\\d]|[.,]\\d)",
+      "\\b1\\.00 (minimum|floor|min\\b)"
+    ],
+    "stale": ["(below|under|less than) (zero|0)\\b", "(floor|minimum|clamp\\w*)( of| at| to)? (zero|0(\\.0+)?)\\b"]
+  },
+  "chat_percent_cap_50": {
+    "value": [
+      "\\b50 ?(%|percent)",
+      "\\bfifty (%|percent)",
+      "\\b(at most|no more than|up to|cap\\w*( at)?|max(imum)?( of)?) half\\b"
+    ],
+    "stale": ["\\b100 ?(%|percent)"]
+  }
+}

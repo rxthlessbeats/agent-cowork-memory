@@ -1,0 +1,29 @@
+{
+  "chat1_83_and_96": {
+    "value": ["\\b83\\b[\\s\\S]{0,120}\\b96\\b", "\\b96\\b[\\s\\S]{0,120}\\b83\\b"]
+  },
+  "chat1_lowest_of_last_three": {
+    "value": [
+      "\\b(lowest|minimum|min|smallest)\\b\\W+(\\w+\\W+){0,3}?((last|latest|most recent|final|newest)\\W+(3|three)|(3|three)\\W+(most recent|latest|last|newest|final))\\b",
+      "\\bmin\\(\\s*[\\w.]+\\[\\s*-\\s*3\\s*:\\s*\\]",
+      "\\b(last|latest|most recent|final)\\W+(3|three)\\b[^.\\n]{0,50}?\\b(lowest|minimum|min|smallest)\\b",
+      "\\ball\\W+(\\w+\\W+){0,3}?(last|latest|most recent)\\W+(3|three)\\b",
+      "\\b(last|latest|most recent)\\W+(3|three)\\W+(\\w+\\W+){0,2}?(are\\W+)?all\\b"
+    ]
+  },
+  "chat2_host_first": {
+    "value": [
+      "[\\w.-]+:\\/[\\w\\/]*\\s+(WARNING|CRITICAL)\\b",
+      "host[>}]?:[<{]?mount[>}]?\\s+[<{]?(level|severity|status|WARNING|CRITICAL)",
+      "(start|begin)\\w*\\s+with\\s+(the\\s+)?[<{]?host",
+      "\\bhost(:mount)?\\s+first\\b",
+      "(level|severity)\\W+(\\w+\\W+){0,3}?after\\W+(the\\W+)?[<{]?host"
+    ],
+    "stale": [
+      "(WARNING|CRITICAL)\\s+[\\w.-]+:\\/",
+      "\\blevel\\S{0,10}\\s+[<{]?host[>}]?:",
+      "\\blevel\\b[^.\\n]{0,25}\\bthen\\s+(the\\s+)?host",
+      "(start|begin)\\w*\\s+with\\s+(the\\s+)?(alert\\s+)?level"
+    ]
+  }
+}

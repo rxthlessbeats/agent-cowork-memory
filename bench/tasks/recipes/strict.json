@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "min_10_guests": {
+      "breaks": ["changed_at_least_12_guests"],
+      "stale": ["stale_min_10_guests"],
+      "why": "scales for at least 10 guests, the first plan the chat raised to 12"
+    },
+    "no_minimum": {
+      "breaks": ["changed_at_least_12_guests"],
+      "why": "scales for the guests as given, with no smallest batch"
+    },
+    "round_to_nearest_25": {
+      "breaks": ["chat_round_up_to_25"],
+      "why": "rounds to the nearest multiple of 25 instead of up"
+    },
+    "salt_and_pepper_scale": {
+      "breaks": ["chat_salt_and_pepper_fixed"],
+      "why": "scales salt and pepper like every other ingredient"
+    }
+  }
+}

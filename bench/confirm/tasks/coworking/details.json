@@ -1,0 +1,22 @@
+{
+  "chat1_73_minutes": {
+    "value": ["\\b73\\b[- ]?min", "\\b(longer|more) than 73\\b", "<= ?73\\b", "\\b73\\)? ?minutes"]
+  },
+  "chat1_56_days_ahead": {
+    "value": ["\\b56\\b[- ]?days?", "\\b(more|further) than 56\\b", "<= ?56\\b", "\\b(8|eight) weeks"]
+  },
+  "changed_wednesday_closed": {
+    "value": [
+      "\\bwednesdays?\\b[^.\\n]{0,60}\\b(closed|can'?t|cannot|no bookings?|not bookable|unbookable|refus\\w*|cleaners?|cleaning)\\b",
+      "\\b(no bookings?|closed|can'?t be booked|cannot be booked|not bookable|refus\\w*|cleaners?|cleaning)\\b[^.\\n]{0,40}\\bwednesdays?\\b",
+      "weekday\\(\\) ?(==|!=) ?2\\b",
+      "isoweekday\\(\\) ?(==|!=) ?3\\b"
+    ],
+    "stale": [
+      "\\bfridays?\\b[^.\\n]{0,60}\\b(closed|can'?t|cannot|no bookings?|not bookable|unbookable|refus\\w*|cleaners?|cleaning)\\b",
+      "\\b(no bookings?|closed|can'?t be booked|cannot be booked|not bookable|refus\\w*|cleaners?|cleaning)\\b[^.\\n]{0,40}\\bfridays?\\b",
+      "weekday\\(\\) ?(==|!=) ?4\\b",
+      "isoweekday\\(\\) ?(==|!=) ?5\\b"
+    ]
+  }
+}

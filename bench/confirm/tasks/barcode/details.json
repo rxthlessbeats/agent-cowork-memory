@@ -1,0 +1,14 @@
+{
+  "chat_within_48_hours": {
+    "value": ["\\b48 ?(h|hrs?|hours?)\\b", "\\b(2|two) days\\b", "timedelta\\(hours ?= ?48\\)"],
+    "stale": ["\\b24 ?(h|hrs?|hours?)\\b", "timedelta\\(hours ?= ?24\\)"]
+  },
+  "chat_21_percent_off": {
+    "value": ["\\b21 ?%", "\\b21 ?(percent|per cent)\\b", "\\b0\\.79\\b|\\b79 ?%"],
+    "stale": ["\\bhalf[ -]?price\\b", "\\b50 ?% off\\b"]
+  },
+  "chat_from_469": {
+    "value": ["£ ?4\\.69\\b", "\\b4\\.69\\b", "\\b469 ?(p|pence)\\b"],
+    "stale": ["(under|below|less than|cheaper than|from|at least) £ ?1(\\.00)?(?![.\\d])"]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "chat_keep_45_days": {
+    "value": ["\\b45[ -]?(days?|d)\\b", "\\bforty[- ]five\\b", "keep_days ?= ?45\\b"],
+    "stale": ["\\b30[ -]?(days?|d)\\b", "keep_days ?= ?30\\b", "\\bthirty days"]
+  },
+  "chat_never_dot_keep": {
+    "value": ["\\.keep\\b", "[\"'`]keep[\"'`] in (the |their |its )?(file ?)?names?"]
+  },
+  "chat_dry_run_default": {
+    "value": [
+      "force ?(=|is|set to) ?true",
+      "dry[- ]?run",
+      "only (report|list|return|print|show)s?\\b[^.\\n]{0,60}would"
+    ]
+  }
+}

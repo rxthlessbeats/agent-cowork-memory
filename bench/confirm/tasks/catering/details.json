@@ -1,0 +1,22 @@
+{
+  "changed_one_server_per_18": {
+    "value": [
+      "\\b(1|one|a) (server )?(per|for every|every|for each|to) 18\\b",
+      "\\b(every|per|each) 18 guests\\b",
+      "\\b18 guests (per|a|each|to a) server\\b",
+      "guests ?/ ?18\\b"
+    ],
+    "stale": [
+      "\\b(1|one|a) (server )?(per|for every|every|for each|to) 25\\b",
+      "\\b(every|per|each) 25 guests\\b",
+      "\\b25 guests (per|a|each|to a) server\\b",
+      "guests ?/ ?25\\b"
+    ]
+  },
+  "chat_arrive_54_minutes": {
+    "value": ["\\b54[ -]?(min|minutes?\\b|m\\b)"]
+  },
+  "chat_sunday_33_percent": {
+    "value": ["\\b33 ?(%|percent|per cent)", "\\b1\\.33\\b", "\\bsundays?\\b[^.\\n]{0,60}\\b33\\b"]
+  }
+}

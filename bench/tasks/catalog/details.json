@@ -1,0 +1,24 @@
+{
+  "chat_names_not_tags": {
+    "value": [
+      "names? only",
+      "never (the )?tags",
+      "not (the )?tags",
+      "ignor\\w* (the )?tags",
+      "(not|never|no) (against |on |in )?tags"
+    ]
+  },
+  "chat_hide_under_3_in_stock": {
+    "value": [
+      "(fewer|less) than (3|three)",
+      "(under|below) (3|three)\\b",
+      "at least (3|three)\\b",
+      "stock ?(>=|≥) ?3",
+      "stock ?< ?3"
+    ]
+  },
+  "changed_priciest_first": {
+    "value": ["(by|on) price", "(most )?expensive (products |ones |items )?first", "price,? (descending|highest)"],
+    "stale": ["most (units )?(in )?stock first", "(by|on) (stock|units in stock)", "most stock"]
+  }
+}

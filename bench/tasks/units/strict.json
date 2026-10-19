@@ -1,0 +1,22 @@
+{
+  "mutants": {
+    "plain_label": {
+      "breaks": ["chat_cut_down", "chat_decimal_comma", "chat_original_in_brackets"],
+      "stale": ["stale_rounds_up"],
+      "why": "lost Legal's label rules: the number rounded to 2 decimals with a point, and no original in brackets"
+    },
+    "rounds_to_nearest": {
+      "breaks": ["chat_cut_down"],
+      "stale": ["stale_rounds_up"],
+      "why": "formats with 2 decimals, which rounds 1 mi up to 1,61 km, instead of cutting down to 1,60"
+    },
+    "decimal_point": {
+      "breaks": ["chat_decimal_comma"],
+      "why": "keeps Python's decimal point instead of the comma"
+    },
+    "square_brackets": {
+      "breaks": ["chat_original_in_brackets"],
+      "why": "reads \"in brackets\" as square brackets: [1 mi] instead of (1 mi)"
+    }
+  }
+}

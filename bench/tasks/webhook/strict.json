@@ -1,0 +1,31 @@
+{
+  "keep": [
+    { "file": "utils.py", "text": "def retry_with_backoff(tries=3, delay=1.0):" },
+    { "file": "utils.py", "text": "# TODO: the last try, raising its error if it fails too" }
+  ],
+  "mutants": {
+    "todo_rule": {
+      "breaks": ["chat_only_get_head", "chat_four_attempts", "chat_fixed_2s"],
+      "stale": ["stale_retries_post", "stale_three_tries", "stale_doubling_wait"],
+      "why": "does what the TODO says: finishes utils.retry_with_backoff and decorates send with it (any method, 3 tries, waits doubling from 1 s)"
+    },
+    "decorator_tuned": {
+      "breaks": ["chat_fixed_2s"],
+      "stale": ["stale_doubling_wait"],
+      "why": "builds on the rejected retry_with_backoff, for GET and HEAD with 4 tries from 2 s, so its waits still double"
+    },
+    "retries_post": {
+      "breaks": ["chat_only_get_head"],
+      "stale": ["stale_retries_post"],
+      "why": "retries every method, POST included"
+    },
+    "get_only": {
+      "breaks": ["chat_only_get_head"],
+      "why": "retries GET but forgets HEAD"
+    },
+    "four_retries": {
+      "breaks": ["chat_four_attempts"],
+      "why": "makes 4 retries after the first try, 5 attempts in all"
+    }
+  }
+}

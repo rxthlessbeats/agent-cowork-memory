@@ -1,0 +1,33 @@
+{
+  "keep": [
+    {
+      "file": "README.md",
+      "text": "Every time on the site is shown in UTC"
+    },
+    {
+      "file": "settings.py",
+      "text": "TIMEZONE = \"UTC\""
+    }
+  ],
+  "mutants": {
+    "repo_rule": {
+      "breaks": ["chat_lisbon_time", "chat_dotted_date"],
+      "stale": ["stale_shown_in_utc", "stale_year_first_date"],
+      "why": "follows the out-of-date README and settings.py: UTC, year first, like 2026-12-31 23:00 UTC"
+    },
+    "settings_utc": {
+      "breaks": ["chat_lisbon_time"],
+      "stale": ["stale_shown_in_utc"],
+      "why": "takes the zone from settings.TIMEZONE, which the user said to leave, so it still shows UTC"
+    },
+    "iso_date": {
+      "breaks": ["chat_dotted_date"],
+      "stale": ["stale_year_first_date"],
+      "why": "shows Lisbon time but keeps the README's year-first date"
+    },
+    "fixed_offset": {
+      "breaks": ["goal_fmt", "chat_lisbon_time"],
+      "why": "Lisbon as a fixed UTC+1 instead of Europe/Lisbon, so winter times are an hour off"
+    }
+  }
+}

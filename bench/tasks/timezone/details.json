@@ -1,0 +1,16 @@
+{
+  "chat_lisbon_time": {
+    "value": ["lisbon", "portug(al|uese) time"],
+    "stale": ["(show|shows|shown|display|displays|displayed) in UTC", "TIMEZONE\\s*=\\s*\"UTC\""]
+  },
+  "chat_dotted_date": {
+    "value": [
+      "\\b31\\.12\\.2026\\b",
+      "\\bdd\\.mm\\.yyyy\\b",
+      "%d\\.%m\\.%Y",
+      "\\bday\\.month\\.year\\b",
+      "day first,? with dots"
+    ],
+    "stale": ["\\b\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d UTC\\b", "\\byyyy-mm-dd\\b", "%Y-%m-%d"]
+  }
+}

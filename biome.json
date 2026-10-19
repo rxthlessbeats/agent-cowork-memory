@@ -1,5 +1,25 @@
 {
-  "files": { "includes": ["src/**", "test/**", "bin/**"] },
-  "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
-  "linter": { "rules": { "recommended": true } }
+  "files": {
+    "includes": [
+      "src/**",
+      "test/**",
+      "bin/**",
+      "bench/**",
+      "!bench/results",
+      "!bench/tasks/*/repo",
+      "!bench/tasks/*/solution",
+      "!bench/tasks/*/solution-2",
+      "!bench/tasks/*/mutants"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "linter": {
+    "rules": {
+      "recommended": true
+    }
+  }
 }

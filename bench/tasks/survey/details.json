@@ -1,0 +1,33 @@
+{
+  "chat_flip_q3_q6": {
+    "value": [
+      "\\bq3\\W+(and|&|,|\\/|or)\\W*q6\\b[^.\\n]{0,40}?\\b(flip|revers|invert|worded|other way|negat)",
+      "\\b(flip|revers|invert)\\w*\\W+(\\w+\\W+){0,3}?q3\\b",
+      "\\b1\\s*(counts as|becomes|->|→|=>|maps to)\\s*5\\b",
+      "\\b6\\s*-\\s*(answers?|ans|a|value|val|v|x|score|response|r)\\b"
+    ]
+  },
+  "chat_six_answers_needed": {
+    "value": [
+      "\\b(fewer|less) than (6|six)\\b",
+      "(\\b(at least|minimum( of)?|min)\\b|>=|≥)\\s*(6|six)\\b",
+      "\\b(need|require)\\w*\\W+(\\w+\\W+){0,2}?(6|six)\\b",
+      "\\banswered\\([^)]*\\)\\s*<\\s*6\\b",
+      "\\b(6|six) or more (answers|answered|questions)"
+    ]
+  },
+  "changed_q8_counts_double": {
+    "value": [
+      "\\bq8\\b(?:not q1\\b|(?!\\bq\\d)[^.;\\n]){0,40}?\\b(double|twice|2x|weight(ed)?\\W+(of\\W+)?2\\b)",
+      "\\b(double\\w*|twice|2x)\\b(?:(?!\\bq\\d)[^.;\\n]){0,25}?\\bq8\\b",
+      "\\bq8[\"'\\]]*\\s*(×|x|\\*)\\s*2\\b",
+      "\\bweights?\\b[^\\n]{0,40}[\"']q8[\"']\\s*:\\s*2\\b"
+    ],
+    "stale": [
+      "\\bq1\\b(?:(?!\\bq\\d)[^.;\\n]){0,40}?\\b(double|twice|2x|weight(ed)?\\W+(of\\W+)?2\\b)",
+      "\\b(double\\w*|twice|2x)\\b(?:(?!\\bq\\d)[^.;\\n]){0,25}?\\bq1\\b",
+      "\\bq1[\"'\\]]*\\s*(×|x|\\*)\\s*2\\b",
+      "\\bweights?\\b[^\\n]{0,40}[\"']q1[\"']\\s*:\\s*2\\b"
+    ]
+  }
+}

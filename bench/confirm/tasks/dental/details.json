@@ -1,0 +1,16 @@
+{
+  "changed_notice_39_hours": {
+    "value": ["\\b39 ?(hours?|hrs?|h)\\b", "\\b39-hour", "hours ?= ?39\\b"],
+    "stale": ["\\b72 ?(hours?|hrs?|h)\\b", "\\b72-hour", "hours ?= ?72\\b", "\\bthree days\\b"]
+  },
+  "chat_fee_5_37": {
+    "value": ["\\b5\\.37\\b", "\\b537\\b"]
+  },
+  "chat_friday_free": {
+    "value": [
+      "\\bfridays?\\b[^.\\n]{0,40}\\b(free|never charged|not charged|no (fee|charge)|exempt\\w*|waived)",
+      "\\b(free|never charged|not charged|no (fee|charge)|exempt\\w*|waived?)\\b[^.\\n]{0,40}\\bfridays?\\b",
+      "weekday\\(\\) ?(==|!=) ?4\\b|isoweekday\\(\\) ?(==|!=) ?5\\b|calendar\\.FRIDAY"
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "mutants": {
+    "double_underscore": {
+      "breaks": ["chat_dot_nested"],
+      "why": "nests keys with the usual double underscore (MYAPP_DB__PORT) instead of the dot the orchestrator allows"
+    },
+    "true_false_bool": {
+      "breaks": ["chat_yes_no"],
+      "stale": ["stale_true_false_bool"],
+      "why": "turns true and false into booleans too, where the chat said they stay strings"
+    },
+    "adds_new_keys": {
+      "breaks": ["chat_unknown_raises"],
+      "stale": ["stale_adds_unknown_keys"],
+      "why": "adds a key for a variable that matches none, where the chat said never add keys but raise"
+    },
+    "names_key": {
+      "breaks": ["chat_unknown_raises"],
+      "why": "raises a KeyError naming the config key (color), not the variable (MYAPP_COLOR)"
+    }
+  }
+}

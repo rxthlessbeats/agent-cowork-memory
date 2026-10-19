@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "bulk_from_51": {
+      "breaks": ["changed_bulk_from_28_pages"],
+      "stale": ["stale_bulk_from_51"],
+      "why": "keeps chat 1's bulk threshold, 51 pages, which chat 2 changed to 28"
+    },
+    "ten_percent_off": {
+      "breaks": ["chat1_33_percent_off"],
+      "why": "guesses the usual 10% bulk discount instead of chat 1's 33%"
+    },
+    "bulk_over_28": {
+      "breaks": ["changed_bulk_from_28_pages"],
+      "why": "off by one: bulk from 29 pages, where 28 pages already is"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_33_percent_off", "chat1_rush_371"],
+      "why": "knows only chat 2: bulk from 28 pages, but guesses 10% off and a £5 rush fee"
+    }
+  }
+}

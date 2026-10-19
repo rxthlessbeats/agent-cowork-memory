@@ -1,0 +1,24 @@
+{
+  "chat_nordic_only": {
+    "value": [
+      "\\bnordics?\\b",
+      "\\b(SE|NO|DK|FI)\\b[\\W_]{1,8}\\b(SE|NO|DK|FI)\\b[\\W_]{1,8}\\b(SE|NO|DK|FI)\\b",
+      "(sweden|norway|denmark|finland)[\\W_]+(and |or )?(sweden|norway|denmark|finland)"
+    ]
+  },
+  "chat_min_age_16": {
+    "value": [
+      "\\b(16|sixteen)(\\+|\\b[^.\\n]{0,20}\\b(or|and) (older|over|above|up)\\b)",
+      "(\\bat least|\\bmin(imum)?(_age)?\\b|\\bno younger than|>=|≥)[^.\\n\\d]{0,20}\\b(16|sixteen)\\b",
+      "(\\bunder|\\bbelow|younger than|less than|<)\\W{0,3}(16|sixteen)\\b"
+    ]
+  },
+  "chat_bracket_format": {
+    "value": [
+      "(?<![\\w\\])])\\[ ?(age|email|country|name|col(umn)?([ _]?name)?|field([ _]?name)?|key|<\\w+>|\\{\\w+\\})\\]",
+      "(column|field)( names?)? (wrapped |enclosed )?in (square )?brackets",
+      "bracketed (column|field)",
+      "square[- ]bracket"
+    ]
+  }
+}

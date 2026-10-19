@@ -1,0 +1,16 @@
+{
+  "chat1_late_after_10_minutes": {
+    "value": [
+      "\\b(10|ten)[ -]?min\\w*[^.\\n]{0,60}\\b(late|after|another night|extra night)",
+      "(more than|over|later than) (10|ten) min",
+      "\\b11:10\\b"
+    ]
+  },
+  "chat1_meds_743_a_night": {
+    "value": ["\\b7[.,]43\\b", "\\b743\\b"]
+  },
+  "changed_31_percent_off": {
+    "value": ["\\b31 ?(%|percent|per ?cent)", "\\b0[.,]69\\b"],
+    "stale": ["\\b25 ?(%|percent|per ?cent)", "\\b0[.,]75\\b"]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "mutants": {
+    "chat2_only": {
+      "breaks": ["chat1_subject_only", "chat1_sales_then_billing_then_tech"],
+      "stale": ["stale_reads_body"],
+      "why": "knows only chat 2: the docstring's subject or body, and the first team in KEYWORDS order wins"
+    },
+    "chat1_only": {
+      "breaks": ["chat2_priority1_oncall"],
+      "why": "knows only chat 1: priority 1 tickets are routed to the teams like any other"
+    },
+    "reads_body": {
+      "breaks": ["chat1_subject_only"],
+      "stale": ["stale_reads_body"],
+      "why": "follows the docstring and matches words in the body as well as the subject"
+    },
+    "most_words": {
+      "breaks": ["chat1_sales_then_billing_then_tech"],
+      "why": "gives a ticket that matches several teams to the team with the most words in the subject"
+    },
+    "on_call_hyphen": {
+      "breaks": ["chat2_priority1_oncall"],
+      "why": "sends priority 1 to an on-call queue spelled on-call, not oncall"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "mutants": {
+    "plain_toc": {
+      "breaks": ["chat_sec_anchor", "chat_skip_draft", "chat_contents_header"],
+      "stale": ["stale_github_anchor"],
+      "why": "lost the site's rules: plain GitHub anchors as slug's docstring says, no Contents line, drafts listed"
+    },
+    "github_anchor": {
+      "breaks": ["chat_sec_anchor"],
+      "stale": ["stale_github_anchor"],
+      "why": "links to the bare slug, slug's GitHub-style anchor, without the renderer's sec- prefix"
+    },
+    "section_prefix": {
+      "breaks": ["chat_sec_anchor"],
+      "why": "remembers a prefix but not which: #section- instead of #sec-"
+    },
+    "contents_heading": {
+      "breaks": ["chat_contents_header"],
+      "why": "starts with a usual \"## Contents\" heading instead of the bold **Contents** line"
+    },
+    "keeps_drafts": {
+      "breaks": ["chat_skip_draft"],
+      "why": "forgets to leave out headings that end with (draft)"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "mutants": {
+    "default_toml": {
+      "breaks": ["goal_sender", "found_local_toml"],
+      "stale": ["stale_default_sender"],
+      "why": "sets the sender and Reply-To in config/default.toml, the obvious file, which local.toml overrides"
+    },
+    "example_toml": {
+      "breaks": ["goal_sender", "found_local_toml"],
+      "stale": ["stale_example_sender"],
+      "why": "sets the sender and Reply-To in config/example.toml, which nothing reads"
+    },
+    "sender_in_code": {
+      "breaks": ["found_local_toml"],
+      "stale": ["stale_sender_hardcoded"],
+      "why": "hard-codes the sender and Reply-To in mailer.build instead of finding the config file that decides"
+    },
+    "reply_to_key": {
+      "breaks": ["goal_sender"],
+      "why": "sets the sender in local.toml but the Reply-To under a reply-to key mailer.build never reads"
+    }
+  }
+}

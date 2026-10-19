@@ -1,0 +1,23 @@
+{
+  "keep": [{ "file": "README.md", "text": "Each user may make at most 60 requests per minute" }],
+  "mutants": {
+    "readme_rule": {
+      "breaks": ["chat_per_key", "chat_no_key_refused", "chat_100_rolling", "chat_admin_unlimited"],
+      "stale": ["stale_per_user", "stale_60_per_minute", "stale_admin_limited"],
+      "why": "follows the out-of-date README: 60 a minute per user, for everyone, keyless requests allowed"
+    },
+    "fixed_window": {
+      "breaks": ["chat_100_rolling"],
+      "why": "100 per clock minute instead of any rolling 60 seconds"
+    },
+    "admin_limited": {
+      "breaks": ["chat_admin_unlimited"],
+      "stale": ["stale_admin_limited"],
+      "why": "limits admin- keys like any other"
+    },
+    "off_by_one": {
+      "breaks": ["chat_per_key", "chat_100_rolling"],
+      "why": "lets a 101st request through"
+    }
+  }
+}

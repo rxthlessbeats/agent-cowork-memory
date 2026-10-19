@@ -1,0 +1,20 @@
+{
+  "chat_one_based": {
+    "value": [
+      "\\b(1|one)[- ]?(based|indexed)",
+      "\\b(number\\w*|count\\w*|start\\w*|index\\w*)( pages?)? (from|at) (1|one)\\b",
+      "\\bpage\\b[^.\\n]{0,25}\\b(1|one)\\b[^.\\n]{0,30}\\bfirst (page|items)"
+    ],
+    "stale": [
+      "\\b(0|zero)[- ]?(based|indexed)",
+      "\\b(number\\w*|count\\w*|start\\w*|index\\w*)( pages?)? (from|at) (0|zero)\\b"
+    ]
+  },
+  "chat_out_of_range": {
+    "value": [
+      "(out[- ]of[- ]range|\\b(past|beyond|after) the (last|final|end)|\\b(below|under|less than) (1|one)\\b|< ?1\\b)[^.\\n]{0,60}(empty|\\[\\])",
+      "(empty|\\[\\])[^.\\n]{0,60}(out[- ]of[- ]range|\\b(past|beyond|after) the (last|final|end)|\\b(below|under|less than) (1|one)\\b|< ?1\\b)",
+      "\\b(never|not|doesn['’]?t|does not|without|no|instead of) rais"
+    ]
+  }
+}
