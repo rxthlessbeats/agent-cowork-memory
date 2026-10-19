@@ -1,0 +1,25 @@
+{
+  "mutants": {
+    "no_api_key": {
+      "breaks": ["chat_api_key"],
+      "why": "keeps step 1's password and token and drops api_key"
+    },
+    "dicts_only": {
+      "breaks": ["chat_nested"],
+      "why": "looks inside nested dicts but not lists"
+    },
+    "card_redacted": {
+      "breaks": ["chat_card_last4"],
+      "why": "hides card_number as [REDACTED] like the other secrets instead of keeping its last 4 digits"
+    },
+    "card_all_masked": {
+      "breaks": ["chat_card_last4"],
+      "why": "stars every digit of the card number, dropping keep the last 4"
+    },
+    "in_place": {
+      "breaks": [],
+      "stale": ["stale_changes_event"],
+      "why": "redacts the caller's event in place instead of working on a copy"
+    }
+  }
+}

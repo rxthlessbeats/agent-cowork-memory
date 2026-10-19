@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "tax_free_from_58": {
+      "breaks": ["changed_tax_free_from_45"],
+      "stale": ["stale_58_nights"],
+      "why": "keeps turn 1's 58 nights for tax-free stays, which turn 4 cut to 45"
+    },
+    "sunday_15_off": {
+      "breaks": ["chat_sunday_17_off"],
+      "why": "guesses a round 15% off Sunday nights instead of 17%"
+    },
+    "tax_free_over_45": {
+      "breaks": ["changed_tax_free_from_45"],
+      "why": "off by one: a stay of exactly 45 nights still pays city tax, though from 45 nights there's none"
+    },
+    "tax_4_83": {
+      "breaks": ["chat_tax_4_38"],
+      "why": "a look-alike value: 4.83 per guest per night instead of 4.38"
+    }
+  }
+}

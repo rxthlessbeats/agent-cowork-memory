@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "back_any_time": {
+      "breaks": ["chat_back_within_106_minutes"],
+      "why": "never charges an item that comes back, however long it was out"
+    },
+    "fee_every_day": {
+      "breaks": ["chat_no_fee_on_sundays"],
+      "why": "charges the restocking fee on Sundays too"
+    },
+    "back_before_106": {
+      "breaks": ["chat_back_within_106_minutes"],
+      "why": "charges an item that comes back after exactly 106 minutes"
+    },
+    "fee_070": {
+      "breaks": ["chat_077_restocking_fee"],
+      "why": "a 0.70 restocking fee instead of 0.77"
+    }
+  }
+}

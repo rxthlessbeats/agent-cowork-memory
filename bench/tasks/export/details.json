@@ -1,0 +1,33 @@
+{
+  "chat_export_csv": {
+    "value": ["\\bexport_csv\\b"]
+  },
+  "chat_semicolons": {
+    "value": [
+      "\\bsemi[- ]?colon",
+      "(separat|delimit)\\w*\\W{0,4}(=|:|is|by|with)?\\W{0,4}[\"'`];",
+      "[\"'`];[\"'`]\\W{0,3}(as )?(separat|delimit)"
+    ],
+    "stale": ["\\bcommas?\\b"]
+  },
+  "chat_header": {
+    "value": ["\\bsignup_date\\b"]
+  },
+  "chat_uk_dates": {
+    "value": [
+      "\\b(dd/mm/yy|day/month/year)",
+      "%d/%m/%Y",
+      "\\b(1[3-9]|2\\d|3[01])/(0?[1-9]|1[0-2])/\\d{4}\\b",
+      "\\b(UK|British)[- ](style |format(ted)? )?dates?\\b",
+      "\\bdates? (in |as )?(the )?(UK|British)\\b"
+    ]
+  },
+  "chat_oldest_first": {
+    "value": [
+      "\\b(oldest|earliest)\\b[^.\\n]{0,25}\\bfirst\\b",
+      "\\b(oldest|earliest)\\W+(to|→|->|–|-)\\W*(newest|latest)",
+      "\\b(ascending|chronological)[^.\\n]{0,30}\\bsign-?up",
+      "\\bsign-?up[^.\\n]{0,30}\\b(ascending|chronological)"
+    ]
+  }
+}

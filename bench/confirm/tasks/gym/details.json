@@ -1,0 +1,17 @@
+{
+  "chat1_senior_from_61": {
+    "value": [
+      "\\b61\\b[^.\\n]{0,20}\\b(or|and) (over|older|above|up)",
+      "\\bage[sd]? (of )?61\\b",
+      "\\b61\\+",
+      "(>=|≥) ?61\\b",
+      "\\b(from|at least) 61\\b"
+    ]
+  },
+  "chat1_senior_35_off": {
+    "value": ["\\b35 ?(%|percent)", "\\bthirty[- ]five (%|percent)", "\\b0\\.65\\b", "\\b65 ?(%|percent) of"]
+  },
+  "chat2_no_visits_2_42": {
+    "value": ["\\b2\\.42\\b"]
+  }
+}

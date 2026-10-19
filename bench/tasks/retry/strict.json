@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "retry_5xx": {
+      "breaks": ["chat_only_429_503"],
+      "stale": ["stale_retries_other_errors"],
+      "why": "retries 429 and every 5xx, the usual default, instead of only 429 and 503"
+    },
+    "four_retries": {
+      "breaks": ["chat_four_attempts", "chat_backoff"],
+      "why": "reads at most 4 attempts as 4 retries: 5 attempts, waits 0.5, 1, 2, 4"
+    },
+    "backoff_from_1s": {
+      "breaks": ["chat_backoff"],
+      "why": "doubles from 1 s (1, 2, 4) instead of from 0.5 s"
+    },
+    "gave_up_error": {
+      "breaks": ["chat_four_attempts", "chat_backoff"],
+      "why": "raises its own error after the last attempt instead of the last HTTP error"
+    }
+  }
+}

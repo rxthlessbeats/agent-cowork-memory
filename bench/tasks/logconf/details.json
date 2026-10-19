@@ -1,0 +1,5 @@
+{
+  "found_prod_ini": {
+    "value": ["prod\\.ini", "APP_ENV\\W.{0,40}\\bprod\\b"]
+  }
+}

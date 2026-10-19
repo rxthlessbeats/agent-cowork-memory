@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "week_ahead": {
+      "breaks": ["chat1_66_hours_ahead"],
+      "why": "guesses the usual week: slots open for booking 7 days ahead instead of 66 hours"
+    },
+    "not_once_started": {
+      "breaks": ["chat2_8_minutes_late"],
+      "why": "refuses any slot that has started, with no 8 minutes for latecomers"
+    },
+    "under_8_minutes": {
+      "breaks": ["chat2_8_minutes_late"],
+      "why": "off by one: refuses a slot that started exactly 8 minutes ago"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_no_fridays", "chat1_66_hours_ahead"],
+      "why": "knows only chat 2: the 8 minutes, but Friday slots can be booked and slots open a week ahead"
+    }
+  }
+}

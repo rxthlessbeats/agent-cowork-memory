@@ -1,0 +1,15 @@
+{
+  "chat_kitchen_38_percent": {
+    "value": ["\\b38 ?(%|percent|per cent)", "\\b0\\.38\\b", "\\b38 ?/ ?100\\b", "\\b62 ?(%|percent|per cent)"]
+  },
+  "chat_under_77_minutes_nothing": {
+    "value": [
+      "\\b77[ -]?(min|minutes?\\b|m\\b)",
+      "\\b(under|below|fewer than|less than|at least|shorter than|minimum of) 77\\b",
+      "(>=|<|≥) ?77\\b"
+    ]
+  },
+  "chat_sunday_all_floor": {
+    "value": ["\\bsundays?\\b", "\\bsun\\b[^.\\n]{0,40}\\bfloor"]
+  }
+}

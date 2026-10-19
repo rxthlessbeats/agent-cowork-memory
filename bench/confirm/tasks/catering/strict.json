@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "one_per_25": {
+      "breaks": ["changed_one_server_per_18"],
+      "stale": ["stale_one_per_25"],
+      "why": "keeps turn 1's one server per 25 guests, which turn 4 changed to 18"
+    },
+    "hour_before": {
+      "breaks": ["chat_arrive_54_minutes"],
+      "why": "guesses the usual hour before the start for the crew's arrival"
+    },
+    "one_more_server": {
+      "breaks": ["changed_one_server_per_18"],
+      "why": "off by one: a server per 18 guests plus one, so exactly 18 guests get two servers"
+    },
+    "a_third_more": {
+      "breaks": ["chat_sunday_33_percent"],
+      "why": "a look-alike: a third more on Sundays instead of 33% more"
+    }
+  }
+}

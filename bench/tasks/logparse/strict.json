@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "helsinki_zone": {
+      "breaks": [],
+      "stale": ["stale_helsinki_dst"],
+      "why": "uses the Europe/Helsinki zone, with the DST the chat says the servers don't have (the checks' May line can't tell)"
+    },
+    "utc_label": {
+      "breaks": ["chat_utc_from_plus3"],
+      "why": "marks the time as UTC without taking off the servers' 3 hours"
+    },
+    "python_levels": {
+      "breaks": ["chat_syslog_levels"],
+      "why": "uses Python logging's level numbers (10 to 40) instead of syslog severities"
+    },
+    "health_in_parse_only": {
+      "breaks": ["chat_drop_health"],
+      "why": "leaves [health] lines out of parse, but parse_line still returns a record for them"
+    }
+  }
+}

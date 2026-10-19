@@ -1,0 +1,25 @@
+{
+  "chat_unique_slug": {
+    "value": [
+      "\\bunique_slug\\b",
+      "\\btaken[\"'`]?\\s?(is |=|:|\\()\\s?(a |the )?(set|collection)|\\btaken[\"'`]? set\\b",
+      "\\b(set|collection) of (\\w+[ -]){0,2}slugs\\b"
+    ]
+  },
+  "chat_numbered": {
+    "value": [
+      "-2\\b[^\\n]{0,25}-3\\b",
+      "\\b(numeric|numbered|number|counter|incrementing|increasing|sequential)\\w*[ -](suffix|counter)",
+      "\\b(start\\w*|begin\\w*) (at|from|with) [\"'`]?-?2\\b",
+      "\\b(append|add)\\w* [\"'`]?-2\\b"
+    ],
+    "stale": ["\\brandom"]
+  },
+  "chat_max_40": {
+    "value": [
+      "\\b40[ -]?(char|characters|chars)\\b",
+      "(\\b(at most|max(imum)?|up to|limit\\w*|cap\\w*|no more than|no longer than)( of| to| at)?|<=|≤) ?40\\b",
+      "len\\w*\\W{0,3}(<=|≤) ?40\\b"
+    ]
+  }
+}

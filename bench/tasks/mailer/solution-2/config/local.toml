@@ -1,0 +1,5 @@
+[mail]
+from = "noreply@corner.example"
+reply_to = "Corner Shop <support@corner.example>"
+host = "mail.corner.example"
+port = 587

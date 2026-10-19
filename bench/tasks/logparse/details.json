@@ -1,0 +1,27 @@
+{
+  "chat_utc_from_plus3": {
+    "value": [
+      "\\b(utc|gmt) ?\\+ ?0?3\\b",
+      "\\+ ?0?3(:?00\\b| ?h(ours?)?\\b)|\\boffset\\b[^.\\n]{0,15}\\+ ?0?3\\b",
+      "\\bhours ?= ?3\\b",
+      "\\b(subtract\\w*|minus|tak\\w* off|shift\\w* back( by)?) (3|three) ?h(ou)?r",
+      "\\b(3|three)[ -]hours? (ahead of (utc|gmt)|behind|offset)"
+    ],
+    "stale": ["\\bhelsinki\\b"]
+  },
+  "chat_syslog_levels": {
+    "value": [
+      "\\bsyslog",
+      "\\bdebug\\b\\W{0,6}((is|becomes|maps to|to)\\W{1,4})?7\\b",
+      "\\binfo\\b\\W{0,6}((is|becomes|maps to|to)\\W{1,4})?6\\b",
+      "\\bwarn(ing)?\\b\\W{0,6}((is|becomes|maps to|to)\\W{1,4})?4\\b"
+    ]
+  },
+  "chat_drop_health": {
+    "value": [
+      "\\[health\\]",
+      "\\bhealth\\b[^.\\n]{0,60}\\b(none|skip|drop|ignor|filter|exclud|omit|left out|leave)",
+      "\\b(skip|drop|ignor|filter|exclud|omit|discard|remov)\\w*[^.\\n]{0,60}\\bhealth\\b"
+    ]
+  }
+}

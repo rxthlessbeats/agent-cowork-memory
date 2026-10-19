@@ -1,0 +1,16 @@
+{
+  "chat_late_after_21_minutes": {
+    "value": ["\\b21 ?(min|minutes|mins)\\b", "\\b21m\\b", "timedelta\\(minutes ?= ?21\\)"]
+  },
+  "changed_flat_318": {
+    "value": ["£ ?3\\.18\\b", "\\b3\\.18\\b", "\\b318 ?(p|pence)\\b"],
+    "stale": ["\\b35 ?%", "\\b35 ?(percent|per cent)\\b", "\\b0\\.35\\b"]
+  },
+  "chat_no_refund_over_20kg": {
+    "value": [
+      "(over|above|more than|heavier than|>) ?20 ?(kg|kilos?|kilograms?)\\b",
+      "\\b20 ?(kg|kilos?|kilograms?)\\b",
+      "kg ?(>|<=|≤) ?20\\b"
+    ]
+  }
+}

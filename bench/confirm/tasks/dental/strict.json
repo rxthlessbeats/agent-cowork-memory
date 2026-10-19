@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "chat1_72_hours": {
+      "breaks": ["changed_notice_39_hours"],
+      "stale": ["stale_72_hours"],
+      "why": "keeps chat 1's 72 hours' notice, which chat 2 cut to 39"
+    },
+    "fridays_charged": {
+      "breaks": ["chat_friday_free"],
+      "why": "the natural default: charges late cancellations on every day, Friday appointments included"
+    },
+    "notice_up_to_39": {
+      "breaks": ["changed_notice_39_hours"],
+      "why": "off by one: charges a cancellation exactly 39 hours ahead, though only less notice than that is charged"
+    },
+    "chat2_only": {
+      "breaks": ["chat_fee_5_37", "chat_friday_free"],
+      "why": "knows only chat 2: charges under 39 hours' notice, but guesses a round 25.00 and charges Fridays too"
+    }
+  }
+}

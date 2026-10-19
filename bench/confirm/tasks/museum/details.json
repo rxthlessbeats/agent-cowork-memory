@@ -1,0 +1,21 @@
+{
+  "chat1_under_16_free": {
+    "value": [
+      "\\b(under|below|younger than|less than) (the age of |age )?16\\b",
+      "\\b(age|ages|aged)\\s*(<|<=|≤|0 ?(-|–|to) ?)\\s*1[56]\\b",
+      "\\b16 (and|or) (over|up|older)\\b",
+      "\\b(0|zero)[ -]?(-|–|to)[ -]?15\\b"
+    ]
+  },
+  "chat1_group_40_4_percent": {
+    "value": [
+      "\\b40 (or more|\\+|and (over|up|more)|people|visitors|guests|tickets)",
+      "\\b(at least|from|groups? of|bookings? (for|of)) 40\\b",
+      "(>=|≥) ?40\\b",
+      "\\b4 ?(%|percent|per cent)"
+    ]
+  },
+  "chat2_saturday_5_51": {
+    "value": ["\\b5[.,]51\\b", "\\b551\\b"]
+  }
+}

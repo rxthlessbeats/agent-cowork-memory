@@ -1,0 +1,26 @@
+{
+  "keep": [
+    { "file": "README.md", "text": "more than 30 minutes after it's full pays an idle fee of 5.00" },
+    { "file": "README.md", "text": "Members get 10% off the energy." }
+  ],
+  "mutants": {
+    "readme_rule": {
+      "breaks": ["chat_idle_fee_after_58_minutes", "chat_idle_fee_935", "chat_members_14_off_energy"],
+      "stale": ["stale_idle_after_30_minutes", "stale_idle_fee_500", "stale_members_10_off"],
+      "why": "follows the out-of-date README: an idle fee of 5.00 after 30 minutes, and 10% off for members"
+    },
+    "fee_per_hour": {
+      "breaks": ["chat_idle_fee_935"],
+      "why": "charges 9.35 for every started hour past the free minutes instead of a flat 9.35"
+    },
+    "fee_from_58": {
+      "breaks": ["chat_idle_fee_after_58_minutes"],
+      "why": "charges the idle fee from 58 minutes, not only past them"
+    },
+    "readme_discount": {
+      "breaks": ["chat_members_14_off_energy"],
+      "stale": ["stale_members_10_off"],
+      "why": "follows the chat on the idle fee but keeps the README's 10% off for members"
+    }
+  }
+}

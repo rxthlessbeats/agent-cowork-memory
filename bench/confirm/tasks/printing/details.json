@@ -1,0 +1,12 @@
+{
+  "changed_bulk_from_28_pages": {
+    "value": ["\\b28 ?(pages?|pp|or more|\\+)", "(from|at least|starts? at|over|>=|≥) ?28\\b", "pages ?(>=|≥) ?28\\b"],
+    "stale": ["\\b51 ?(pages?|pp|or more|\\+)", "(from|at least|starts? at|over|>=|≥) ?51\\b", "pages ?(>=|≥) ?51\\b"]
+  },
+  "chat1_33_percent_off": {
+    "value": ["\\b33 ?%", "\\b33 ?(percent|per cent)\\b", "\\b0\\.67\\b|\\b67 ?%"]
+  },
+  "chat1_rush_371": {
+    "value": ["£ ?3\\.71\\b", "\\b3\\.71\\b", "\\b371 ?(p|pence)\\b"]
+  }
+}

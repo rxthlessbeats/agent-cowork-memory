@@ -1,0 +1,16 @@
+{
+  "chat_62_days": {
+    "value": ["\\b62\\b[- ]?(or more |\\+ ?)?days?", "\\b62 or more\\b", ">= ?62\\b", "\\b62nd day"]
+  },
+  "chat_1_61_minimum": {
+    "value": ["\\b1\\.61\\b"]
+  },
+  "chat_no_mondays": {
+    "value": [
+      "\\b(no|never|not|don'?t|skip\\w*|nothing)\\b\\W+(\\w+\\W+){0,4}?mondays?\\b",
+      "\\bmondays?\\b[^.\\n]{0,40}\\b(surgery|no (letters|reminders)|nothing|skip\\w*|none)\\b",
+      "weekday\\(\\) ?(==|!=) ?0\\b",
+      "isoweekday\\(\\) ?(==|!=) ?1\\b"
+    ]
+  }
+}

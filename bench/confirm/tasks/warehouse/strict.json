@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "weekdays_only": {
+      "breaks": ["chat2_no_orders_on_sundays"],
+      "why": "orders on weekdays only, so Saturday gets nothing either"
+    },
+    "fixed_752": {
+      "breaks": ["chat1_up_to_752"],
+      "why": "orders a fixed 752 units each time instead of enough to bring the SKU back up to 752"
+    },
+    "under_68": {
+      "breaks": ["chat1_reorder_at_68"],
+      "why": "reorders only below 68 units, so a SKU at exactly 68 waits"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_reorder_at_68", "chat1_up_to_752"],
+      "why": "knows only chat 2: no orders on Sundays, but guesses a reorder point of 50 and a level of 500"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "under_18_free": {
+      "breaks": ["chat1_under_16_free"],
+      "why": "guesses the usual museum rule, free under 18, so a 16- or 17-year-old goes free"
+    },
+    "groups_of_10": {
+      "breaks": ["chat1_group_40_4_percent"],
+      "why": "guesses the usual group discount: 10% off for 10 or more people"
+    },
+    "over_40": {
+      "breaks": ["chat1_group_40_4_percent"],
+      "why": "off by one: the 4% only for more than 40 people, so a booking of exactly 40 pays in full"
+    },
+    "chat1_only": {
+      "breaks": ["chat2_saturday_5_51"],
+      "why": "knows only chat 1: no 5.51 extra on Saturdays"
+    }
+  }
+}

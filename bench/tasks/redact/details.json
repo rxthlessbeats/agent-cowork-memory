@@ -1,0 +1,16 @@
+{
+  "chat_api_key": {
+    "value": ["\\bapi[ _-]?keys?\\b"]
+  },
+  "chat_nested": {
+    "value": [
+      "\\bnested (dicts?|dictionar|lists?|values?|structures?|objects?|data|containers?|keys?|events?)",
+      "\\brecurs",
+      "\\b(dicts?|dictionaries) and lists",
+      "\\blists and (dicts?|dictionaries)"
+    ]
+  },
+  "chat_card_last4": {
+    "value": ["\\*{3,}\\d{4}\\b", "\\b(last|final) (4|four)\\b", "\\[-4:\\]"]
+  }
+}

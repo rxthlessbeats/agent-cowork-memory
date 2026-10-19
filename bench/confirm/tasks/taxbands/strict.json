@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "uk_allowance": {
+      "breaks": ["chat_allowance_4145"],
+      "why": "guesses the usual 12570 personal allowance instead of 4145"
+    },
+    "pension_age_67": {
+      "breaks": ["chat_half_from_65"],
+      "why": "guesses pension age, 67, for the pensioners' relief instead of 65"
+    },
+    "exempt_through_18": {
+      "breaks": ["chat_under_18_exempt"],
+      "why": "off by one: 18-year-olds pay no tax either, though only under-18s are exempt"
+    },
+    "allowance_only": {
+      "breaks": ["chat_under_18_exempt", "chat_half_from_65"],
+      "why": "knows only part of the chat: the 4145 allowance, but neither the under-18 exemption nor the half from 65"
+    }
+  }
+}

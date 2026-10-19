@@ -1,0 +1,32 @@
+{
+  "chat1_zero_points_left_off": {
+    "value": [
+      "\\b((0|zero)\\W+points?|(points?|scores?)( is| of)? (0|zero))\\b\\W+(\\w+\\W+){0,4}?(left|leave|drop|exclud|omit|skip|filter|remov|hid|not (shown|listed|included|on))",
+      "\\b(exclud|omit|skip|drop|filter|remov|leav|left|hid)\\w*\\W+(\\w+\\W+){0,4}?((0|zero)[ -]?(points?|pts|scores?)|(points?|scores?)( of)? (0|zero))\\b",
+      "\\b(points?|scores?)\\s*(>|!=|==|<=)\\s*0\\b",
+      "\\b(positive|non-?zero|at least (1|one))\\W+(points?|scores?)\\b"
+    ]
+  },
+  "chat1_top_5_keeps_ties": {
+    "value": [
+      "(same (points|score)s? as|as many points as|equal\\w*( to)?|match\\w*|tied? (with|on|at|for)|ties? (with|at|for|on))\\W+(\\w+\\W+){0,2}?(5th|fifth)\\b",
+      "\\b(5th|fifth)[- ](place|spot|position)\\W+(\\w+\\W+){0,3}?(ties?|tied)\\b",
+      "\\b(5|five)\\b[^.;\\n]{0,80}?\\b(never|not)\\W+(\\w+\\W+)?(split|cut)\\b",
+      "\\b(5|five)\\b[^.;\\n]{0,60}?\\b(keep|includ|extend|allow)\\w*\\W+(\\w+\\W+){0,2}?(ties?|tied)\\b"
+    ]
+  },
+  "chat2_average_place": {
+    "value": [
+      "\\b2\\.5\\b",
+      "\\b(average|mean|avg)\\W+(\\w+\\W+){0,3}?(places?|ranks?|positions?|ranking)\\b",
+      "\\b(places?|ranks?|positions?)\\W+(\\w+\\W+){0,3}?(averaged|average|mean)\\b",
+      "fractional rank"
+    ],
+    "stale": [
+      "\\b1,\\s*3,\\s*3,\\s*4\\b",
+      "\\b(lowest|worst)\\W+(\\w+\\W+){0,2}?(place|rank|position)",
+      "modified competition|\\b1334\\b",
+      "\\b(not|instead of|rather than|previously|formerly)\\W+(the\\W+)?(lowest|worst)\\b"
+    ]
+  }
+}

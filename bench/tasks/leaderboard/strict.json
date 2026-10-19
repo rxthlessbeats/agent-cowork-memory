@@ -1,0 +1,25 @@
+{
+  "mutants": {
+    "chat1_only": {
+      "breaks": ["chat2_average_place"],
+      "stale": ["stale_lowest_place"],
+      "why": "knows only chat 1: tied players share the lowest place of their group (1, 3, 3, 4), not the average"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_zero_points_left_off", "chat1_top_5_keeps_ties"],
+      "why": "knows only chat 2's average places: players on 0 points are listed, and every player makes the board"
+    },
+    "top5_splits_ties": {
+      "breaks": ["chat1_top_5_keeps_ties"],
+      "why": "cuts the board at exactly 5 players, splitting a tie at 5th"
+    },
+    "competition_rank": {
+      "breaks": ["chat2_average_place"],
+      "why": "gives tied players the first place of their group (1, 2, 2, 4), the usual sports ranking"
+    },
+    "cut_by_rank": {
+      "breaks": ["chat1_top_5_keeps_ties"],
+      "why": "keeps ranks 5 and better, so players tied at 5th, averaged to 5.5, all drop off the board"
+    }
+  }
+}

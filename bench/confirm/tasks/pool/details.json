@@ -1,0 +1,25 @@
+{
+  "changed_capacity_66": {
+    "value": [
+      "\\b66\\s?(swimmers|people|places|spots|persons)\\b",
+      "(at most|max(imum)?|capacity|cap|limit)\\D{0,20}\\b66\\b",
+      "\\b66\\b"
+    ],
+    "stale": [
+      "\\b85\\s?(swimmers|people|places|spots|persons)\\b",
+      "(at most|max(imum)?|capacity|cap|limit)\\D{0,20}\\b85\\b",
+      "\\b85\\b"
+    ]
+  },
+  "chat1_member_39": {
+    "value": ["\\b39\\s?(%|percent|per cent)", "members?\\b[^.\\n]{0,40}\\b39\\b", "\\b0?\\.61\\b"]
+  },
+  "chat1_friday_adults": {
+    "value": [
+      "\\bfri(day)?s?\\b[^.\\n]{0,60}\\badults?\\b",
+      "\\badults?[- ]only\\b[^.\\n]{0,40}\\bfri(day)?s?\\b",
+      "\\bno (children|child|kids)\\b[^.\\n]{0,40}\\bfri(day)?s?\\b",
+      "weekday\\(\\)\\s?==\\s?4\\b"
+    ]
+  }
+}

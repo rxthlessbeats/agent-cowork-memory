@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "monday_off": {
+      "breaks": ["changed_no_tuesday"],
+      "stale": ["stale_monday_off"],
+      "why": "keeps chat 1's Monday day off, which chat 2 moved to Tuesday"
+    },
+    "free_from_50": {
+      "breaks": ["chat_free_from_60"],
+      "why": "guesses the usual 50.00 for free delivery"
+    },
+    "free_above_60": {
+      "breaks": ["chat_free_from_60"],
+      "why": "off by one: free only above 60.00, so an order of exactly 60.00 still pays"
+    },
+    "chat2_only": {
+      "breaks": ["chat_fee_8_23", "chat_free_from_60"],
+      "why": "knows only chat 2: the Tuesday day off, with a guessed flat 5.00 fee and no free delivery"
+    }
+  }
+}

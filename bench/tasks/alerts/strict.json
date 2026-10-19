@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "chat1_only": {
+      "breaks": ["chat2_host_first"],
+      "stale": ["stale_level_first"],
+      "why": "knows only chat 1: the level first, WARNING web-1:/var 85%, which chat 2 replaced"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_83_and_96", "chat1_lowest_of_last_three"],
+      "why": "knows only chat 2's message format: guesses 80 and 90, and goes by the latest reading"
+    },
+    "above_thresholds": {
+      "breaks": ["chat1_83_and_96"],
+      "why": "alerts above 83 and 96 instead of from them, so a steady 83% stays ok"
+    },
+    "lowest_of_all": {
+      "breaks": ["chat1_lowest_of_last_three"],
+      "why": "goes by the lowest reading in the whole history, not just the last three"
+    }
+  }
+}

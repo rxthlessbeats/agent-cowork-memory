@@ -1,0 +1,22 @@
+{
+  "changed_commute_37": {
+    "value": [
+      "\\b37 ?(mi|miles)\\b",
+      "\\bfirst 37\\b",
+      "\\b37\\b[^.\\n]{0,40}\\b(each|every|per|a) trip",
+      "miles\\W{0,3} ?- ?37\\b"
+    ],
+    "stale": [
+      "\\b57 ?(mi|miles)\\b",
+      "\\bfirst 57\\b",
+      "\\bnot 57\\b",
+      "\\b(was|from|instead of|previously|replac\\w*|rather than) 57\\b"
+    ]
+  },
+  "chat_parking_up_to_7_96": {
+    "value": ["\\b7\\.96\\b"]
+  },
+  "chat_paid_next_thursday": {
+    "value": ["(first|next|following) thursday", "thursday after", "(paid|pays|payday|pay day)[^.\\n]{0,30}\\bthursday"]
+  }
+}

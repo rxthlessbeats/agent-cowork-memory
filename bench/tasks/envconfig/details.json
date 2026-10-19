@@ -1,0 +1,20 @@
+{
+  "chat_dot_nested": {
+    "value": ["MYAPP_\\w+\\.\\w+", "\\bdot(s|ted)?\\b[^\\n]{0,60}\\bnest", "\\bnest\\w*[^\\n]{0,60}\\bdot(s|ted)?\\b"]
+  },
+  "chat_yes_no": {
+    "value": [
+      "\\byes\\b[\\W_]{1,8}((and|or)[\\W_]{1,8})?no\\b[\\W_]{1,8}(\\w+ ){0,3}\\W{0,4}bool",
+      "\\byes\\b\\W{0,6}(->|→|=>|:|becomes?|maps? to|to)\\W{0,6}true\\b",
+      "\\byes\\b\\W{1,6}((and|or)\\W{1,6})?no\\b\\W{0,6}(->|→|=>|:|become|map to|to)\\W{0,6}true\\b",
+      "\\b(true|false)\\b\\W{0,6}((and|or)\\W{0,6})?\\b(true|false)\\b\\W{0,6}(stay|remain|are left|left|kept|are kept)"
+    ]
+  },
+  "chat_unknown_raises": {
+    "value": [
+      "\\bKeyError\\b",
+      "\\b(never|not|don['’]?t|no|without) (add|creat)\\w*( any)? (new|unknown|extra) keys",
+      "\\b(unknown|unmatched|non-?existent|typo)\\w*[^.\\n]{0,60}\\brais"
+    ]
+  }
+}

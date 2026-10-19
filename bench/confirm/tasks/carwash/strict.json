@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "rate_25p": {
+      "breaks": ["chat1_15p_per_started_minute"],
+      "why": "guesses a common jet wash rate, 25p a started minute, instead of chat 1's 15p"
+    },
+    "cap_30_minutes": {
+      "breaks": ["chat1_cap_22_minutes"],
+      "why": "guesses a round half-hour cap on what a session pays instead of chat 1's 22 minutes"
+    },
+    "free_up_to_30s": {
+      "breaks": ["chat2_free_under_30s"],
+      "why": "off by one: a session of exactly 30 seconds is free too, where only less than 30 seconds is"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_15p_per_started_minute", "chat1_cap_22_minutes"],
+      "why": "knows only chat 2: short sessions are free, but it guesses 20p a minute and caps nothing"
+    }
+  }
+}

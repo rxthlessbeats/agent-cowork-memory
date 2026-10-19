@@ -1,0 +1,21 @@
+{
+  "chat_27_free_minutes": {
+    "value": [
+      "\\b27\\b[- ]?(free )?min",
+      "\\bfirst 27\\b",
+      "\\b(past|after|over|beyond) (the )?27(th)?\\b",
+      "minutes?\\W+(\\w+\\W+){0,3}?27\\b[^.\\n]{0,20}\\bfree\\b"
+    ]
+  },
+  "chat_members_14_off": {
+    "value": ["\\b14 ?(%|percent)", "\\bfourteen (%|percent)", "\\b0\\.86\\b"]
+  },
+  "chat_wednesday_free": {
+    "value": [
+      "\\bwednesdays?\\b[^.\\n]{0,60}\\b(free|no charge|costs? nothing|costs? 0(\\.00)?|zero)\\b",
+      "\\b(free|no charge|nothing)\\b[^.\\n]{0,60}\\bwednesdays?\\b",
+      "weekday\\(\\) ?== ?2\\b",
+      "isoweekday\\(\\) ?== ?3\\b"
+    ]
+  }
+}

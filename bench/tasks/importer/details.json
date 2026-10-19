@@ -1,0 +1,8 @@
+{
+  "found_v2_data": {
+    "value": ["data/v2", "DATA_VERSION"]
+  },
+  "found_index_rebuilt": {
+    "value": ["reindex", "index\\.json"]
+  }
+}

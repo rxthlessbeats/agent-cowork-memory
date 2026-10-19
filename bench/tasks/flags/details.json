@@ -1,0 +1,8 @@
+{
+  "found_flag_on": {
+    "value": ["new_receipts", "flags\\.ini"]
+  },
+  "found_new_formatter": {
+    "value": ["\\bmodern\\b", "extra_lines"]
+  }
+}

@@ -1,0 +1,434 @@
+{
+  "lockers": {
+    "small_int": 38,
+    "big_int": 368,
+    "money": "4.53",
+    "percent": 14,
+    "minutes": 91,
+    "weekday": "Monday",
+    "second_small_int": 65
+  },
+  "tipping": {
+    "small_int": 70,
+    "big_int": 4465,
+    "money": "5.39",
+    "percent": 38,
+    "minutes": 77,
+    "weekday": "Sunday",
+    "second_small_int": 45
+  },
+  "recycling": {
+    "small_int": 78,
+    "big_int": 1564,
+    "money": "4.94",
+    "percent": 35,
+    "minutes": 57,
+    "weekday": "Friday",
+    "second_small_int": 75
+  },
+  "bikeshare": {
+    "small_int": 14,
+    "big_int": 1581,
+    "money": "7.31",
+    "percent": 14,
+    "minutes": 27,
+    "weekday": "Wednesday",
+    "second_small_int": 43
+  },
+  "library": {
+    "small_int": 60,
+    "big_int": 4746,
+    "money": "1.44",
+    "percent": 3,
+    "minutes": 48,
+    "weekday": "Tuesday",
+    "second_small_int": 4
+  },
+  "vending": {
+    "small_int": 74,
+    "big_int": 810,
+    "money": "8.05",
+    "percent": 26,
+    "minutes": 48,
+    "weekday": "Thursday",
+    "second_small_int": 68
+  },
+  "carpool": {
+    "small_int": 46,
+    "big_int": 4175,
+    "money": "9.26",
+    "percent": 27,
+    "minutes": 105,
+    "weekday": "Tuesday",
+    "second_small_int": 33
+  },
+  "giftwrap": {
+    "small_int": 42,
+    "big_int": 2762,
+    "money": "3.66",
+    "percent": 28,
+    "minutes": 109,
+    "weekday": "Wednesday",
+    "second_small_int": 57
+  },
+  "minibar": {
+    "small_int": 41,
+    "big_int": 3118,
+    "money": "0.77",
+    "percent": 11,
+    "minutes": 106,
+    "weekday": "Sunday",
+    "second_small_int": 76
+  },
+  "busfare": {
+    "small_int": 25,
+    "big_int": 4772,
+    "money": "7.43",
+    "percent": 25,
+    "minutes": 60,
+    "weekday": "Thursday",
+    "second_small_int": 7
+  },
+  "plants": {
+    "small_int": 39,
+    "big_int": 2529,
+    "money": "3.19",
+    "percent": 13,
+    "minutes": 46,
+    "weekday": "Thursday",
+    "second_small_int": 89
+  },
+  "petclinic": {
+    "small_int": 62,
+    "big_int": 790,
+    "money": "1.61",
+    "percent": 47,
+    "minutes": 60,
+    "weekday": "Monday",
+    "second_small_int": 40
+  },
+  "taxbands": {
+    "small_int": 65,
+    "big_int": 4145,
+    "money": "9.34",
+    "percent": 25,
+    "minutes": 23,
+    "weekday": "Monday",
+    "second_small_int": 18
+  },
+  "payslip": {
+    "small_int": 52,
+    "big_int": 1561,
+    "money": "3.54",
+    "percent": 8,
+    "minutes": 90,
+    "weekday": "Thursday",
+    "second_small_int": 22
+  },
+  "elevator": {
+    "small_int": 10,
+    "big_int": 1725,
+    "money": "6.39",
+    "percent": 34,
+    "minutes": 26,
+    "weekday": "Monday",
+    "second_small_int": 51
+  },
+  "ferry": {
+    "small_int": 12,
+    "big_int": 4631,
+    "money": "0.82",
+    "percent": 14,
+    "minutes": 64,
+    "weekday": "Saturday",
+    "second_small_int": 53
+  },
+  "warehouse": {
+    "small_int": 68,
+    "big_int": 752,
+    "money": "1.19",
+    "percent": 17,
+    "minutes": 103,
+    "weekday": "Sunday",
+    "second_small_int": 81
+  },
+  "museum": {
+    "small_int": 40,
+    "big_int": 4228,
+    "money": "5.51",
+    "percent": 4,
+    "minutes": 7,
+    "weekday": "Saturday",
+    "second_small_int": 16
+  },
+  "carwash": {
+    "small_int": 30,
+    "big_int": 935,
+    "money": "0.15",
+    "percent": 39,
+    "minutes": 22,
+    "weekday": "Friday",
+    "second_small_int": 59
+  },
+  "gym": {
+    "small_int": 61,
+    "big_int": 2668,
+    "money": "2.42",
+    "percent": 35,
+    "minutes": 51,
+    "weekday": "Thursday",
+    "second_small_int": 49
+  },
+  "tutoring": {
+    "small_int": 53,
+    "big_int": 285,
+    "money": "4.54",
+    "percent": 47,
+    "minutes": 67,
+    "weekday": "Wednesday",
+    "second_small_int": 55
+  },
+  "laundry": {
+    "small_int": 78,
+    "big_int": 2569,
+    "money": "6.84",
+    "percent": 10,
+    "minutes": 8,
+    "weekday": "Friday",
+    "second_small_int": 66
+  },
+  "bakery": {
+    "small_int": 91,
+    "big_int": 1961,
+    "money": "1.53",
+    "percent": 12,
+    "minutes": 81,
+    "weekday": "Friday",
+    "second_small_int": 28
+  },
+  "cinema": {
+    "small_int": 60,
+    "big_int": 2461,
+    "money": "0.24",
+    "percent": 40,
+    "minutes": 13,
+    "weekday": "Monday",
+    "second_small_int": 91
+  },
+  "kennel": {
+    "small_int": 80,
+    "big_int": 4613,
+    "money": "7.43",
+    "percent": 31,
+    "minutes": 10,
+    "weekday": "Wednesday",
+    "second_small_int": 97
+  },
+  "florist": {
+    "small_int": 60,
+    "big_int": 3404,
+    "money": "8.23",
+    "percent": 4,
+    "minutes": 103,
+    "weekday": "Tuesday",
+    "second_small_int": 10
+  },
+  "printing": {
+    "small_int": 51,
+    "big_int": 4569,
+    "money": "3.71",
+    "percent": 33,
+    "minutes": 36,
+    "weekday": "Friday",
+    "second_small_int": 28
+  },
+  "coworking": {
+    "small_int": 63,
+    "big_int": 4392,
+    "money": "1.15",
+    "percent": 25,
+    "minutes": 73,
+    "weekday": "Wednesday",
+    "second_small_int": 56
+  },
+  "skipass": {
+    "small_int": 61,
+    "big_int": 4847,
+    "money": "4.41",
+    "percent": 26,
+    "minutes": 68,
+    "weekday": "Thursday",
+    "second_small_int": 82
+  },
+  "roster": {
+    "small_int": 63,
+    "big_int": 3975,
+    "money": "6.22",
+    "percent": 11,
+    "minutes": 71,
+    "weekday": "Wednesday",
+    "second_small_int": 70
+  },
+  "dental": {
+    "small_int": 72,
+    "big_int": 3813,
+    "money": "5.37",
+    "percent": 3,
+    "minutes": 64,
+    "weekday": "Friday",
+    "second_small_int": 39
+  },
+  "pool": {
+    "small_int": 85,
+    "big_int": 832,
+    "money": "0.26",
+    "percent": 39,
+    "minutes": 105,
+    "weekday": "Friday",
+    "second_small_int": 66
+  },
+  "auction": {
+    "small_int": 48,
+    "big_int": 2482,
+    "money": "3.72",
+    "percent": 26,
+    "minutes": 109,
+    "weekday": "Thursday",
+    "second_small_int": 70
+  },
+  "catering": {
+    "small_int": 52,
+    "big_int": 4782,
+    "money": "3.91",
+    "percent": 33,
+    "minutes": 54,
+    "weekday": "Sunday",
+    "second_small_int": 18
+  },
+  "courier": {
+    "small_int": 20,
+    "big_int": 1693,
+    "money": "3.18",
+    "percent": 35,
+    "minutes": 21,
+    "weekday": "Monday",
+    "second_small_int": 68
+  },
+  "raffle": {
+    "small_int": 58,
+    "big_int": 3580,
+    "money": "3.55",
+    "percent": 15,
+    "minutes": 65,
+    "weekday": "Wednesday",
+    "second_small_int": 12
+  },
+  "buyback": {
+    "small_int": 62,
+    "big_int": 4809,
+    "money": "5.56",
+    "percent": 40,
+    "minutes": 76,
+    "weekday": "Thursday",
+    "second_small_int": 91
+  },
+  "mileage": {
+    "small_int": 57,
+    "big_int": 3336,
+    "money": "7.96",
+    "percent": 28,
+    "minutes": 83,
+    "weekday": "Thursday",
+    "second_small_int": 37
+  },
+  "hostel": {
+    "small_int": 58,
+    "big_int": 1545,
+    "money": "4.38",
+    "percent": 17,
+    "minutes": 22,
+    "weekday": "Sunday",
+    "second_small_int": 45
+  },
+  "bingo": {
+    "small_int": 34,
+    "big_int": 4612,
+    "money": "4.72",
+    "percent": 44,
+    "minutes": 78,
+    "weekday": "Tuesday",
+    "second_small_int": 32
+  },
+  "energy": {
+    "small_int": 55,
+    "big_int": 2600,
+    "money": "9.35",
+    "percent": 14,
+    "minutes": 58,
+    "weekday": "Thursday",
+    "second_small_int": 54
+  },
+  "sauna": {
+    "small_int": 96,
+    "big_int": 2135,
+    "money": "4.52",
+    "percent": 26,
+    "minutes": 76,
+    "weekday": "Wednesday",
+    "second_small_int": 57
+  },
+  "barcode": {
+    "small_int": 48,
+    "big_int": 668,
+    "money": "4.69",
+    "percent": 21,
+    "minutes": 79,
+    "weekday": "Thursday",
+    "second_small_int": 52
+  },
+  "timeclock": {
+    "small_int": 62,
+    "big_int": 836,
+    "money": "2.39",
+    "percent": 33,
+    "minutes": 87,
+    "weekday": "Saturday",
+    "second_small_int": 67
+  },
+  "dunning": {
+    "small_int": 10,
+    "big_int": 3853,
+    "money": "0.41",
+    "percent": 27,
+    "minutes": 9,
+    "weekday": "Thursday",
+    "second_small_int": 62
+  },
+  "wifi": {
+    "small_int": 94,
+    "big_int": 2965,
+    "money": "5.46",
+    "percent": 18,
+    "minutes": 92,
+    "weekday": "Sunday",
+    "second_small_int": 6
+  },
+  "rubric": {
+    "small_int": 29,
+    "big_int": 4606,
+    "money": "3.91",
+    "percent": 43,
+    "minutes": 61,
+    "weekday": "Monday",
+    "second_small_int": 57
+  },
+  "airmiles": {
+    "small_int": 69,
+    "big_int": 911,
+    "money": "1.79",
+    "percent": 18,
+    "minutes": 110,
+    "weekday": "Sunday",
+    "second_small_int": 55
+  }
+}

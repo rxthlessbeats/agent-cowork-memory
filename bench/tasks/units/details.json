@@ -1,0 +1,26 @@
+{
+  "chat_cut_down": {
+    "value": [
+      "never round(s|ed|ing)? (it |them |the \\w+ )?up|(not|n['’]t|without|no) round(s|ed|ing)? (it |them |the \\w+ )?up|overstat",
+      "(truncat|cut|floor)\\w*( it| them| the (converted )?(number|value|result))?( down)? (to|at) (2|two) (decimal|digit|place|dp)",
+      "(always |must |should |be |is |are |gets? )round(s|ed|ing)?[ _-]down|round(s|ed|ing)?[ _-]down (to|at) (2|two|the)\\b|round_down|(rather than|instead of) round",
+      "\\b1,60\\b|\\b1\\.60 ?km\\b"
+    ],
+    "stale": ["\\b1[,.]61\\b"]
+  },
+  "chat_decimal_comma": {
+    "value": [
+      "comma (as |for )?(the |a )?decimal",
+      "decimal( separator| point| mark| sign)?\\W{0,3}(is |as |should be |must be |becomes )?(an? )?(comma|',')",
+      "\\b\\d+,\\d\\d ?(km|m|cm|mm|mi|in|ft|yd|kg|g|oz|lb)\\b"
+    ]
+  },
+  "chat_original_in_brackets": {
+    "value": [
+      "original (value |amount |number |input |quantity )?(and (its )?unit )?(in|inside|within) (round )?(brackets|parenthes[ie]s|parens)",
+      "(brackets|parenthes[ie]s|parens)\\W{0,3}(with |containing |showing |holding |for |of )?(the )?original",
+      "\\(1 mi\\)|\\d[,.]\\d\\d ?(km|m|cm|mm|mi|in|ft|yd|kg|g|oz|lb) \\(\\d+(\\.\\d+)? ?(km|m|cm|mm|mi|in|ft|yd|kg|g|oz|lb)\\)",
+      "\\([{<]?(value|original|orig)\\w*[}>]? [{<]?(from_unit|from|unit|src)\\w*[}>]?\\)"
+    ]
+  }
+}

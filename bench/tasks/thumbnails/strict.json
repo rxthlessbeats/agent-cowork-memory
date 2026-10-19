@@ -1,0 +1,30 @@
+{
+  "keep": [{ "file": "README.md", "text": "Thumbnails are 128x128 PNG." }],
+  "mutants": {
+    "readme_rule": {
+      "breaks": ["chat_160x120", "chat_jpeg_85", "chat_pad_white_no_crop", "chat_no_upscale"],
+      "stale": ["stale_128x128", "stale_png", "stale_crops", "stale_upscaled"],
+      "why": "follows the out-of-date README: 128x128 PNG, a square cropped from the middle, smaller images scaled up"
+    },
+    "box_128": {
+      "breaks": ["chat_160x120"],
+      "stale": ["stale_128x128"],
+      "why": "fits and pads the whole image as asked, but in the README's 128x128 box"
+    },
+    "png": {
+      "breaks": ["chat_jpeg_85"],
+      "stale": ["stale_png"],
+      "why": "keeps the README's PNG instead of JPEG at quality 85"
+    },
+    "cover_crop": {
+      "breaks": ["chat_pad_white_no_crop"],
+      "stale": ["stale_crops"],
+      "why": "scales the image to fill 160x120 and crops what overflows, instead of fitting it whole and padding with white"
+    },
+    "upscales": {
+      "breaks": ["chat_no_upscale"],
+      "stale": ["stale_upscaled"],
+      "why": "scales small images up to fit the box"
+    }
+  }
+}

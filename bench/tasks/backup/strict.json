@@ -1,0 +1,31 @@
+{
+  "mutants": {
+    "docstring_rule": {
+      "breaks": [
+        "chat1_ten_days_of_dailies",
+        "chat1_wednesday_weeklies",
+        "chat2_oldest_kept",
+        "chat2_first_of_month_for_six_months"
+      ],
+      "stale": ["stale_7_days_of_dailies", "stale_sunday_weeklies"],
+      "why": "lost both chats and follows keep's docstring: 7 days of dailies and Sunday weeklies, nothing else"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_ten_days_of_dailies", "chat1_wednesday_weeklies"],
+      "stale": ["stale_7_days_of_dailies", "stale_sunday_weeklies"],
+      "why": "knows only chat 2 (oldest kept, 1st of the month for 6 months) and keeps the docstring's 7 days and Sundays"
+    },
+    "chat1_only": {
+      "breaks": ["chat2_oldest_kept", "chat2_first_of_month_for_six_months"],
+      "why": "knows only chat 1 (10 days, Wednesdays) and misses chat 2's oldest backup and 1st-of-month rules"
+    },
+    "weekday_off_by_one": {
+      "breaks": ["chat1_wednesday_weeklies"],
+      "why": "takes Wednesday as weekday() == 3 (counting Monday as 1), so it keeps Thursdays"
+    },
+    "monthly_for_a_year": {
+      "breaks": ["chat2_first_of_month_for_six_months"],
+      "why": "keeps the backups from the 1st of a month for a year instead of 6 months"
+    }
+  }
+}

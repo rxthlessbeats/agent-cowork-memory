@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "chat1_cap_70": {
+      "breaks": ["changed_cap_63_hours"],
+      "stale": ["stale_cap_70"],
+      "why": "keeps chat 1's 70 hours a week, which chat 2 cut to 63"
+    },
+    "rest_one_hour": {
+      "breaks": ["chat1_rest_71_minutes"],
+      "why": "guesses an hour's rest between shifts instead of 71 minutes"
+    },
+    "budget_from_3975": {
+      "breaks": ["chat1_budget_3975"],
+      "why": "off by one: a wage bill of exactly 3975.00 counts as over budget"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_rest_71_minutes", "chat1_budget_3975"],
+      "why": "knows only chat 2: 63 hours, but guesses an hour's rest and a 5000.00 budget"
+    }
+  }
+}

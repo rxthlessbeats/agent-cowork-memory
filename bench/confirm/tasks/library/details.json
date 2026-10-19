@@ -1,0 +1,21 @@
+{
+  "chat_grace_4_days": {
+    "value": [
+      "\\bup to (4|four) days\\b",
+      "\\b(4|four)[- ]days?\\W+(\\w+\\W+){0,2}?grace|\\bgrace\\W+(\\w+\\W+){0,3}?(4|four)\\b",
+      "\\bfrom (day )?(5|five|5th|fifth)\\b",
+      "\\b(first|initial) (4|four) days\\b[^.\\n]{0,30}\\b(free|nothing|no fines?)\\b",
+      "\\b(late|days)\\w* ?(<=|≤|>|>=|≥|<) ?(4|5)\\b"
+    ]
+  },
+  "chat_lost_after_60_days": {
+    "value": [
+      "\\b(more than|over|beyond|after|past|exceed\\w*|>) ?(60|sixty)\\b",
+      "\\b(60|sixty)\\b[^.\\n]{0,40}\\b(lost|replace\\w*|price)",
+      "\\b(lost|replace\\w*)\\b[^.\\n]{0,40}\\b(60|sixty)\\b"
+    ]
+  },
+  "chat_free_tuesdays": {
+    "value": ["\\btuesdays?\\b", "\\bweekday\\(\\) ?== ?1\\b"]
+  }
+}

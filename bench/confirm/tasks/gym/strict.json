@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "senior_65": {
+      "breaks": ["chat1_senior_from_61"],
+      "why": "starts the senior fee at the usual pension age, 65, instead of 61"
+    },
+    "senior_half_price": {
+      "breaks": ["chat1_senior_35_off"],
+      "why": "gives seniors half price instead of 35% off"
+    },
+    "senior_over_61": {
+      "breaks": ["chat1_senior_from_61"],
+      "why": "off by one: the senior fee only over 61, so a 61-year-old pays the standard fee"
+    },
+    "chat1_only": {
+      "breaks": ["chat2_no_visits_2_42"],
+      "why": "knows only chat 1: a month without visits costs the usual fee instead of 2.42"
+    }
+  }
+}

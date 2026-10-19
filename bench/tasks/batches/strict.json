@@ -1,0 +1,42 @@
+{
+  "keep": [
+    {
+      "file": "README.md",
+      "text": "Export and import both move rows in batches of `settings.BATCH_SIZE` (5,000 rows)"
+    },
+    {
+      "file": "README.md",
+      "text": "A transfer always ends with an empty batch"
+    },
+    {
+      "file": "settings.py",
+      "text": "BATCH_SIZE = 5000"
+    }
+  ],
+  "mutants": {
+    "readme_rule": {
+      "breaks": ["chat_export_7500", "chat_import_2750", "chat_no_empty_batch"],
+      "stale": ["stale_5000", "stale_one_size", "stale_empty_end"],
+      "why": "follows the out-of-date README and settings.py: one BATCH_SIZE of 5,000 for both, and an empty batch at the end"
+    },
+    "swapped_sizes": {
+      "breaks": ["chat_export_7500", "chat_import_2750"],
+      "stale": ["stale_swapped"],
+      "why": "swaps the two sizes: export in 2,750s, import in 7,500s"
+    },
+    "one_setting": {
+      "breaks": ["chat_export_7500"],
+      "stale": ["stale_one_size"],
+      "why": "keeps one shared setting, set to 2,750 to suit both, so export's batches are too small"
+    },
+    "empty_end": {
+      "breaks": ["chat_no_empty_batch"],
+      "stale": ["stale_empty_end"],
+      "why": "gets the sizes right but still ends each transfer with the README's empty batch"
+    },
+    "exact_multiple": {
+      "breaks": ["chat_no_empty_batch"],
+      "why": "stops at the first short batch, so a transfer of an exact multiple, or of nothing, ends with an empty one"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "chat1_reorder_at_68": {
+    "value": [
+      "\\b68\\b[^.\\n]{0,40}(or (fewer|less|under|below)|units?|on hand|in stock)",
+      "(down to|at or below|at most|falls? to|drops? to|reaches|hits|<=|≤) ?68\\b"
+    ]
+  },
+  "chat1_up_to_752": {
+    "value": ["\\b752\\b"]
+  },
+  "chat2_no_orders_on_sundays": {
+    "value": [
+      "\\bsundays?\\b[^.\\n]{0,60}\\b(no|nothing|never|skip\\w*|empty|don'?t|closed)\\b",
+      "\\b(no|nothing|never|skip\\w*|don'?t)\\b[^.\\n]{0,60}\\bsundays?\\b",
+      "weekday\\(\\) ?(==|!=) ?6\\b|isoweekday\\(\\) ?(==|!=) ?7\\b"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "any_day": {
+      "breaks": ["chat_no_mondays"],
+      "why": "the natural default without the chat: books any day of the week, Mondays included"
+    },
+    "no_gap": {
+      "breaks": ["chat_26_minutes_apart"],
+      "why": "refuses only overlapping bookings, so one can start the minute the last one ends"
+    },
+    "under_10_days": {
+      "breaks": ["chat_10_days_ahead"],
+      "why": "off by one: refuses a booking exactly 10 days ahead, though on the 1st you can book the 11th"
+    },
+    "half_hour_gap": {
+      "breaks": ["chat_26_minutes_apart"],
+      "why": "a look-alike value: half an hour between bookings instead of 26 minutes"
+    }
+  }
+}

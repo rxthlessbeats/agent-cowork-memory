@@ -1,0 +1,19 @@
+{
+  "chat_two_digits": {
+    "value": [
+      "\\b(2|two)\\b[^\\w\\n]{0,3}(or more |\\+ ?)?digits?\\b",
+      "\\bdigits?\\b[^.\\n]{0,30}(>=|≥|at least) ?(2|two)\\b"
+    ]
+  },
+  "chat_no_company_name": {
+    "value": ["brightwell"]
+  },
+  "chat_no_trailing_digit": {
+    "value": [
+      "\\bend(s|ing)? (with|in|on) (a )?(digit|number|numeral)",
+      "\\b(trailing|final|last) (character |char )?(digit|number|numeral)",
+      "\\b(last|final) (character|char)\\b[^.\\n]{0,25}\\b(digit|number|numeral)",
+      "\\[-1\\]\\.isdigit"
+    ]
+  }
+}

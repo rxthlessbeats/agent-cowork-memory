@@ -1,0 +1,39 @@
+{
+  "one short chat": [
+    "cache",
+    "csvimport",
+    "envconfig",
+    "export",
+    "invoice",
+    "logparse",
+    "pager",
+    "password",
+    "redact",
+    "report",
+    "retry",
+    "semver",
+    "shipping",
+    "slugs",
+    "tokenbucket",
+    "workdays"
+  ],
+  "one long chat": ["booking", "inventory", "loyalty", "mdtoc", "todo", "units"],
+  "spread over two chats": ["backup", "grades", "newsletter", "quota", "receipts", "tickets"],
+  "changed in a later chat": ["alerts", "discount", "leaderboard", "naming", "rental", "timesheet"],
+  "corrected mid-chat": ["catalog", "parking", "playlist", "recipes", "seating", "survey"],
+  "contradicted by the repo": [
+    "ratelimit",
+    "ledger",
+    "webhook",
+    "batches",
+    "pricing",
+    "archive",
+    "thumbnails",
+    "timezone",
+    "reminders",
+    "signup",
+    "jobqueue",
+    "scoring"
+  ],
+  "recoverable from the repo": ["mailer", "importer", "plugins", "flags", "logconf", "search", "payroll", "metrics"]
+}

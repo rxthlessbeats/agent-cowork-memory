@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "as_given": {
+      "breaks": ["chat_v_prefix"],
+      "stale": ["stale_returned_as_given"],
+      "why": "follows latest's docstring in the repo: returns the winner as given, without the v"
+    },
+    "semver_prerelease": {
+      "breaks": ["chat_hotfix_above"],
+      "why": "ranks -hotfix below the plain version, as semver ranks a pre-release"
+    },
+    "calendar_numeric": {
+      "breaks": ["chat_calendar_below"],
+      "why": "compares 2023.4 by its numbers, so the calendar release beats every X.Y.Z"
+    },
+    "hotfix_first": {
+      "breaks": ["chat_hotfix_above"],
+      "why": "tie-breaks in the wrong order: any hotfix outranks the next plain version (1.10.0-hotfix over 1.10.1)"
+    }
+  }
+}

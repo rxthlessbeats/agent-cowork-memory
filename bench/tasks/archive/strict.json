@@ -1,0 +1,28 @@
+{
+  "keep": [
+    { "file": "README.md", "text": "Archives are kept for 30 days" },
+    { "file": "settings.py", "text": "KEEP_DAYS = 30" }
+  ],
+  "mutants": {
+    "readme_rule": {
+      "breaks": ["chat_keep_45_days", "chat_never_dot_keep", "chat_dry_run_default"],
+      "stale": ["stale_keep_30_days", "stale_dot_keep_pruned", "stale_deletes_without_force"],
+      "why": "follows README.md, TASK.md and settings.py: deletes everything older than KEEP_DAYS (30) at once, .keep archives too"
+    },
+    "keep_30_days": {
+      "breaks": ["chat_keep_45_days"],
+      "stale": ["stale_keep_30_days"],
+      "why": "reuses settings.KEEP_DAYS, the out-of-date 30 days"
+    },
+    "dot_keep_suffix": {
+      "breaks": ["chat_never_dot_keep"],
+      "stale": ["stale_dot_keep_pruned"],
+      "why": "spares only names that end in .keep, so stock-2024-12-31.keep.tar.gz is pruned"
+    },
+    "dry_run_flag": {
+      "breaks": ["chat_dry_run_default"],
+      "stale": ["stale_deletes_without_force"],
+      "why": "deletes unless dry_run=True is passed, instead of only with force=True"
+    }
+  }
+}

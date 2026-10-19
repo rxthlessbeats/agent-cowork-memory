@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "express_free": {
+      "breaks": ["chat_express_never_free"],
+      "stale": ["stale_express_free"],
+      "why": "ships every method free from 60 EUR, express included"
+    },
+    "over_60": {
+      "breaks": ["chat_free_from_60"],
+      "why": "ships free only over 60 EUR, not at 60 or more"
+    },
+    "freight_from_20": {
+      "breaks": ["chat_freight_over_20kg"],
+      "why": "sends 20 kg itself by freight, not only parcels over 20 kg"
+    },
+    "no_freight": {
+      "breaks": ["chat_freight_over_20kg"],
+      "why": "drops the freight rule and charges heavy parcels by the kg"
+    }
+  }
+}

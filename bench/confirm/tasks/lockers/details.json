@@ -1,0 +1,15 @@
+{
+  "chat_free_up_to_91_minutes": {
+    "value": ["\\b91\\b[\\s-]*(min|minutes)\\b", "(up to|first|within|under|at most|<=|≤) ?91\\b"]
+  },
+  "chat_453_per_started_hour": {
+    "value": ["\\b4[.,]53\\b", "\\b453\\b"]
+  },
+  "chat_monday_14_off": {
+    "value": [
+      "\\bmon(day)?s?\\b[^.\\n]{0,80}\\b14 ?(%|percent|per ?cent)",
+      "\\b14 ?(%|percent|per ?cent)[^.\\n]{0,80}\\bmon(day)?s?\\b",
+      "\\b0[.,]86\\b"
+    ]
+  }
+}

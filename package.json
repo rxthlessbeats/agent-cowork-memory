@@ -22,7 +22,9 @@
   },
   "scripts": {
     "check": "biome check && tsc --noEmit && node --test",
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.build.json",
+    "bench": "node bench/offline.ts",
+    "bench:live": "node bench/live.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.3.0",

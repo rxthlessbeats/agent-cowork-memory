@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "offline_after_an_hour": {
+      "breaks": ["chat_offline_after_48_minutes"],
+      "why": "guesses the usual hour before a silent machine counts as offline, instead of 48 minutes"
+    },
+    "low_under_20_percent": {
+      "breaks": ["chat_low_under_26_percent"],
+      "why": "guesses a slot is low under 20% full instead of under 26%"
+    },
+    "coins_over_810": {
+      "breaks": ["chat_coins_full_from_810"],
+      "why": "off by one: the coin box is full only above 810 coins, not from 810"
+    },
+    "coins_full_at_900": {
+      "breaks": ["chat_coins_full_from_810"],
+      "why": "takes the look-alike 900, what the box holds, as the point where it counts as full"
+    }
+  }
+}

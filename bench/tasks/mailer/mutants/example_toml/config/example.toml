@@ -1,0 +1,7 @@
+# Example mail settings.
+[mail]
+name = "Corner Shop"
+from = "noreply@corner.example"
+reply_to = "support@corner.example"
+host = "smtp.example.com"
+port = 587

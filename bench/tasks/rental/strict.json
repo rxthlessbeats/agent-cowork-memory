@@ -1,0 +1,22 @@
+{
+  "mutants": {
+    "three_day_minimum": {
+      "breaks": ["chat2_excavator_delivery"],
+      "stale": ["stale_3_day_minimum"],
+      "why": "keeps chat 1's 3-day excavator minimum, which chat 2 replaced with a flat 95.00 delivery fee"
+    },
+    "minimum_and_fee": {
+      "breaks": ["chat2_excavator_delivery"],
+      "stale": ["stale_3_day_minimum"],
+      "why": "adds chat 2's 95.00 delivery fee but keeps the 3-day minimum it replaced"
+    },
+    "half_from_day_5": {
+      "breaks": ["chat1_half_after_day_5", "chat2_excavator_delivery"],
+      "why": "off by one: half the day rate from the fifth day on, not after it"
+    },
+    "same_day_full_day": {
+      "breaks": ["chat1_same_day_half"],
+      "why": "charges a same-day return as one full day, the usual minimum, instead of half a day rate"
+    }
+  }
+}

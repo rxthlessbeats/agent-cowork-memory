@@ -1,0 +1,6 @@
+[mail]
+name = "Corner Shop"
+from = "noreply@corner.example"
+reply_to = "support@corner.example"
+host = "localhost"
+port = 25

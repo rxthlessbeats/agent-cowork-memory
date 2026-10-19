@@ -1,0 +1,14 @@
+{
+  "chat_minimum_911": {
+    "value": ["\\b911\\b"],
+    "stale": ["\\b500\\s?miles\\b", "\\bat least 500\\b"]
+  },
+  "chat_business_18": {
+    "value": ["\\b18\\s?(%|percent|per cent)", "\\b1\\.18\\b", "business\\b[^.\\n]{0,40}\\b18\\b"],
+    "stale": ["\\b50\\s?(%|percent|per cent)", "\\b1\\.5\\b"]
+  },
+  "chat_double_sunday": {
+    "value": ["\\bsun(day)?s?\\b", "weekday\\(\\)\\s?==\\s?6\\b"],
+    "stale": ["\\bsat(urday)?s?\\b", "weekday\\(\\)\\s?==\\s?5\\b"]
+  }
+}

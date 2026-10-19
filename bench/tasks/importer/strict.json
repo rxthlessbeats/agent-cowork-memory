@@ -1,0 +1,24 @@
+{
+  "mutants": {
+    "edited_v1_csv": {
+      "breaks": ["goal_lookups", "found_v2_data", "found_index_rebuilt"],
+      "stale": ["stale_v1_csv_edited"],
+      "why": "fixes data/products.csv, the stale v1 copy, instead of data/v2/, which DATA_VERSION = 2 picks"
+    },
+    "not_rebuilt": {
+      "breaks": ["goal_lookups", "found_index_rebuilt"],
+      "stale": ["stale_index_not_rebuilt"],
+      "why": "fixes data/v2/products.csv but never runs python -m tools.reindex, so lookups still read the old index"
+    },
+    "index_by_hand": {
+      "breaks": ["found_v2_data"],
+      "stale": ["stale_index_hand_edited"],
+      "why": "edits the generated data/v2/index.json by hand and leaves the CSVs it is built from as they were"
+    },
+    "lookup_reads_csv": {
+      "breaks": ["found_index_rebuilt"],
+      "stale": ["stale_index_not_rebuilt"],
+      "why": "fixes the v2 CSV, then makes lookup.py read the CSVs directly instead of rebuilding the index"
+    }
+  }
+}

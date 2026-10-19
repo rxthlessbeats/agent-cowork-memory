@@ -1,0 +1,14 @@
+{
+  "chat_4606_words": {
+    "value": ["\\b4,?606\\b"],
+    "stale": ["\\b4,?000[- ]words?\\b", "\\bat most 4,?000\\b", "\\blimit\\w*\\W+(\\w+\\W+){0,3}?4,?000\\b"]
+  },
+  "chat_61_minute_grace": {
+    "value": ["\\b61 ?(min|mins|minutes|m)\\b", "\\b61-minute", "minutes ?= ?61\\b"],
+    "stale": ["after the deadline is late", "\\bno grace\\b"]
+  },
+  "chat_pass_43": {
+    "value": ["\\b43 ?(%|percent|per cent)", "\\bpass(ing)? mark\\W+(\\w+\\W+){0,3}?43\\b", "\\bPASS_MARK ?= ?43\\b"],
+    "stale": ["\\b50 ?(%|percent|per cent)", "\\bpass(ing)? mark\\W+(\\w+\\W+){0,3}?50\\b"]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "chat_first_reminder_10_days": {
+    "value": [
+      "\\b10\\b[^.\\n]{0,30}\\b(days?|d)\\b[^.\\n]{0,30}\\b(overdue|late|past due|after)",
+      "\\b(first|1st)\\s+reminder\\b[^.\\n]{0,40}\\b10\\b",
+      "\\b(overdue|days)\\w* ?(>=|≥) ?10\\b|\\b10\\+ days\\b"
+    ],
+    "stale": [
+      "\\b14\\b[^.\\n]{0,30}\\b(days?|d)\\b[^.\\n]{0,30}\\b(overdue|late|past due|after)",
+      "\\b(first|1st)\\s+reminder\\b[^.\\n]{0,40}\\b14\\b",
+      "\\b(overdue|days)\\w* ?(>=|≥) ?14\\b"
+    ]
+  },
+  "chat_thursday_reminders": {
+    "value": ["\\bthursdays?\\b", "\\bweekday\\(\\) ?== ?3\\b"],
+    "stale": ["\\bmondays?\\b", "\\bweekday\\(\\) ?== ?0\\b"]
+  },
+  "chat_collections_62_days": {
+    "value": ["\\b62\\b", "\\bsixty[- ]two\\b"],
+    "stale": [
+      "\\b90\\b[^.\\n]{0,30}\\b(days?|d)\\b[^.\\n]{0,30}\\b(overdue|late|collect\\w*|agency)",
+      "\\bcollect\\w*\\b[^.\\n]{0,40}\\b90\\b"
+    ]
+  }
+}

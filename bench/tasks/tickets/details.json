@@ -1,0 +1,22 @@
+{
+  "chat1_subject_only": {
+    "value": [
+      "only (the |its |a ticket['’]?s |the ticket['’]?s )?subject",
+      "subject[- ](line )?(only|alone)",
+      "(ignor|skip|disregard|exclud|drop)\\w* (the |its |a ticket['’]?s |the ticket['’]?s )?(email |message )?bod(y|ies)",
+      "bod(y|ies) (is |are )?(ignored|not (used|checked|considered|searched|counted)|doesn['’]?t count|does not count|never counts?)",
+      "(not|never) (the |its )?bod(y|ies)\\b"
+    ]
+  },
+  "chat1_sales_then_billing_then_tech": {
+    "value": [
+      "sales (gets (the ticket |it |them |priority )?first|first|wins|beats|outranks|takes (precedence|priority)|has (precedence|priority)|is (checked |tried |picked )?first)",
+      "sales\\W{0,3}(>|→|->|=>|then|before|over|first)\\W{1,4}(then )?billing",
+      "tech (only|last|is last|comes last|is the fallback|as (a |the )?fallback)",
+      "(priority|order|precedence|preference)\\w*\\W{1,8}(is\\W{1,3})?sales\\W{1,6}billing\\W{1,6}tech"
+    ]
+  },
+  "chat2_priority1_oncall": {
+    "value": ["\\bon-?call\\b", "\\bon call (queue|team|rotation)\\b"]
+  }
+}

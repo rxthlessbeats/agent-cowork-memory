@@ -1,0 +1,33 @@
+{
+  "keep": [
+    {
+      "file": "worker.py",
+      "text": "Jobs run oldest first, in the order they were queued: plain FIFO."
+    }
+  ],
+  "mutants": {
+    "repo_rule": {
+      "breaks": ["chat1_high_normal_low", "changed_shortest_estimate_first", "chat2_urgent_first"],
+      "stale": ["stale_priority_ignored", "stale_oldest_first"],
+      "why": "follows the out-of-date docstring: plain FIFO, priority and estimate never change the order"
+    },
+    "chat1_only": {
+      "breaks": ["changed_shortest_estimate_first", "chat2_urgent_first"],
+      "stale": ["stale_oldest_first"],
+      "why": "knows only chat 1: high, normal, low, oldest first within a priority, and no urgent"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_high_normal_low"],
+      "stale": ["stale_priority_ignored"],
+      "why": "knows only chat 2: urgent first, then the shortest estimate, with high, normal and low ignored as the docstring says"
+    },
+    "key_order": {
+      "breaks": ["chat1_high_normal_low", "chat2_urgent_first"],
+      "why": "sorts by estimate before priority, so a short low job beats a long high one"
+    },
+    "no_urgent": {
+      "breaks": ["chat2_urgent_first"],
+      "why": "shortest estimate within high, normal and low, but forgets the new urgent priority"
+    }
+  }
+}

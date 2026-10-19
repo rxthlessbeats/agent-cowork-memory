@@ -1,0 +1,22 @@
+{
+  "mutants": {
+    "sunday_double": {
+      "breaks": ["chat2_saturday_double"],
+      "stale": ["stale_sunday_double"],
+      "why": "pays chat 1's Sunday double, which chat 2 moved to Saturday"
+    },
+    "weekend_double": {
+      "breaks": ["chat2_saturday_double"],
+      "stale": ["stale_sunday_double"],
+      "why": "pays both Saturday and Sunday double, reading chat 2's move as an addition"
+    },
+    "overtime_past_8": {
+      "breaks": ["chat1_after_7_5_hours"],
+      "why": "starts overtime after the usual 8 hours a day instead of 7.5"
+    },
+    "time_and_a_half": {
+      "breaks": ["chat1_overtime_1_4"],
+      "why": "pays overtime at the usual time and a half instead of 1.4"
+    }
+  }
+}

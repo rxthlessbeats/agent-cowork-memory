@@ -1,0 +1,22 @@
+{
+  "chat1_warn_from_88": {
+    "value": ["\\b88 ?(%|percent|per cent)", "\\b0\\.88\\b"],
+    "stale": ["\\b80 ?(%|percent|per cent)", "\\b0\\.80?\\b"]
+  },
+  "chat1_percent_rounded_up": {
+    "value": ["round(s|ed|ing)?( the \\w+| it)?[ _]up\\b", "\\bceil(ing|ed)?\\b", "\\b91 ?%"]
+  },
+  "chat2_warn_under_1gb_free": {
+    "value": [
+      "\\b(1|one) ?(gb|gib|gigabytes?) (of )?(free|left|remaining|available|headroom|(free )?space)",
+      "(free|left|remaining|available|headroom)( space| storage)?( is)? (<|under|below|less than) ?(1|one) ?(gb|gib|gigabyte)",
+      "(limit ?- ?used|free|remaining|headroom) ?< ?(1 ?\\* ?)?gb\\b"
+    ]
+  },
+  "chat2_no_warnings_from_1tb": {
+    "value": [
+      "\\b(1|one|a) ?(tb|tib|terabytes?)\\b",
+      "\\b1024 ?(gb|gib)\\b|1024 ?\\* ?gb\\b|\\bgb ?\\* ?1024\\b|1024 ?\\*\\* ?4"
+    ]
+  }
+}

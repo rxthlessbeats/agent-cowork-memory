@@ -1,0 +1,19 @@
+{
+  "mutants": {
+    "edited_decoy": {
+      "breaks": ["goal_csv_export", "found_registered_module"],
+      "stale": ["stale_decoy_edited"],
+      "why": "gives exporters/csv_writer.py, registered for nothing, the \";\" and header defaults instead of changing csv_out"
+    },
+    "decoy_registered": {
+      "breaks": ["found_registered_module"],
+      "stale": ["stale_decoy_edited", "stale_decoy_wired_in"],
+      "why": "changes csv_writer's defaults and registers \"csv\" to it, leaving the registered csv_out as it was"
+    },
+    "export_calls_decoy": {
+      "breaks": ["found_registered_module"],
+      "stale": ["stale_decoy_wired_in"],
+      "why": "makes export.py call csv_writer with \";\" and a header for \"csv\", around the registry"
+    }
+  }
+}

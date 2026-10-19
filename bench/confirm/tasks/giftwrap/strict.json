@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "two_kilos": {
+      "breaks": ["chat_2762_grams"],
+      "why": "guesses a round 2 kg weight limit for wrapping instead of the chat's 2762 g"
+    },
+    "fee_300": {
+      "breaks": ["chat_366_per_item"],
+      "why": "guesses a round €3.00 for each wrapped item instead of €3.66"
+    },
+    "under_2762": {
+      "breaks": ["chat_2762_grams"],
+      "why": "off by one: wraps only items under 2762 g, so an item of exactly 2762 g goes unwrapped"
+    },
+    "cut_at_40": {
+      "breaks": ["chat_42_characters"],
+      "why": "a look-alike value: cuts the card message to 40 characters, not 42"
+    }
+  }
+}

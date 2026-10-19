@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "close_at_start": {
+      "breaks": ["chat2_close_13"],
+      "why": "guesses online sales close at the listed start, not 13 minutes after it"
+    },
+    "student_half": {
+      "breaks": ["chat1_student_40"],
+      "why": "guesses students pay half price, not 40% off"
+    },
+    "open_at_13": {
+      "breaks": ["chat2_close_13"],
+      "why": "off by one: still sells at exactly 13 minutes after the start, 20:13 for a 20:00 show"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_student_40", "chat1_fee_24"],
+      "why": "knows only chat 2: gives students the senior discount and charges no booking fee"
+    }
+  }
+}

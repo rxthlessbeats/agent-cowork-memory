@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "cents": {
+      "breaks": ["chat_dollars"],
+      "stale": ["stale_prints_cents"],
+      "why": "prints the totals in cents as load() gives them, not as dollars"
+    },
+    "float_dollars": {
+      "breaks": ["chat_dollars"],
+      "why": "prints dollars without forcing two decimals: $150.0 and $21.0"
+    },
+    "alphabetical": {
+      "breaks": ["chat_biggest_first", "chat_top"],
+      "why": "lists the categories by name instead of biggest total first"
+    },
+    "no_top": {
+      "breaks": ["chat_top"],
+      "why": "has no --top option"
+    }
+  }
+}

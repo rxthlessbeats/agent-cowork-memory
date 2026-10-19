@@ -1,0 +1,5 @@
+[mail]
+name = "Corner Shop"
+from = "shop@corner.example"
+host = "localhost"
+port = 25

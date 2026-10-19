@@ -1,0 +1,30 @@
+{
+  "chat1_ten_days_of_dailies": {
+    "value": [
+      "\\b(10|ten)[ -]?(days?|dailies|daily)\\b",
+      "today['’]?s?( backup)? (and|plus|\\+) (the )?(9|nine)\\b",
+      "(last|past|recent|latest) (10|ten) (backups|nights)",
+      "\\b(age|days?|daily) ?(<|=) ?10\\b"
+    ],
+    "stale": ["\\b(7|seven)[ -]?(days?|dailies|daily)\\b", "not (7|seven)\\b"]
+  },
+  "chat1_wednesday_weeklies": {
+    "value": ["\\bwednesdays?\\b", "\\bweekday\\(\\) ?== ?2\\b|isoweekday\\(\\) ?== ?3\\b"],
+    "stale": ["\\bsundays?\\b", "\\bweekday\\(\\) ?== ?6\\b|isoweekday\\(\\) ?== ?7\\b"]
+  },
+  "chat2_oldest_kept": {
+    "value": [
+      "(never|not|n['’]t|without)( ever)? (be )?(delet|remov|prun|drop|purg|touch)\\w* (the )?(very |single |one )?oldest",
+      "(keep|kept|retain|preserv|protect|spare)\\w* (always )?(the )?(very |single |one )?oldest",
+      "oldest (backup |one |file |archive )?(in the (folder|directory) )?(is |must |should |gets? |always |will |be )*(kept|retained|preserved|protected|safe|exempt|stays|remains|survives|never (be |gets? )?(deleted|removed|pruned))",
+      "oldest\\W.{0,40}auditor|auditor.{0,40}\\boldest"
+    ]
+  },
+  "chat2_first_of_month_for_six_months": {
+    "value": [
+      "\\b(6|six)[ -]?months?\\b",
+      "\\b(6|six) (most recent |last |latest )?(monthl(y|ies)|month-?starts?|first-of-(the-)?months?)",
+      "\\bmonths? ?< ?6\\b|\\bmonthly ?= ?6\\b"
+    ]
+  }
+}

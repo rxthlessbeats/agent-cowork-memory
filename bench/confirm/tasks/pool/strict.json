@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "chat1_capacity_85": {
+      "breaks": ["changed_capacity_66"],
+      "stale": ["stale_capacity_85"],
+      "why": "keeps chat 1's 85 swimmers a session, which chat 2 changed to 66"
+    },
+    "member_20": {
+      "breaks": ["chat1_member_39"],
+      "why": "guesses members get 20% off, not 39%"
+    },
+    "capacity_65": {
+      "breaks": ["changed_capacity_66"],
+      "why": "off by one: refuses the 66th swimmer, so a session holds 65"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_member_39", "chat1_friday_adults"],
+      "why": "knows only chat 2: guesses 10% off for members and takes children on Fridays"
+    }
+  }
+}

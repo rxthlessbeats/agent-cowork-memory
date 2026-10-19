@@ -1,0 +1,19 @@
+{
+  "chat_48_and_2_hours": {
+    "value": [
+      "\\b(48|forty-eight)[ -]?(h|hrs?|hours?)\\b",
+      "\\b48 ?h?\\s*(/|and|&|\\+|,)\\s*2 ?(h|hrs?|hours?)\\b",
+      "\\btwo days\\b[^.\\n]{0,30}\\btwo hours\\b",
+      "\\btwo days (before|ahead|earlier|in advance)"
+    ],
+    "stale": ["\\b(24|twenty-four)[ -]?(h|hrs?|hours?) (before|ahead|earlier|in advance|prior)"]
+  },
+  "chat_quiet_hours": {
+    "value": [
+      "\\b21:00\\b",
+      "\\b9 ?pm\\b",
+      "\\b22:00\\b[^\\n]{0,40}\\b0?7:00\\b",
+      "\\b10 ?pm\\b[^\\n]{0,40}\\b7 ?am\\b"
+    ]
+  }
+}

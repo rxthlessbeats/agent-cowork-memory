@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "first_hour_free": {
+      "breaks": ["chat_free_up_to_91_minutes"],
+      "why": "guesses the usual first hour free, so a 61- to 91-minute stay is charged"
+    },
+    "ten_percent_monday": {
+      "breaks": ["chat_monday_14_off"],
+      "why": "gives Monday drop-offs a round 10% off instead of 14%"
+    },
+    "charged_from_91": {
+      "breaks": ["chat_free_up_to_91_minutes"],
+      "why": "frees only stays under 91 minutes, so a stay of exactly 91 is charged"
+    },
+    "rate_435": {
+      "breaks": ["chat_453_per_started_hour"],
+      "why": "charges 4.35 an hour, the planted 4.53 with its digits swapped"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "chat_back_within_106_minutes": {
+    "value": ["\\b106\\b[\\s-]*(min|minutes)\\b", "(within|more than|over|longer than|under|up to) 106\\b"]
+  },
+  "chat_077_restocking_fee": {
+    "value": ["\\b0[.,]77\\b", "\\b77 ?(c|cents?)\\b"]
+  },
+  "chat_no_fee_on_sundays": {
+    "value": [
+      "\\bsundays?\\b[^.\\n]{0,60}\\b(fee|restock\\w*)\\b",
+      "\\b(fee|restock\\w*)\\b[^.\\n]{0,60}\\bsundays?\\b",
+      "weekday\\(\\) ?(==|!=) ?6\\b|isoweekday\\(\\) ?(==|!=) ?7\\b"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "lost_after_30": {
+      "breaks": ["chat_lost_after_60_days"],
+      "why": "guesses a month: a book more than 30 days late counts as lost, instead of more than 60"
+    },
+    "no_amnesty": {
+      "breaks": ["chat_free_tuesdays"],
+      "why": "has no amnesty day: a late book brought back on a Tuesday pays like any other"
+    },
+    "grace_under_4": {
+      "breaks": ["chat_grace_4_days"],
+      "why": "off by one: a book exactly 4 days late pays, though up to 4 days late is free"
+    },
+    "free_thursdays": {
+      "breaks": ["chat_free_tuesdays"],
+      "why": "makes Thursday the amnesty day instead of Tuesday"
+    }
+  }
+}

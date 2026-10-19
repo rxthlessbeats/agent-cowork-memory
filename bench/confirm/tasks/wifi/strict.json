@@ -1,0 +1,28 @@
+{
+  "keep": [
+    {
+      "file": "README.md",
+      "text": "A voucher works for 60 minutes from its first use, on up to 3 devices, until 1000 MB have gone through it."
+    }
+  ],
+  "mutants": {
+    "readme_rule": {
+      "breaks": ["chat_92_minutes", "chat_6_devices", "chat_2965_mb"],
+      "stale": ["stale_one_hour", "stale_three_devices", "stale_1000_mb"],
+      "why": "follows the out-of-date README.md: 60 minutes from the first use, 3 devices, 1000 MB"
+    },
+    "data_3_gb": {
+      "breaks": ["chat_2965_mb"],
+      "why": "guesses a round 3 GB (3072 MB) of data a voucher instead of 2965 MB"
+    },
+    "minutes_inclusive": {
+      "breaks": ["chat_92_minutes"],
+      "why": "off by one: still lets a device on exactly 92 minutes after the voucher's first use"
+    },
+    "readme_devices": {
+      "breaks": ["chat_6_devices"],
+      "stale": ["stale_three_devices"],
+      "why": "takes the chat's new time and data limits but keeps README.md's 3 devices"
+    }
+  }
+}

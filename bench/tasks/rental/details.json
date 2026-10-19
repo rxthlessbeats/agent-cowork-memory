@@ -1,0 +1,28 @@
+{
+  "chat1_half_after_day_5": {
+    "value": [
+      "\\b7\\.5\\b",
+      "\\b(after|beyond|past|over|from)\\W+(the\\W+)?(first\\W+)?(day\\W+)?(5|five|fifth|5th)\\b[^.\\n]{0,40}?(\\bhalf\\b|\\/ ?2\\b|\\b0\\.5\\b|\\b50 ?%)",
+      "(\\bhalf|\\/ ?2|\\b0\\.5|\\b50 ?%)\\W+(\\w+\\W+){0,4}?(after|beyond|past|over|from)\\W+(the\\W+)?(first\\W+)?(day\\W+)?(5|five|fifth|5th)\\b",
+      "\\b(first|initial)\\W+(5|five)\\W+days?\\b[^.\\n]{0,50}?(\\bhalf\\b|\\/ ?2\\b|\\b0\\.5\\b|\\b50 ?%)",
+      "\\bdays?\\W+(6|six|sixth)\\b[^.\\n]{0,40}?(\\bhalf\\b|\\/ ?2\\b|\\b0\\.5\\b|\\b50 ?%)"
+    ]
+  },
+  "chat1_same_day_half": {
+    "value": [
+      "\\bsame[- ]day\\W+(\\w+\\W+){0,5}?(half|0\\.5|50 ?%|\\/ ?2\\b)",
+      "\\b(half|0\\.5|50 ?%|\\/ ?2\\b)\\W+(\\w+\\W+){0,6}?(same[- ]day|(0|zero)[- ]days?\\b)",
+      "\\b(day (it was|it's|it is|they were|of) pick\\w*|pick-?up (day|date)|(end|return) ?== ?(start|pickup)|(start|pickup) ?== ?(end|return))\\W+(\\w+\\W+){0,5}?(half|0\\.5|50 ?%|\\/ ?2\\b)",
+      "\\b(0|zero)[- ]days?\\W+(\\w+\\W+){0,6}?(half|0\\.5|50 ?%|\\/ ?2\\b)"
+    ]
+  },
+  "chat2_excavator_delivery": {
+    "value": ["\\b95(\\.00)?\\b(?!\\s*(%|percent))", "ninety[- ]five"],
+    "stale": [
+      "\\b(fewer|less) than (3|three) days",
+      "\\b(3|three)[- ]day minimum",
+      "\\b(minimum|min|at least)\\W+(\\w+\\W+){0,2}?(3|three)[- ]days?\\b",
+      "\\bmax\\(\\s*(3\\s*,|[\\w.()]+\\s*,\\s*3\\s*\\))"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "thirty_free_minutes": {
+      "breaks": ["chat_27_free_minutes"],
+      "why": "gives the usual half hour free instead of 27 minutes"
+    },
+    "members_10_off": {
+      "breaks": ["chat_members_14_off"],
+      "why": "gives members a round 10% off instead of 14%"
+    },
+    "thursday_free": {
+      "breaks": ["chat_wednesday_free"],
+      "why": "off by one in the weekday: tests weekday() == 3, so Thursday rides are free and Wednesday ones aren't"
+    },
+    "no_member_discount": {
+      "breaks": ["chat_members_14_off"],
+      "why": "knows only part of the chat: the free minutes and free Wednesdays, but members pay full price"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "seniors_from_65": {
+      "breaks": ["changed_seniors_from_61"],
+      "stale": ["stale_seniors_from_65"],
+      "why": "keeps chat 1's senior age, 65, which chat 2 brought down to 61"
+    },
+    "free_from_80": {
+      "breaks": ["chat1_free_from_82"],
+      "why": "guesses the usual 80 for skiing free instead of 82"
+    },
+    "seniors_over_61": {
+      "breaks": ["changed_seniors_from_61"],
+      "why": "off by one: a 61-year-old still pays the full price, and half price starts at 62"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_free_from_82", "chat1_thursday_26_off"],
+      "why": "knows only chat 2: half price from 61, but nobody skis free from 82 and Thursdays are full price"
+    }
+  }
+}

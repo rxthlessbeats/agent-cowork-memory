@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "by_minutes_only": {
+      "breaks": ["chat_kitchen_38_percent"],
+      "why": "the natural default without the kitchen's part: the whole pool by minutes, cooks and servers alike"
+    },
+    "an_hour_minimum": {
+      "breaks": ["chat_under_77_minutes_nothing"],
+      "why": "guesses the usual hour for the shortest shift that counts, so a 76-minute shift gets a share"
+    },
+    "over_77_minutes": {
+      "breaks": ["chat_under_77_minutes_nothing"],
+      "why": "off by one: only shifts longer than 77 minutes count, so exactly 77 gets nothing"
+    },
+    "weekends_all_floor": {
+      "breaks": ["chat_sunday_all_floor"],
+      "why": "gives the floor the whole pool at weekends, Saturdays as well as Sundays"
+    }
+  }
+}

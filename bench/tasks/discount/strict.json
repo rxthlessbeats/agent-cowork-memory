@@ -1,0 +1,25 @@
+{
+  "mutants": {
+    "chat1_only": {
+      "breaks": ["chat2_minimum_25"],
+      "stale": ["stale_minimum_30"],
+      "why": "knows only chat 1: codes work from 30.00, the minimum chat 2 lowered to 25.00"
+    },
+    "chat2_only": {
+      "breaks": ["chat1_gift_cards", "chat1_max_20_off"],
+      "why": "knows only chat 2's 25.00 minimum: gift cards are discounted, and nothing caps the discount"
+    },
+    "minimum_exclusive": {
+      "breaks": ["chat2_minimum_25"],
+      "why": "lets a code work only above 25.00, so a subtotal of exactly 25.00 pays in full"
+    },
+    "cap_20_percent": {
+      "breaks": ["chat1_max_20_off"],
+      "why": "reads 'never more than 20 off' as 20 percent, not 20.00"
+    },
+    "gift_voids_code": {
+      "breaks": ["chat1_gift_cards"],
+      "why": "gives no discount at all on a cart with a gift card in it, instead of leaving out just the gift card lines"
+    }
+  }
+}

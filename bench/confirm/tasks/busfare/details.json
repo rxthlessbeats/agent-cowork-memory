@@ -1,0 +1,16 @@
+{
+  "chat_cap_7_43": {
+    "value": ["\\b7[.,]43\\b", "\\b743\\b"]
+  },
+  "chat_thursday_quarter_off": {
+    "value": [
+      "\\bthursdays?\\b[^.\\n]{0,60}\\b25 ?(%|percent|per cent)",
+      "\\b25 ?(%|percent|per cent)[^.\\n]{0,60}\\bthursdays?\\b",
+      "\\bthursdays?\\b",
+      "\\bthu\\b[^.\\n]{0,30}(1[.,]80|\\b180\\b)"
+    ]
+  },
+  "chat_stop_4772_free": {
+    "value": ["\\b4772\\b"]
+  }
+}

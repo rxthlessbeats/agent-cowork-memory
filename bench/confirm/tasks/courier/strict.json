@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "thirty_five_percent": {
+      "breaks": ["changed_flat_318"],
+      "stale": ["stale_35_percent"],
+      "why": "keeps turn 1's 35% of the fee, which turn 4 changed to a flat £3.18"
+    },
+    "no_grace": {
+      "breaks": ["chat_late_after_21_minutes"],
+      "why": "the natural default: late as soon as it misses the promised time, with no 21-minute grace"
+    },
+    "none_from_20kg": {
+      "breaks": ["chat_no_refund_over_20kg"],
+      "why": "off by one: no refund for a parcel of exactly 20 kg, where only parcels over 20 kg get none"
+    },
+    "change_turn_only": {
+      "breaks": ["chat_late_after_21_minutes", "chat_no_refund_over_20kg"],
+      "why": "knows only turn 4's change: the flat £3.18, but late as soon as it misses the promised time, and heavy parcels refunded"
+    }
+  }
+}

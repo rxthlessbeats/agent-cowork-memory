@@ -1,0 +1,21 @@
+{
+  "chat1_rest_71_minutes": {
+    "value": ["\\b71 ?(m|mins?|minutes)\\b", "\\b71\\b[^.\\n]{0,30}\\b(rest|break|between)"]
+  },
+  "chat1_budget_3975": {
+    "value": ["\\b3,?975(\\.00)?\\b"]
+  },
+  "changed_cap_63_hours": {
+    "value": [
+      "\\b63 ?(h|hrs?|hours)\\b",
+      "(more than|over|above|max(imum)?( of)?|at most|cap\\w*( at)?|limit\\w*( of| at| to)?) 63\\b",
+      "\\b63\\b[^.\\n]{0,20}(a|per|each|in the) week"
+    ],
+    "stale": [
+      "\\b70 ?(h|hrs?|hours)\\b",
+      "(more than|over|above|max(imum)?( of)?|at most|cap\\w*( at)?|limit\\w*( of| at| to)?) 70\\b",
+      "\\bnot 70\\b",
+      "\\b(was|from|instead of|previously|replac\\w*|rather than) 70\\b"
+    ]
+  }
+}

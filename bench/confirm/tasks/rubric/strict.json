@@ -1,0 +1,26 @@
+{
+  "keep": [
+    { "file": "MARKING.md", "text": "Essays may be at most 4000 words." },
+    { "file": "MARKING.md", "text": "Anything handed in after the deadline is late." },
+    { "file": "MARKING.md", "text": "The pass mark is 50%" }
+  ],
+  "mutants": {
+    "marking_md_rules": {
+      "breaks": ["chat_4606_words", "chat_61_minute_grace", "chat_pass_43"],
+      "stale": ["stale_4000_words", "stale_no_grace", "stale_pass_50"],
+      "why": "follows the out-of-date MARKING.md: at most 4000 words, late from the deadline itself, 50% to pass"
+    },
+    "pass_40": {
+      "breaks": ["chat_pass_43"],
+      "why": "guesses the usual 40% pass mark instead of 43%"
+    },
+    "limit_under_4606": {
+      "breaks": ["chat_4606_words"],
+      "why": "off by one: takes points off an essay of exactly 4606 words, though 4606 is fine and only 4607 is over"
+    },
+    "grace_60": {
+      "breaks": ["chat_61_minute_grace"],
+      "why": "a look-alike value: an hour's grace after the deadline instead of 61 minutes"
+    }
+  }
+}

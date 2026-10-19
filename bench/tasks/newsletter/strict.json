@@ -1,0 +1,26 @@
+{
+  "mutants": {
+    "chat2_only": {
+      "breaks": ["chat1_oldest_first", "chat1_ref_weekly"],
+      "stale": ["stale_newest_first"],
+      "why": "knows only chat 2: the docstring's newest-first order, and links without ?ref=weekly"
+    },
+    "chat1_only": {
+      "breaks": ["chat2_first_sentence", "chat2_skip_empty_summary"],
+      "why": "knows only chat 1: the whole summary, and posts with an empty summary still listed"
+    },
+    "newest_first": {
+      "breaks": ["chat1_oldest_first"],
+      "stale": ["stale_newest_first"],
+      "why": "keeps the docstring's newest-first order"
+    },
+    "ref_digest": {
+      "breaks": ["chat1_ref_weekly"],
+      "why": "remembers a ref tag for the digest's stats but not its value: ?ref=digest instead of ?ref=weekly"
+    },
+    "empty_summary_line": {
+      "breaks": ["chat2_skip_empty_summary"],
+      "why": "reads 'skip empty summaries' as dropping the empty summary line, so the post is still listed"
+    }
+  }
+}

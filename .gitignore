@@ -3,3 +3,13 @@ dist/
 *.tgz
 plans/
 .venv/
+bench/results/**/logs/
+frozen/
+frozen-opencode/
+# Benchmark plans, and runs not reported yet
+bench/PLAN*.md
+bench/confirm/PLAN.md
+bench/results/cursor/
+bench/results/opencode/
+bench/results/confirm/cursor/
+bench/results/confirm/opencode/

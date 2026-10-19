@@ -1,0 +1,27 @@
+{
+  "chat_safety_buffer": {
+    "value": [
+      "\\b(3|three)[- ]days?\\W{0,3}(of )?(safety|buffer|margin)",
+      "\\b(safety|buffer|margin)\\w*\\W{0,3}(of )?(\\w+ ){0,2}(3|three)\\b",
+      "\\blead[ _]?(time|days?)\\W{0,4}(\\+|plus)\\W{0,4}(a )?(3|three)\\b",
+      "\\b(3|three) (extra|additional|more|spare) days"
+    ]
+  },
+  "chat_cover_21_days": {
+    "value": [
+      "\\b(21|twenty[- ]one)[- ]days?",
+      "\\b21\\W{0,3}(\\*|×|x|times)\\W{0,3}(the )?daily",
+      "\\bdaily[_ ]use\\W{0,3}(\\*|×|times)\\W{0,3}21\\b",
+      "\\b(3|three) weeks"
+    ]
+  },
+  "chat_cap_500": {
+    "value": [
+      "(\\bcap|\\bmax|\\blimit|\\bat most|no more than|\\bup to|more than|≤|<=|\\bmin\\()[^.\\n\\d]{0,30}\\b500\\b",
+      "\\b500\\b[^.\\n\\d]{0,30}(\\bcap|\\bmax|\\blimit|\\bat most|per (order|delivery|item))"
+    ]
+  },
+  "chat_skip_x": {
+    "value": ["\\b(start\\w*|prefix\\w*|begin\\w*)( with)?\\W{0,3}x-", "[\"'`]x-", "\\bx-(prefix|items?|names?)"]
+  }
+}

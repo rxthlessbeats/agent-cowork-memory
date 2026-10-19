@@ -1,0 +1,28 @@
+{
+  "keep": [
+    {
+      "file": "reminders.py",
+      "text": "Each appointment gets one reminder, sent exactly 24 hours before it starts."
+    }
+  ],
+  "mutants": {
+    "repo_rule": {
+      "breaks": ["chat_48_and_2_hours", "chat_quiet_hours"],
+      "stale": ["stale_24_hours"],
+      "why": "follows the out-of-date docstring: one reminder, exactly 24 hours before, at any hour"
+    },
+    "kept_24_hours": {
+      "breaks": ["chat_48_and_2_hours"],
+      "stale": ["stale_24_hours"],
+      "why": "keeps the old 24-hour reminder alongside the new 48- and 2-hour ones"
+    },
+    "no_quiet_hours": {
+      "breaks": ["chat_quiet_hours"],
+      "why": "48 and 2 hours before, but sends them in the night too"
+    },
+    "same_night": {
+      "breaks": ["chat_quiet_hours"],
+      "why": "moves a reminder that falls after midnight to 21:00 that same day, after an early appointment, not the evening before"
+    }
+  }
+}

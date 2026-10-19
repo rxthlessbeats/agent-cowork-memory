@@ -1,0 +1,37 @@
+{
+  "chat_export_7500": {
+    "value": [
+      "export(?:(?!import|and\\b)[^\\d.,;]){0,40}?\\b7[,_ ]?500\\b",
+      "\\b7[,_ ]?500\\b(?:[- ]rows?)?\\s*(?:\\(export\\w*\\)|(?:for |per |on |in |during )?(?:the |each |an? )?export)"
+    ],
+    "stale": [
+      "\\b5[,_ ]?000\\b",
+      "export(?:(?!import|and\\b)[^\\d.,;]){0,40}?\\b2[,_ ]?750\\b",
+      "\\b2[,_ ]?750\\b(?:[- ]rows?)?\\s*(?:\\(export\\w*\\)|(?:for |per |on |in |during )?(?:the |each |an? )?export)"
+    ]
+  },
+  "chat_import_2750": {
+    "value": [
+      "import(?:(?!export|and\\b)[^\\d.,;]){0,40}?\\b2[,_ ]?750\\b",
+      "\\b2[,_ ]?750\\b(?:[- ]rows?)?\\s*(?:\\(import\\w*\\)|(?:for |per |on |in |during )?(?:the |each |an? )?import)"
+    ],
+    "stale": [
+      "\\b5[,_ ]?000\\b",
+      "import(?:(?!export|and\\b)[^\\d.,;]){0,40}?\\b7[,_ ]?500\\b",
+      "\\b7[,_ ]?500\\b(?:[- ]rows?)?\\s*(?:\\(import\\w*\\)|(?:for |per |on |in |during )?(?:the |each |an? )?import)"
+    ]
+  },
+  "chat_no_empty_batch": {
+    "value": [
+      "never[^.]{0,30}empty batch",
+      "no empty batch",
+      "empty batch\\w*[^.]{0,40}\\b(reject|400|never|not|refus|skip)",
+      "(skip|drop|omit|avoid)\\w*[^.]{0,20}empty batch"
+    ],
+    "stale": [
+      "ends? with an empty batch",
+      "empty batch[^.]{0,40}\\b(tells|signals|marks)\\b",
+      "empty (end|final|closing|sentinel) batch"
+    ]
+  }
+}

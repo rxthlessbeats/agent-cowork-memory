@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "two_hours": {
+      "breaks": ["changed_closes_after_109_minutes"],
+      "stale": ["stale_two_hours"],
+      "why": "lets bids count up to two hours after the lot opens, the first plan the chat changed to 109 minutes"
+    },
+    "any_higher_bid": {
+      "breaks": ["chat_increment_372"],
+      "why": "counts any bid higher than the leading one, with no minimum raise"
+    },
+    "over_48_only": {
+      "breaks": ["chat_opening_bid_48"],
+      "why": "refuses a bid of exactly 48.00, counting only bids over it"
+    },
+    "increment_327": {
+      "breaks": ["chat_increment_372"],
+      "why": "a minimum raise of 3.27, the planted 3.72 with its digits swapped"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "mutants": {
+    "chat2_only": {
+      "breaks": ["chat1_year_starts_1_april", "chat1_five_digit_counter"],
+      "stale": ["stale_four_digits"],
+      "why": "knows only chat 2: the docstring's calendar year and 4-digit counter, with the 13s skipped"
+    },
+    "chat1_only": {
+      "breaks": ["chat2_no_13"],
+      "why": "knows only chat 1: counters with a 13 in them are still issued"
+    },
+    "four_digits": {
+      "breaks": ["chat1_five_digit_counter"],
+      "stale": ["stale_four_digits"],
+      "why": "keeps the docstring's 4-digit counter, 2026-0042"
+    },
+    "fy_end_year": {
+      "breaks": ["goal_counts_up", "chat1_year_starts_1_april", "chat1_five_digit_counter"],
+      "why": "names the financial year for the year it ends in (FY2027 for April 2026 on), not the year it began"
+    },
+    "skip_only_13": {
+      "breaks": ["chat2_no_13"],
+      "why": "skips the counter 13 itself but still issues 113 and 130 to 139"
+    }
+  }
+}

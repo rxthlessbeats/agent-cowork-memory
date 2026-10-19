@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "sixty_days": {
+      "breaks": ["chat_62_days"],
+      "why": "takes the two months' terms as a round 60 days instead of 62"
+    },
+    "any_unpaid_balance": {
+      "breaks": ["chat_1_61_minimum"],
+      "why": "chases every balance above zero instead of skipping those under 1.61"
+    },
+    "over_62_days": {
+      "breaks": ["chat_62_days"],
+      "why": "off by one: chases only after more than 62 days, so an invoice unpaid for exactly 62 isn't chased"
+    },
+    "forgets_mondays": {
+      "breaks": ["chat_no_mondays"],
+      "why": "knows only part of the long chat: sends letters on Mondays too"
+    }
+  }
+}

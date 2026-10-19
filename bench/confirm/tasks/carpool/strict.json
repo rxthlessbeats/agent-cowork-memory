@@ -1,0 +1,20 @@
+{
+  "mutants": {
+    "no_cap": {
+      "breaks": ["chat_cap_9_26"],
+      "why": "the natural default without the chat: each rider pays their full share, however big, with no 9.26 cap"
+    },
+    "free_under_5_km": {
+      "breaks": ["chat_free_under_4175_m"],
+      "why": "guesses a round 5 km for the free station hop instead of 4175 metres"
+    },
+    "free_up_to_4175": {
+      "breaks": ["chat_free_under_4175_m"],
+      "why": "off by one: a ride of exactly 4175 metres is free too, though only shorter ones are"
+    },
+    "thursday": {
+      "breaks": ["chat_due_first_tuesday"],
+      "why": "a look-alike day: money is due on the first Thursday after the ride instead of the first Tuesday"
+    }
+  }
+}

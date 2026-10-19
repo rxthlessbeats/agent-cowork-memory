@@ -1,0 +1,24 @@
+{
+  "chat_overtime_33_percent": {
+    "value": ["\\b33 ?(%|percent)", "\\bthirty[- ]three (%|percent)", "\\b1\\.33(?!\\d)", "\\b0\\.33(?!\\d)"],
+    "stale": ["time and a half", "\\b1\\.5 ?(x|×|times)", "\\b150 ?%"]
+  },
+  "chat_saturday_double": {
+    "value": [
+      "\\bsaturdays?\\b[^.;\\n]{0,40}?(double|2x|2×|twice|x ?2\\b)",
+      "\\b(double|2x|2×|twice)[^.;\\n]{0,30}?\\bsaturdays?\\b",
+      "weekday\\(\\) ?== ?5\\b",
+      "isoweekday\\(\\) ?== ?6\\b"
+    ],
+    "stale": [
+      "\\bsundays?\\b[^.;\\n]{0,40}?(double|2x|2×|twice|x ?2\\b)",
+      "\\b(double|2x|2×|twice)[^.;\\n]{0,30}?\\bsundays?\\b",
+      "weekday\\(\\) ?== ?6\\b",
+      "isoweekday\\(\\) ?== ?7\\b"
+    ]
+  },
+  "chat_meal_2_39": {
+    "value": ["\\b2\\.39\\b"],
+    "stale": ["\\b5\\.00\\b[^.\\n]{0,30}\\bmeal", "\\bmeal\\b[^.\\n]{0,30}\\b5(\\.00)?\\b"]
+  }
+}

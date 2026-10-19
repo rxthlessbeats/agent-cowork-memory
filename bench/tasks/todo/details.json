@@ -1,0 +1,22 @@
+{
+  "chat_due_date_first": {
+    "value": [
+      "\\b(sort|order|rank)\\w* (\\w+ )?(primarily |first |mainly )?by (the )?(earliest )?due",
+      "\\bdue[ _]?(date)?,? (earliest|soonest|ascending)",
+      "\\bdue[ _]?date first",
+      "\\bpriority\\b[^.\\n]{0,50}\\b(ties?|tie-?break\\w*|tiebreak\\w*)\\b",
+      "\\b(tie-?break\\w*|break\\w* ties)\\b[^.\\n]{0,30}\\bpriority"
+    ]
+  },
+  "chat_no_due_is_seven_days": {
+    "value": ["\\b(7|seven)[ -]days?\\b", "timedelta\\(days ?= ?7\\)", "\\b(a|one) week (after|from|out|later|ahead)"]
+  },
+  "chat_low_only_if_overdue": {
+    "value": [
+      "\\blow[- ]priority (todos? |items? |tasks? |ones |entries )?(are |get |should be |is )?(left out|omitted|excluded|dropped|skipped|hidden|filtered|not (shown|included|listed))",
+      "\\b(leave|leaving|omit|exclud|drop|skip|hid|filter)\\w* (out )?(all |any )?low[- ]priority",
+      "\\blow\\b[^.\\n]{0,60}\\b(unless|only if|only when|except (when|if))\\b[^.\\n]{0,20}overdue",
+      "\\bonly (the )?overdue (ones|low)"
+    ]
+  }
+}

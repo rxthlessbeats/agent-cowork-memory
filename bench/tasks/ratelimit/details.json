@@ -1,0 +1,24 @@
+{
+  "chat_per_key": {
+    "value": [
+      "(per|by|for each|each) (api )?key",
+      "keyed (by|on) (the )?(api )?key",
+      "limit\\w* (by|on|per) (the )?(api )?key"
+    ],
+    "stale": ["(per|each|by) user\\b"]
+  },
+  "chat_no_key_refused": {
+    "value": [
+      "(without|no|missing) (an? )?(api )?key\\b[^.]{0,40}(refus|reject|deni|block|429|fail)",
+      "(refus|reject|deni|block)\\w*[^.]{0,40}(without|no|missing) (an? )?(api )?key"
+    ]
+  },
+  "chat_100_rolling": {
+    "value": ["\\b100\\b[^.]{0,40}(60 ?(s|sec|seconds)|minute)"],
+    "stale": ["\\b60 requests"]
+  },
+  "chat_admin_unlimited": {
+    "value": ["admin-"],
+    "stale": ["limits apply to everyone"]
+  }
+}

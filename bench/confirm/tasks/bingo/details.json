@@ -1,0 +1,20 @@
+{
+  "chat_prize_44": {
+    "value": ["\\b44\\s?(%|percent|per cent)", "\\b0?\\.44\\b", "(prize|full[- ]house)\\b[^.\\n]{0,40}\\b44\\b"]
+  },
+  "changed_jackpot_32": {
+    "value": [
+      "\\b32\\s?(calls|numbers|balls)\\b",
+      "(\\bwithin|\\bin|\\bunder|\\bat most|<=|≤)\\s?32\\b",
+      "\\b32\\b[^.\\n]{0,20}\\bor (fewer|less)\\b"
+    ],
+    "stale": [
+      "\\b34\\s?(calls|numbers|balls)\\b",
+      "(\\bwithin|\\bin|\\bunder|\\bat most|<=|≤)\\s?34\\b",
+      "\\b34\\b[^.\\n]{0,20}\\bor (fewer|less)\\b"
+    ]
+  },
+  "chat_no_jackpot_tuesday": {
+    "value": ["\\btue(sday)?s?\\b", "weekday\\(\\)\\s?(==|!=)\\s?1\\b"]
+  }
+}

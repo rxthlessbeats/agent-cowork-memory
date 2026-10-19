@@ -1,0 +1,15 @@
+{
+  "chat_2762_grams": {
+    "value": ["\\b2[ ,.]?762\\s?(g|grams?)\\b", "\\b2762\\b", "\\b2[.,]762\\s?kg\\b"]
+  },
+  "chat_366_per_item": {
+    "value": ["(€|eur\\s?)\\s?3[.,]66\\b", "\\b3[.,]66\\b", "\\b366\\b"]
+  },
+  "chat_42_characters": {
+    "value": [
+      "\\b42\\b[^.\\n]{0,30}\\b(char|letter)",
+      "\\b(first|max(imum)?|at most|up to|cut\\w*(\\s+it)?\\s+(down\\s+)?to|truncat\\w*(\\s+it)?\\s+to)\\s+(its\\s+first\\s+)?42\\b",
+      "\\[:\\s?42\\s?\\]"
+    ]
+  }
+}

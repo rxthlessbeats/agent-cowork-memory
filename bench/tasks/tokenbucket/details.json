@@ -1,0 +1,24 @@
+{
+  "chat_burst_of_8": {
+    "value": [
+      "\\b(8|eight)[ -]tokens?\\b",
+      "\\bburst\\w* (of )?(up to |size\\W{0,3})?(8|eight)\\b",
+      "\\b(capacity|holds?|max\\w*)\\W{0,3}(of )?(8|eight)\\b",
+      "\\b(8|eight)[ -](call|request)s? burst"
+    ]
+  },
+  "chat_refill_every_1_5s": {
+    "value": [
+      "(?<![\\d.])1\\.5[ -]?(s|sec|secs|seconds?)\\b",
+      "\\bevery 1\\.5\\b",
+      "(?<![\\d.])(2/3|0\\.6+7?) (of a )?tokens? (per|/|a|every) ?(s|sec|second)\\b"
+    ]
+  },
+  "chat_internal_unlimited": {
+    "value": [
+      "\\binternal-",
+      "\\b(start\\w*|begin\\w*|prefix\\w*) with [\"'`]?internal\\b",
+      "\\binternal\\b[^\\n]{0,40}\\b(never (be )?limited|unlimited|not limited|exempt|bypass\\w*|no limit)"
+    ]
+  }
+}

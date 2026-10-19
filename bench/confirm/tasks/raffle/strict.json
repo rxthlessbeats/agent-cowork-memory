@@ -1,0 +1,21 @@
+{
+  "mutants": {
+    "thirty_minutes": {
+      "breaks": ["changed_65_minutes"],
+      "stale": ["stale_30_minutes"],
+      "why": "keeps turn 1's 30 minutes before the draw, which turn 4 changed to 65"
+    },
+    "fifty_per_buyer": {
+      "breaks": ["chat_58_per_buyer"],
+      "why": "caps each buyer at a round 50 tickets instead of 58"
+    },
+    "total_below_3580": {
+      "breaks": ["chat_3580_total"],
+      "why": "off by one: sells only while the total stays under 3580, so the 3580th ticket is never sold"
+    },
+    "per_sale_58": {
+      "breaks": ["chat_58_per_buyer"],
+      "why": "caps each sale at 58 tickets instead of what the buyer holds in all, ignoring tickets already bought"
+    }
+  }
+}

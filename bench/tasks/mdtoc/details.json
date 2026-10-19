@@ -1,0 +1,19 @@
+{
+  "chat_sec_anchor": {
+    "value": ["\\bsec-"]
+  },
+  "chat_skip_draft": {
+    "value": [
+      "\\(draft\\)",
+      "\\b(skip|omit|leav|exclud|drop|hid|ignor|filter)\\w*( out)?[^\\n]{0,40}\\bdraft",
+      "\\bdraft\\b[^\\n]{0,30}\\b(skipped|omitted|left out|excluded|dropped|hidden|ignored|filtered)"
+    ]
+  },
+  "chat_contents_header": {
+    "value": [
+      "\\*\\*contents\\*\\*",
+      "\\bbold\\b[^\\n]{0,15}[\"'`]?contents\\b",
+      "\\bcontents\\b[\"'`*]?[^\\n]{0,15}\\bbold"
+    ]
+  }
+}

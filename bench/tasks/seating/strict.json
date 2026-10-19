@@ -1,0 +1,23 @@
+{
+  "mutants": {
+    "board_row_d": {
+      "breaks": ["changed_row_f_for_board"],
+      "stale": ["stale_board_row_d"],
+      "why": "keeps row D free for the board, the first plan the chat moved to row F"
+    },
+    "rows_d_and_f_free": {
+      "breaks": ["changed_row_f_for_board"],
+      "stale": ["stale_board_row_d"],
+      "why": "keeps both row D and row F free, reading the move as an addition"
+    },
+    "docstring_front_first": {
+      "breaks": ["chat_back_row_first"],
+      "stale": ["stale_front_to_back"],
+      "why": "follows the module docstring: seats front to back, starting at A1"
+    },
+    "pillar_off_by_one": {
+      "breaks": ["chat_never_seat_7"],
+      "why": "off by one: skips index 7 counting from 0 (seat 8), so seat 7 is given out"
+    }
+  }
+}

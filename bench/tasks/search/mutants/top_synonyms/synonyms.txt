@@ -1,0 +1,4 @@
+# Synonym groups, one group per line, words separated by commas.
+rug, carpet
+lamp, light
+couch, sofa, settee

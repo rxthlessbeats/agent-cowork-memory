@@ -1,0 +1,30 @@
+{
+  "chat_160x120": {
+    "value": ["\\b160 ?(px)? ?(x|×|by|\\*) ?120( ?px)?\\b"],
+    "stale": ["\\b128 ?(px)? ?(x|×|by|\\*) ?128( ?px)?\\b"]
+  },
+  "chat_jpeg_85": {
+    "value": [
+      "\\bjpe?g\\b[^.\\n]{0,40}\\b85\\b",
+      "\\b85\\b[^.\\n]{0,40}\\bjpe?g\\b",
+      "quality[^.\\n]{0,20}\\b85\\b",
+      "\\b85\\b[^.\\n]{0,10}quality"
+    ],
+    "stale": ["(thumbnails?|thumbs?)[^.\\n]{0,30}\\bpng\\b", "\\bpng\\b[^.\\n]{0,30}(thumbnails?|thumbs?)"]
+  },
+  "chat_pad_white_no_crop": {
+    "value": [
+      "pad\\w*[^.\\n]{0,40}\\bwhite\\b",
+      "\\bwhite\\b[^.\\n]{0,40}(pad|border|bars?\\b|background|fill)",
+      "(never|don'?t|do not|not|no|without|instead of) crop"
+    ],
+    "stale": ["crop\\w*[^.\\n]{0,20}\\bsquare\\b", "\\bsquare crop"]
+  },
+  "chat_no_upscale": {
+    "value": [
+      "(never|don'?t|do not|not|no|without|isn'?t|aren'?t|won'?t|shouldn'?t)( be)? (up-?scal|enlarg|(scal|blow|stretch)\\w* (\\w+ ){0,3}up\\b)",
+      "(small(er)?|tiny) (images?|ones|pictures?|photos?)[^.\\n]{0,40}(own|original|native|actual) size"
+    ],
+    "stale": ["smaller (images|ones) (are|get) scaled up", "scaled up to (fill|128)"]
+  }
+}

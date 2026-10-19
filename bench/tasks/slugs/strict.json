@@ -1,0 +1,25 @@
+{
+  "mutants": {
+    "random_suffix": {
+      "breaks": ["chat_numbered", "chat_max_40"],
+      "stale": ["stale_random_suffix"],
+      "why": "adds random characters to a taken slug instead of -2, -3"
+    },
+    "starts_at_1": {
+      "breaks": ["chat_numbered", "chat_max_40"],
+      "why": "numbers taken slugs from -1, not -2"
+    },
+    "suffix_outside_limit": {
+      "breaks": ["chat_max_40"],
+      "why": "cuts the slug to 40 and then adds the suffix, so the suffix isn't inside the 40"
+    },
+    "hard_cut": {
+      "breaks": ["chat_max_40"],
+      "why": "cuts at the character limit, splitting a word, instead of at a hyphen"
+    },
+    "exists_callback": {
+      "breaks": ["chat_unique_slug", "chat_numbered", "chat_max_40"],
+      "why": "takes a function that says whether a slug is in use, not the set of slugs taken"
+    }
+  }
+}

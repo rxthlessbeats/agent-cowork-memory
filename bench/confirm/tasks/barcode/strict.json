@@ -1,0 +1,27 @@
+{
+  "keep": [
+    { "file": "README.md", "text": "An item is reduced once it is within 24 hours of its use-by." },
+    { "file": "README.md", "text": "Reduced items are half price." },
+    { "file": "README.md", "text": "Items under £1 are never reduced" }
+  ],
+  "mutants": {
+    "readme_rule": {
+      "breaks": ["chat_within_48_hours", "chat_21_percent_off", "chat_from_469"],
+      "stale": ["stale_24_hours", "stale_half_price", "stale_from_1_pound"],
+      "why": "follows the out-of-date README: reduced within 24 hours of the use-by, to half price, from £1"
+    },
+    "quarter_off": {
+      "breaks": ["chat_21_percent_off"],
+      "why": "guesses a round quarter off instead of the chat's 21%"
+    },
+    "over_469": {
+      "breaks": ["chat_from_469"],
+      "why": "off by one: an item at exactly £4.69 gets no sticker, where only items under £4.69 don't"
+    },
+    "readme_24_hours": {
+      "breaks": ["chat_within_48_hours"],
+      "stale": ["stale_24_hours"],
+      "why": "follows the chat on the price rules but keeps the README's 24 hours, which the chat made 48"
+    }
+  }
+}

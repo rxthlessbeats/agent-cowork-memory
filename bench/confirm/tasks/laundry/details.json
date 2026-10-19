@@ -1,0 +1,15 @@
+{
+  "chat1_no_fridays": {
+    "value": [
+      "\\b(no|not|never|nobody|can'?t|cannot|closed|except)\\b[^.\\n]{0,40}\\bfridays?\\b",
+      "\\bfridays?\\b[^.\\n]{0,40}\\b(closed|blocked|refused|not allowed|unavailable|can'?t|cannot|caretaker|servic)",
+      "weekday\\(\\) ?(==|!=) ?4\\b"
+    ]
+  },
+  "chat1_66_hours_ahead": {
+    "value": ["\\b66 ?(h|hrs?|hours)\\b", "\\b66\\b[^.\\n]{0,30}\\b(ahead|before|advance)"]
+  },
+  "chat2_8_minutes_late": {
+    "value": ["\\b(8|eight) ?(m|mins?|minutes)\\b", "\\b(8|eight)[ -]minutes?\\b"]
+  }
+}

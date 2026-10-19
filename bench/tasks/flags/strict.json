@@ -1,0 +1,18 @@
+{
+  "mutants": {
+    "classic_vat": {
+      "breaks": ["found_flag_on", "found_new_formatter"],
+      "stale": ["stale_classic_vat"],
+      "why": "adds VAT to formats/classic.py, the old layout the flag still picks, and never switches to the new one"
+    },
+    "flag_off": {
+      "breaks": ["goal_vat_line", "found_flag_on", "found_new_formatter"],
+      "why": "puts VAT in modern.extra_lines but leaves new_receipts off for live, so receipts stay classic"
+    },
+    "modern_forced": {
+      "breaks": ["found_flag_on"],
+      "stale": ["stale_flag_bypassed"],
+      "why": "puts VAT in modern.extra_lines and hard-wires receipt() to the new layout instead of turning the flag on"
+    }
+  }
+}

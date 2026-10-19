@@ -1,0 +1,14 @@
+{
+  "chat_idle_fee_after_58_minutes": {
+    "value": ["\\b58\\b[\\s-]*(min|minutes)\\b", "(up to|within|more than|over|after|past|longer than) 58\\b"],
+    "stale": ["\\b30\\b[\\s-]*(min|minutes)\\b"]
+  },
+  "chat_idle_fee_935": {
+    "value": ["\\b9[.,]35\\b", "\\b935\\b"],
+    "stale": ["\\b5[.,]00\\b", "\\b500 ?(c|cents)\\b"]
+  },
+  "chat_members_14_off_energy": {
+    "value": ["\\b14 ?(%|percent|per ?cent)", "\\b0[.,]86\\b"],
+    "stale": ["\\b10 ?(%|percent|per ?cent)", "\\b0[.,]90?\\b"]
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "changed_wrong_costs_3": {
+    "value": [
+      "(wrong|incorrect)\\w*[^,.;]{0,30}(-|−|minus |costs? |lose\\w* |deduct\\w* |subtract\\w* |takes? (off )?)(3|three)\\b",
+      "(-|−|minus )(3|three)\\b[^,.;]{0,30}(wrong|incorrect)",
+      "\\b(3|three) (points? )?(off|deducted|penalty|per (wrong|incorrect)|for (each|every|a|an|any) (wrong|incorrect))",
+      "penalt\\w* (of )?(-|−)?(3|three)\\b"
+    ],
+    "stale": [
+      "(wrong|incorrect)\\w*[^,.;]{0,30}(-|−|minus |costs? |lose\\w* |deduct\\w* |subtract\\w* |takes? (off )?)(5|five)\\b",
+      "(-|−|minus )(5|five)\\b[^,.;]{0,30}(wrong|incorrect)",
+      "\\b(5|five) (points? )?(off|deducted|penalty|per (wrong|incorrect)|for (each|every|a|an|any) (wrong|incorrect))",
+      "penalt\\w* (of )?(-|−)?(5|five)\\b",
+      "(wrong|incorrect)[^,.;]{0,30}\\b(score|scores|get|gets|count|counts|earn|earns) (nothing|0|zero|no points)"
+    ]
+  },
+  "chat2_never_below_0": {
+    "value": [
+      "(never|not|no|can't|cannot|won't|doesn't)\\b[^,.;]{0,25}(below|under|less than) (0|zero)\\b",
+      "(floor\\w*|clamp\\w*|bottom\\w* out|capped)[^,.;]{0,20}\\b(at|to) (0|zero)\\b",
+      "max\\(\\s*0\\s*,",
+      "(non-?|(never|not|can't|cannot|won't) (go |be |become |turn )?)negative",
+      "(minimum|lowest)( possible)? (score|total)( is| of)? (0|zero)\\b"
+    ]
+  }
+}

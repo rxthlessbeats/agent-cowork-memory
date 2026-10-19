@@ -1,0 +1,6 @@
+# Example mail settings.
+[mail]
+name = "Example Shop"
+from = "shop@example.com"
+host = "smtp.example.com"
+port = 587

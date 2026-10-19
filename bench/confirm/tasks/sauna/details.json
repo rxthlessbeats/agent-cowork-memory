@@ -1,0 +1,18 @@
+{
+  "chat_heater_96": {
+    "value": [
+      "\\b96 ?(°|º|degrees|celsius|c\\b)",
+      "\\b(above|over|max(imum)?( of)?|cap(ped)?( at)?|up to|limit(ed)?( to| of)?|clamp\\w*( to| at)?) 96\\b",
+      "min\\([^)\\n]{0,30}\\b96\\b"
+    ],
+    "stale": ["\\b100 ?(°|º|degrees|celsius)", "\\bup to 100\\b"]
+  },
+  "chat_session_76_minutes": {
+    "value": ["\\b76[ -]?(min|minutes?\\b|m\\b)"],
+    "stale": ["\\b90[ -]?(min|minutes?\\b|m\\b)"]
+  },
+  "chat_closed_wednesday": {
+    "value": ["\\bwednesdays?\\b"],
+    "stale": ["\\bclosed on mondays?\\b", "\\bmondays?\\b[^.\\n]{0,30}(closed|cleaning)"]
+  }
+}

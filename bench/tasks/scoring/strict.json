@@ -1,0 +1,24 @@
+{
+  "keep": [{ "file": "README.md", "text": "Wrong and skipped answers score nothing" }],
+  "mutants": {
+    "repo_rule": {
+      "breaks": ["changed_wrong_costs_3", "chat2_never_below_0"],
+      "stale": ["stale_no_penalty"],
+      "why": "follows the out-of-date README: 10 per correct answer, nothing off for a wrong one"
+    },
+    "chat1_only": {
+      "breaks": ["changed_wrong_costs_3", "chat2_never_below_0"],
+      "stale": ["stale_minus_5"],
+      "why": "knows only chat 1: 5 off per wrong answer, and a total that can go below 0"
+    },
+    "no_floor": {
+      "breaks": ["chat2_never_below_0"],
+      "why": "3 off per wrong answer, but lets the total go below 0"
+    },
+    "minus_5_floored": {
+      "breaks": ["changed_wrong_costs_3"],
+      "stale": ["stale_minus_5"],
+      "why": "takes chat 2's floor at 0 but keeps chat 1's 5 off per wrong answer"
+    }
+  }
+}

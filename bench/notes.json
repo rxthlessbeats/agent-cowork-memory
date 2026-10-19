@@ -1,0 +1,324 @@
+{
+  "notes": [
+    {
+      "id": "n1",
+      "text": "Session logic is in src/auth/session.ts: sessions are server-side in Redis (key prefix `sess:`) with a 14-day sliding expiry, and the browser only gets the opaque `tandem_sid` cookie (httpOnly, SameSite=Lax).",
+      "keyword_query": "session storage",
+      "question_query": "where do we store user sessions?",
+      "update": "Moved login sessions from Redis into a Postgres `auth_sessions` table; Redis was evicting keys under memory pressure and logging people out at random.",
+      "related": "Admin impersonation gets its own session with `impersonatorId` set, and it's hard-capped at 1 hour no matter how active it is."
+    },
+    {
+      "id": "n2",
+      "text": "Passwords are hashed with bcrypt, cost 12. Don't lower the cost to speed up tests; the test env already sets BCRYPT_ROUNDS=4.",
+      "keyword_query": "password hashing",
+      "question_query": "what algorithm are user passwords hashed with?",
+      "update": "Switched password hashing to argon2id. Existing bcrypt hashes still verify and get re-hashed with argon2 on the user's next successful login.",
+      "related": "Signup and password change reject passwords shorter than 10 characters, plus anything found in the HIBP breached-password range API."
+    },
+    {
+      "id": "n3",
+      "text": "Public API auth = per-workspace API keys with `tdm_live_` / `tdm_test_` prefixes. Only a SHA-256 hash is stored, so the plaintext key is shown once at creation and can't be recovered.",
+      "keyword_query": "api key auth",
+      "question_query": "how do third-party integrations authenticate against our API?",
+      "update": "The public API uses OAuth2 client credentials now: integrations exchange a client ID and secret for a bearer token that lasts an hour. Static API keys have been retired.",
+      "related": "API keys can be scoped read-only; write endpoints check with the `requireScope('write')` middleware and return 403 for read-only keys."
+    },
+    {
+      "id": "n4",
+      "text": "Prod migrations are run by hand (`pnpm db:migrate` from the bastion host); the deploy pipeline never touches the schema.",
+      "keyword_query": "running migrations",
+      "question_query": "how do schema migrations get applied in production?",
+      "update": "Migrations run automatically now as a `migrate` job in the deploy workflow, before the new containers go live. Don't run them by hand against prod anymore.",
+      "related": "Schema changes have to work with both the old and the new code (expand/contract): add the column as nullable, backfill it, and drop the old one in a later PR."
+    },
+    {
+      "id": "n5",
+      "text": "Gotcha: DATABASE_URL goes through PgBouncer in transaction mode, so prepared statements, advisory locks, LISTEN/NOTIFY and session-level SET won't work on it. Use DATABASE_DIRECT_URL for anything that needs a real session.",
+      "keyword_query": "connection pooling",
+      "question_query": "why do prepared statements fail against the database?",
+      "update": "PgBouncer is gone and DATABASE_URL connects straight to Postgres again, so advisory locks, LISTEN/NOTIFY and prepared statements work on the main pool. DATABASE_DIRECT_URL was removed.",
+      "related": "Each API container's pg pool is capped at 10 connections (PG_POOL_MAX) and the worker uses 4; check PgBouncer's default_pool_size before raising either."
+    },
+    {
+      "id": "n6",
+      "text": "Projects and tasks are soft-deleted via a `deleted_at` column, and a nightly purge job hard-deletes anything that's been in the trash for more than 30 days.",
+      "keyword_query": "soft delete",
+      "question_query": "what happens to a project row when a user deletes it?",
+      "update": "Deleting a project or task now removes the row immediately. If something needs restoring, use the JSON snapshot written to audit_log at delete time; there's no trash period anymore.",
+      "related": "Queries on tasks and projects have to skip trashed rows; the `notDeleted()` query helper adds the `deleted_at IS NULL` filter for you."
+    },
+    {
+      "id": "n7",
+      "text": "Deploy flow: merging to main auto-deploys to staging, but prod only ships when someone runs the 'Promote to production' workflow in GitHub Actions, which needs a maintainer's approval.",
+      "keyword_query": "deploy process",
+      "question_query": "how does a merged change get released to production?",
+      "update": "Prod deploys are continuous now: a merge to main goes to staging and then straight on to production once the smoke tests pass. No manual promote step.",
+      "related": ".github/workflows/deploy.yml builds the Docker image once per commit and promotes that same tag to prod, so prod runs exactly what was tested on staging."
+    },
+    {
+      "id": "n8",
+      "text": "Prod is AWS ECS Fargate in us-east-1 (api + worker services; the React app is static on S3/CloudFront), all managed by Terraform in infra/terraform/. Don't change anything by hand in the console.",
+      "keyword_query": "prod infrastructure",
+      "question_query": "what cloud infrastructure does production run on?",
+      "update": "Production moved to eu-central-1 (Frankfurt) for EU data residency; us-east-1 only hosts staging now.",
+      "related": "Terraform state is in the `tandem-tf-state` S3 bucket with DynamoDB locking. Run `make plan ENV=prod` and paste the output into the PR before anyone applies."
+    },
+    {
+      "id": "n9",
+      "text": "Secrets live in SSM Parameter Store under /tandem/<env>/ and get injected into the ECS tasks as env vars at deploy time. Nothing secret goes in the repo, not even staging values.",
+      "keyword_query": "secrets management",
+      "question_query": "where should I put a new API secret for production?",
+      "update": "Secrets are managed in Doppler now. The containers pull them at startup with a Doppler service token, and the old SSM parameters are being deleted.",
+      "related": "A new env var also has to be added to the zod schema in src/config/env.ts; the app refuses to boot if a required one is missing."
+    },
+    {
+      "id": "n10",
+      "text": "Integration tests need the Postgres from docker-compose.test.yml (port 5433, start it with `pnpm test:db:up`); each test runs in a transaction that gets rolled back afterwards.",
+      "keyword_query": "integration test db",
+      "question_query": "how do I set up a database for running the integration tests locally?",
+      "update": "Integration tests spin up their own Postgres through Testcontainers (one per Vitest worker), so there's nothing to start beforehand; just run the tests.",
+      "related": "Integration specs are the *.int.test.ts files. Plain `pnpm test` skips them, so use `pnpm test:int` to run those."
+    },
+    {
+      "id": "n11",
+      "text": "Playwright E2E only runs on PRs with the `run-e2e` label, plus nightly on main. It takes ~15 min, so it's deliberately not part of the default PR checks.",
+      "keyword_query": "e2e ci",
+      "question_query": "why didn't the Playwright tests run on my PR?",
+      "update": "E2E runs on every PR now, sharded across 4 runners (about 5 minutes total). No label needed.",
+      "related": "E2E specs log in with the `loginAs(page, 'owner')` fixture, which creates the session directly instead of going through the login form."
+    },
+    {
+      "id": "n12",
+      "text": "CI fails the `test` job if line coverage for src/ drops below 80% (the threshold is set in vitest.config.ts).",
+      "keyword_query": "test coverage",
+      "question_query": "does CI enforce a minimum coverage percentage?",
+      "update": "Coverage is report-only in CI now: the PR comment still shows the numbers, but a drop doesn't fail the build anymore.",
+      "related": "Generated code (src/generated/) and test helpers are excluded from the coverage numbers via `coverage.exclude`."
+    },
+    {
+      "id": "n13",
+      "text": "Styling convention: Tailwind only, no CSS modules or styled-components. Take colors and spacing from the theme in tailwind.config.ts instead of hardcoding hex values.",
+      "keyword_query": "css styling",
+      "question_query": "how should I style a new component?",
+      "update": "We're migrating off Tailwind. New components get a co-located .module.css that uses the CSS variables in web/src/styles/tokens.css, and Tailwind classes get converted whenever a file is touched.",
+      "related": "Dark mode uses Tailwind's `class` strategy (ThemeProvider toggles `dark` on <html>), so use `dark:` variants rather than prefers-color-scheme media queries."
+    },
+    {
+      "id": "n14",
+      "text": "UI primitives are Radix, wrapped in our own components in web/src/components/ui/ (Button, Dialog, Select, Tooltip, ...). Feature code should import from there, never from @radix-ui/* directly.",
+      "keyword_query": "ui components",
+      "question_query": "where should feature code import dialogs and dropdowns from?",
+      "update": "It's fine to import @radix-ui/react-* directly in feature code now. We're deleting the pass-through wrappers in components/ui and only keeping the ones that add real styling or behavior (Button, Dialog).",
+      "related": "Each component in components/ui has a Storybook story next to it; `pnpm storybook` serves them on :6006 if you want to check the variants."
+    },
+    {
+      "id": "n15",
+      "text": "Icons: lucide-react only, don't add another icon library. Size 16 in tables and menus, 20 everywhere else.",
+      "keyword_query": "icon set",
+      "question_query": "which icon library are we using?",
+      "update": "Icons are Phosphor (@phosphor-icons/react) now as part of the rebrand. lucide-react is being removed, so please don't add new lucide imports.",
+      "related": "Icons that lucide doesn't have (our logo mark, the Slack and Stripe integration logos) are hand-written SVG components in web/src/icons/."
+    },
+    {
+      "id": "n16",
+      "text": "API errors always come back as `{ error: { code, message } }` with a stable snake_case `code` (e.g. `task_not_found`). Clients should branch on `code`, never on the message text.",
+      "keyword_query": "error response",
+      "question_query": "what JSON shape should an API error return?",
+      "update": "Error responses follow RFC 7807 now: application/problem+json with type, title, status and detail, and the machine-readable code is the last segment of the `type` URI.",
+      "related": "Validation failures are 422 and also include `error.details`, which maps field paths to messages, e.g. `{ \"dueDate\": [\"must be in the future\"] }`."
+    },
+    {
+      "id": "n17",
+      "text": "List endpoints use cursor pagination: `?limit=` (max 100) plus `?cursor=`, and responses include `nextCursor` (null on the last page). No offset or page-number params anywhere.",
+      "keyword_query": "pagination",
+      "question_query": "how do list endpoints handle paging?",
+      "update": "List endpoints switched to `page`/`pageSize` with a `total` in the response, since the reports table needs page numbers. The cursor params are gone.",
+      "related": "Cursors are opaque base64 of (created_at, id). Clients shouldn't decode them, and a cursor is only valid for the sort order it was issued with."
+    },
+    {
+      "id": "n18",
+      "text": "Public API versioning is in the path (/v1/...). Additive changes like new optional fields or new endpoints can go into v1; anything breaking needs a new version.",
+      "keyword_query": "api versioning",
+      "question_query": "how do we ship a breaking change to the public API?",
+      "update": "API versions are now picked with a dated `Tandem-Version` header (Stripe-style, e.g. 2026-09-01) instead of a URL prefix, and new routes are mounted without /v1.",
+      "related": "Before removing a field we send `Deprecation` and `Sunset` headers on responses that include it, at least 90 days ahead."
+    },
+    {
+      "id": "n19",
+      "text": "Stripe webhooks are processed synchronously in src/billing/webhooks.ts: the subscription row is updated within the request and we only return 200 after the commit, so Stripe retries if anything throws.",
+      "keyword_query": "stripe webhook",
+      "question_query": "how are incoming Stripe events processed?",
+      "update": "The Stripe webhook endpoint now just verifies the signature, saves the raw event to `stripe_events` and returns 200 right away; a background job applies the subscription changes.",
+      "related": "Signature verification needs the raw body, so /webhooks/stripe is mounted with express.raw() before the global express.json() in src/server.ts. Don't reorder that middleware."
+    },
+    {
+      "id": "n20",
+      "text": "Stripe price IDs for each plan are mapped in src/billing/plans.ts, separately for test and live mode. Never hardcode a `price_...` ID anywhere else.",
+      "keyword_query": "stripe price ids",
+      "question_query": "where do the Stripe prices for each plan come from?",
+      "update": "Plans resolve their Stripe price by lookup_key (`team_monthly`, `team_annual`, etc.) at boot and cache it, so there are no price IDs in the code anymore.",
+      "related": "Annual plans are 10x the monthly price (two months free). When adding a plan, add both the monthly and the annual price, for test and live."
+    },
+    {
+      "id": "n21",
+      "text": "Trials are 14 days with no credit card required. If a trial ends with no payment method on file, the workspace becomes read-only; nothing gets deleted.",
+      "keyword_query": "trial expiry",
+      "question_query": "what happens to a workspace when its free trial ends?",
+      "update": "Signup requires a card now and trials are 7 days; at the end they convert to a paid subscription automatically unless the customer cancels.",
+      "related": "Trial workspaces get a reminder email 3 days before the end, triggered by Stripe's `customer.subscription.trial_will_end` event."
+    },
+    {
+      "id": "n22",
+      "text": "Background jobs are on BullMQ. Each job type has its own handler file, and the worker runs as a separate process (`pnpm worker`), not inside the API server.",
+      "keyword_query": "background jobs",
+      "question_query": "which queue library do we use for async work?",
+      "update": "Swapped BullMQ for pg-boss, so jobs are rows in Postgres and can be enqueued in the same transaction as the write that triggers them.",
+      "related": "Jobs are split across separate queues (`email`, `billing`, `exports`) with their own concurrency, so a burst of CSV exports can't hold up outgoing email."
+    },
+    {
+      "id": "n23",
+      "text": "Default job retry policy: 5 attempts with exponential backoff starting at 30s. Don't override it per job unless there's a specific reason.",
+      "keyword_query": "job retries",
+      "question_query": "how many times is a failing job retried?",
+      "update": "Bumped the default to 10 attempts with backoff capped at 1h; during last week's email provider outage, jobs ran out of retries before it recovered.",
+      "related": "Since a retry can run after a partial success, handlers must be idempotent; e.g. send-invoice-email checks `invoices.emailed_at` before sending."
+    },
+    {
+      "id": "n24",
+      "text": "Recurring jobs (usage rollup nightly at 02:00 UTC, trial-expiry sweep hourly) are registered in src/jobs/schedule.ts and run inside the worker; we don't use OS cron or scheduled GitHub Actions for this.",
+      "keyword_query": "scheduled jobs",
+      "question_query": "where do I register a job that should run every night?",
+      "update": "Scheduled jobs fire from EventBridge Scheduler rules now (infra/terraform/schedules.tf), so they don't get skipped during worker deploys. src/jobs/schedule.ts was deleted.",
+      "related": "The usage rollup upserts on (workspace_id, day), so re-running it for a given date is safe: `pnpm job:run usage-rollup --date=2026-09-30`."
+    },
+    {
+      "id": "n25",
+      "text": "Log through the pino instance from src/lib/logger.ts, and use `req.log` inside route handlers so the request ID gets attached. No console.log in server code.",
+      "keyword_query": "logger",
+      "question_query": "what's the right way to log from a route handler?",
+      "update": "Logging goes through the OpenTelemetry logs SDK now, so every line carries trace and span IDs. Import `log` from src/observability/log.ts; the pino logger module was removed.",
+      "related": "Never log request bodies on auth or billing routes. The logger redacts password/token/authorization fields, but redaction won't catch new field names."
+    },
+    {
+      "id": "n26",
+      "text": "Sentry samples 10% of transactions for performance tracing in prod and 100% on staging; errors are always captured regardless of that rate.",
+      "keyword_query": "sentry tracing",
+      "question_query": "what sample rate do we use for performance traces in production?",
+      "update": "Dropped prod tracesSampleRate to 0.02 because we kept hitting the Sentry transaction quota mid-month. Staging still traces everything.",
+      "related": "The deploy workflow creates a Sentry release named after the git SHA and uploads the web app's source maps, so minified stack traces resolve."
+    },
+    {
+      "id": "n27",
+      "text": "Our only alerting is Better Stack pinging /healthz every 30s and posting to #tandem-alerts in Slack. There's no PagerDuty, so nobody gets phoned.",
+      "keyword_query": "on-call alerts",
+      "question_query": "how do we find out when production goes down?",
+      "update": "Critical prod alerts now page the on-call engineer through PagerDuty; #tandem-alerts only gets the non-urgent stuff.",
+      "related": "/healthz only says the process is up; /readyz also checks the database connection and is what the load balancer health check hits."
+    },
+    {
+      "id": "n28",
+      "text": "All UI strings go through i18next (`t('billing.upgradeCta')`) with files at web/src/locales/<lang>/<namespace>.json. English is the source language, and we only ship en and de right now.",
+      "keyword_query": "translations",
+      "question_query": "which languages does the app ship in?",
+      "update": "French and Spanish went live this week, so we're at four languages. Crowdin syncs the translations and opens PRs into the locales folder.",
+      "related": "Don't reuse a translation key across features just because the English text matches; German often needs different wording depending on context."
+    },
+    {
+      "id": "n29",
+      "text": "Dates are stored in UTC and rendered in the user's profile timezone (users.timezone), not the browser's; format them with the helpers in web/src/lib/dates.ts.",
+      "keyword_query": "timezone",
+      "question_query": "which timezone should timestamps be displayed in?",
+      "update": "Times are shown in the browser's local timezone now; we removed the timezone field from profile settings because it confused people who travel.",
+      "related": "`formatDate()` takes 'short' or 'long' and follows the UI language, so German users get 12.10.2026 instead of 10/12/2026."
+    },
+    {
+      "id": "n30",
+      "text": "The dashboard stats endpoint (GET /workspaces/:id/stats) is cached in Redis for 60s per workspace. Call `invalidateStats(workspaceId)` after any write that changes task counts.",
+      "keyword_query": "dashboard stats cache",
+      "question_query": "how do we keep the dashboard stats endpoint fast?",
+      "update": "Workspace stats come from the `workspace_stats` materialized view, refreshed every 5 minutes. The Redis cache and invalidateStats() were removed, so counts can lag a bit.",
+      "related": "The stats endpoint was ~900ms p95 for large workspaces before caching; the composite index on tasks(workspace_id, status) also roughly halved the uncached query."
+    },
+    {
+      "id": "n31",
+      "text": "Every top-level route is lazy-loaded with React.lazy, and the main bundle has a 250 KB gzipped budget that size-limit enforces in CI.",
+      "keyword_query": "bundle budget",
+      "question_query": "how big is the main JS bundle allowed to be?",
+      "update": "Main bundle budget raised to 350 KB gzipped. The rich-text editor pushed us over and the user approved the increase.",
+      "related": "If the size check fails, `pnpm analyze` opens the rollup visualizer; it's usually a heavy lib (charts, editor) imported outside its lazy route."
+    },
+    {
+      "id": "n32",
+      "text": "Lint/format is Biome, not ESLint or Prettier. `pnpm lint` runs `biome check` and CI fails on any diagnostic.",
+      "keyword_query": "lint setup",
+      "question_query": "are we using ESLint and Prettier?",
+      "update": "Back on ESLint + Prettier: we needed typescript-eslint's type-aware rules (no-floating-promises, no-misused-promises), and Biome doesn't have them.",
+      "related": "Formatter settings are 2-space indent, single quotes and trailing commas. `pnpm lint --write` fixes formatting, so don't hand-format around it."
+    },
+    {
+      "id": "n33",
+      "text": "Pinned to Node 20 (.nvmrc, `engines`, node:20-alpine base image) because sharp's prebuilt binaries break on Node 22 with our Alpine image.",
+      "keyword_query": "node version",
+      "question_query": "can we upgrade to Node 22?",
+      "update": "Upgraded to Node 22 across the board; moving the Docker base image to node:22-bookworm-slim fixed the sharp install issue.",
+      "related": "CI's setup-node reads the version from .nvmrc (node-version-file), so there's no Node version hardcoded in the workflow files."
+    },
+    {
+      "id": "n34",
+      "text": "Convention: named exports for components, hooks and utils, no `export default`. It keeps renames and find-all-references reliable.",
+      "keyword_query": "default exports",
+      "question_query": "should components use default or named exports?",
+      "update": "Page components in web/src/pages/ are default exports now, so React.lazy(() => import('./pages/Billing')) works without the .then() remapping.",
+      "related": "The only files that should use `export default` are ones tools load by convention: the *.config.ts files and Storybook stories."
+    },
+    {
+      "id": "n35",
+      "text": "Services signal failures by throwing the AppError subclasses from src/lib/errors.ts (NotFoundError, ForbiddenError, ConflictError), and the Express error middleware turns them into HTTP responses. Don't call res.status() from service code.",
+      "keyword_query": "throwing errors",
+      "question_query": "how should a service report that a record wasn't found?",
+      "update": "Services return a Result (neverthrow ok/err) for expected failures instead of throwing, and route handlers map the error variant to a status code. Only throw for actual bugs.",
+      "related": "Each AppError takes the API error code as its first argument, e.g. `throw new NotFoundError('task_not_found')`, and that code ends up in the response body."
+    },
+    {
+      "id": "n36",
+      "text": "User prefers small, single-purpose PRs (roughly under 400 changed lines), with refactors split out from behavior changes.",
+      "keyword_query": "pr size",
+      "question_query": "how big should pull requests be for this user?",
+      "update": "User said they'd rather review one PR per feature, even a big one, than a stack of small dependent PRs, so stop splitting work up.",
+      "related": "For any UI change, the user wants before/after screenshots in the PR description."
+    },
+    {
+      "id": "n37",
+      "text": "Check with the user before adding any new npm dependency: propose it with size and maintenance info instead of just running `pnpm add`.",
+      "keyword_query": "adding dependencies",
+      "question_query": "do I need to ask before installing a new package?",
+      "update": "User is OK with us adding dev dependencies (test utils, @types packages, build tooling) without asking; only runtime deps still need sign-off.",
+      "related": "When proposing a package, the user wants to see weekly downloads, last release date, gzipped size, and at least one alternative we considered."
+    },
+    {
+      "id": "n38",
+      "text": "Before reporting a task as done, the user wants `pnpm typecheck`, `pnpm lint` and the relevant tests run locally. Don't hand off and let CI find the problems.",
+      "keyword_query": "checks before done",
+      "question_query": "what should I run before telling the user a task is complete?",
+      "update": "User says there's no need to run the full typecheck and lint locally anymore since CI is fast now. Just run the tests for what you changed.",
+      "related": "If a check fails for something unrelated to the change (a flaky test, a type error already on main), the user wants it called out rather than quietly fixed in the same PR."
+    },
+    {
+      "id": "n39",
+      "text": "Progress on CSV export: POST /exports and the `export-csv` job are merged; the Export button on the Reports page isn't started yet.",
+      "keyword_query": "csv export",
+      "question_query": "how far along is the CSV export feature?",
+      "update": "CSV export is done end to end: the Reports page has a working Export button, and the download starts as soon as the job finishes.",
+      "related": "CSV exports are capped at 50k rows for now; anything bigger is out of scope until we add S3 delivery with an emailed download link."
+    },
+    {
+      "id": "n40",
+      "text": "React 19 upgrade is on branch `chore/react-19`: typecheck passes but 6 Playwright specs fail around Dialog focus trapping, so it's not merged.",
+      "keyword_query": "react 19 upgrade",
+      "question_query": "has the React 19 upgrade landed yet?",
+      "update": "React 19 is merged to main. The Dialog focus failures went away after bumping the Radix packages.",
+      "related": "The React 19 branch also drops forwardRef from the components/ui wrappers, since ref is a regular prop now."
+    }
+  ]
+}

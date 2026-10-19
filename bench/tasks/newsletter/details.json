@@ -1,0 +1,34 @@
+{
+  "chat1_oldest_first": {
+    "value": [
+      "(?<!they are, )oldest (post |posts |one |entry |item |article )?(comes |goes |is |listed |shown )?(first|at the top|on top)",
+      "oldest\\W{1,4}(to\\W{1,4})?newest",
+      "(?<!reverse[ -])chronological",
+      "earliest (post |posts |one )?first|ascending( order)? (by |of )?(published|date)|(published|date)\\w*\\W{1,3}ascending",
+      "newest (post |posts |one )?(comes |goes |is )?(last|at the (bottom|end))"
+    ],
+    "stale": [
+      "newest (post |posts |one |entry |item |article )?(comes |goes |is |listed |shown )?(first|at the top|on top)",
+      "not (the )?newest",
+      "reverse[ -]?chronolog|newest\\W{1,4}(to\\W{1,4})?oldest|(published|date)\\w*\\W{1,3}desc|reverse ?= ?true"
+    ]
+  },
+  "chat1_ref_weekly": {
+    "value": ["ref ?[=:] ?['\"`]?weekly", "\\bref\\b[^.\\n]{0,30}\\bweekly\\b"]
+  },
+  "chat2_first_sentence": {
+    "value": [
+      "\\b(first|1st|opening|leading) sentence",
+      "\\b(only|just) (the |a )?(one|1|single) sentence|\\b(one|1|a single)[ -]sentence (only|per|of each|from each|summar)",
+      "(up to|until|through|cut at|truncat\\w* at|split at|ends? at) the first (period|full stop|dot|['\"`]\\.)"
+    ]
+  },
+  "chat2_skip_empty_summary": {
+    "value": [
+      "summar(y|ies) (is |are )?(empty|blank)",
+      "(empty|blank|missing)[- ]summar(y|ies)",
+      "(skip|omit|leave out|leav\\w* out|drop|exclud|filter|hide|ignor)\\w*( out)? (any |the |all )?posts? (that have |with |without |whose |having |that lack )(an? |no |any )?(empty |blank )?summar",
+      "posts? (with |without |having )(an? |no )?(empty |blank )?summar\\w* (are |is |get |gets )?(skipped|omitted|left out|dropped|excluded|filtered|hidden|ignored)"
+    ]
+  }
+}
