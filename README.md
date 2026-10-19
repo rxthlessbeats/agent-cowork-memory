@@ -70,9 +70,21 @@ Each agent gets a brief, joins the thread it was sent from, claims the files it 
 
 ## Benchmark
 
-**What it evaluates:** when a new chat continues work from earlier chats, how much of their context survives. Each task is a small Python repo in two steps. Earlier chats do step 1 and leave step 2's details in the chat: in one short or long chat, spread over two chats, changed later, corrected mid-chat, or against a README that still says the old thing. A new chat is then asked to finish the task. A run counts only if every hidden check passes, existing tests still pass, and no old or replaced value is implemented.
+**What it evaluates**
+- How much of earlier chats' context survives when a new chat continues the work.
+- Each task is a small Python repo in two steps: earlier chats do step 1 and leave step 2's details in the chat.
+- The details sit in one short or long chat, spread over two chats, changed later, corrected mid-chat, or against a README that still says the old thing.
+- A run counts only if every hidden check passes, existing tests still pass, and no old or replaced value is implemented.
 
-**What we tested:** Codex (gpt-6-luna, medium effort) continuing the work five ways: with no ACM, with ACM (*"Use ACM to continue from my last Codex chat…"*), with the summary the earlier chat writes when asked, with a careful handoff note, and with every earlier chat pasted in. We ran 38 held-out tasks, written and with the analysis fixed before any run, over two independent histories, 3 runs per way each.
+**What we tested**
+- Codex (gpt-6-luna, medium effort) continuing the work five ways:
+  - no ACM;
+  - ACM (*"Use ACM to continue from my last Codex chat…"*);
+  - the summary the earlier chat writes when asked;
+  - a careful handoff note;
+  - every earlier chat pasted in.
+- 38 held-out tasks, written, and the analysis fixed, before any run.
+- Two independent histories, 3 runs per way each.
 
 | | No ACM | ACM | Summary pasted | Handoff note pasted | Full history pasted |
 |---|---|---|---|---|---|
@@ -80,12 +92,11 @@ Each agent gets a brief, joins the thread it was sent from, claims the files it 
 | Implemented an old value | 13/76 | **0/228** | 7/228 | 0/228 | 0/228 |
 | What you type or paste | 80 chars | **95** | 753 | 2,740 | 1,940 |
 
-**Result:**
-- ACM loses far less context than a pasted summary: it finished 41 points more often (p < 0.001), and was ahead on 29 of 38 tasks and behind on none.
+**Result**
+- ACM loses far less context than a pasted summary: it finished 41 points more often (p < 0.001). It was ahead on 29 of 38 tasks and behind on none.
 - It matches pasting the whole history and a careful note pasted in full, from one sentence, with nothing to find or copy.
 - On the 60 development tasks the same holds: ACM finished 176/180 runs, the summary 124/180.
-
-These are tasks built so the details live in earlier chats, on one agent and one model.
+- Limits: the tasks are built so the details live in earlier chats; one agent, one model.
 
 ```sh
 npm run bench        # offline checks, free
