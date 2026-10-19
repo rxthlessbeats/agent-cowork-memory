@@ -1,4 +1,5 @@
-/** OpenCode keeps chats in SQLite (~/.local/share/opencode/opencode.db) or, on older installs, JSON files under storage/. */
+/** OpenCode keeps chats in SQLite (~/.local/share/opencode/opencode.db) or, on older installs, JSON files under storage/.
+ * OpenCode 2 changed the database: sessions in session_v2, and each message, its parts inline, in session_message. */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
@@ -35,11 +36,21 @@ function query<T>(db: string, fn: (conn: DatabaseSync) => T, fallback: T): T {
   }
 }
 
+function hasTable(c: DatabaseSync, name: string): boolean {
+  return Boolean(c.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?").get(name));
+}
+
 function dbSessions(db: string): { id: string; workspace: string; mtime: number }[] {
   return query(
     db,
     (c) =>
-      (c.prepare("SELECT id, directory, time_updated, parent_id FROM session").all() as Json[])
+      (
+        c
+          .prepare(
+            `SELECT id, directory, time_updated, parent_id FROM ${hasTable(c, "session_v2") ? "session_v2" : "session"}`,
+          )
+          .all() as Json[]
+      )
         .filter((r) => r.directory && !r.parent_id)
         .map((r) => ({ id: text(r.id), workspace: text(r.directory), mtime: stamp(r.time_updated) })),
     [],
@@ -117,10 +128,28 @@ function fromFiles(path: string): Buffer {
   );
 }
 
+/** OpenCode 2's messages: a user's text in data.text, an assistant's text and tool calls in data.content. */
+function fromDb2(c: DatabaseSync, id: string): Buffer {
+  const rows = c.prepare("SELECT type, data FROM session_message WHERE session_id = ? ORDER BY seq").all(id) as Json[];
+  return jsonl(
+    rows.flatMap((r): [Json, Json[]][] => {
+      const d = obj(JSON.parse(text(r.data)));
+      const role = text(r.type);
+      if (role === "user") return [[{ role, time: d.time }, [{ type: "text", text: d.text }]]];
+      if (role === "assistant") {
+        const parts = Array.isArray(d.content) ? d.content.map(obj) : [];
+        return [[{ role, time: d.time, finish: d.finish }, parts]];
+      }
+      return [];
+    }),
+  );
+}
+
 function fromDb(db: string, id: string): Buffer {
   return query(
     db,
     (c) => {
+      if (hasTable(c, "session_message")) return fromDb2(c, id);
       const parts = c.prepare("SELECT data FROM part WHERE message_id = ? ORDER BY time_created, rowid");
       const rows = c
         .prepare("SELECT id, data FROM message WHERE session_id = ? ORDER BY time_created")

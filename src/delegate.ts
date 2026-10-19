@@ -275,7 +275,8 @@ function jobsDir(home: string): string {
   return join(home, "jobs");
 }
 
-function cleanJobs(db: Db, home: string): void {
+/** Drop finished jobs' files older than JOB_FILE_DAYS. Runs when a server starts and on every delegate. */
+export function cleanJobs(db: Db, home: string): void {
   const folder = jobsDir(home);
   if (!existsSync(folder)) return;
   const open = new Set(

@@ -289,6 +289,23 @@ export function resume(
     kept.push({ role: rec.role, text: body });
   }
   kept.reverse();
+  // What the user asked before the newest messages comes along too: the opening request is often what the whole
+  // chat is for, and later ones carry its corrections. In half the budget: the opening (cut if longer), then the
+  // newest others that fit, oldest first.
+  const asked = records.slice(0, records.length - kept.length).filter((r) => r.role === "user" && typed(r.text));
+  const earlier: string[] = [];
+  let room = Math.floor(budget / 2);
+  if (asked.length) {
+    const first = asked[0].text.length > room ? clip(asked[0].text, room) : asked[0].text;
+    if (first !== asked[0].text) clipped += 1;
+    room -= first.length;
+    for (const r of asked.slice(1).reverse()) {
+      if (r.text.length > room) continue;
+      earlier.unshift(r.text);
+      room -= r.text.length;
+    }
+    earlier.unshift(first);
+  }
   // Continuing a chat continues its thread; a chat that never used acm starts one named after it.
   const thread = chatThread(db, s, hit.harness, native, () => raw);
   if (thread) joinThread(db, s, thread);
@@ -299,15 +316,48 @@ export function resume(
     const old = sessionFor(db, { harness: hit.harness, chat: native, folder: s.root });
     db.prepare("UPDATE sessions SET thread_id = ? WHERE id = ?").run(started, old.id);
   }
+  // The thread's other chats (the one this chat continued, jobs it started): what the agent needs may be there.
+  // Each brings what the user said in it, oldest chat first, in half the budget: the requests made there reach
+  // this chat even when its agent never resumes that one (weaker models often don't; bench/PLAN-context-loss.md).
+  const others = db
+    .prepare("SELECT harness, chat FROM sessions WHERE thread_id = ? AND id != ? AND NOT (harness = ? AND chat = ?)")
+    .all(s.thread_id, s.id, hit.harness, native) as Json[];
+  const all = others.length ? listing(HARNESSES, s.root, roots) : [];
+  let left = Math.floor(budget / 2);
+  const threadChats = others
+    .flatMap((o) => all.filter((i) => i.harness === o.harness && READERS[i.harness].nativeId(i.path) === o.chat))
+    .sort((a, b) => a.mtime - b.mtime)
+    .map((item) => {
+      const { agent, chat, updated, first } = entry(db, s, item);
+      const said = parse(item.harness, chatBytes(item.harness, item.path)).records.filter(
+        (r) => r.role === "user" && typed(r.text),
+      );
+      const user_messages: string[] = [];
+      for (const [i, r] of said.entries()) {
+        // The opening request is cut to fit; later ones come whole or not at all.
+        const text = i === 0 && r.text.length > left ? clip(r.text, Math.max(0, left - 60)) : r.text;
+        if (text.length > left) continue;
+        if (text !== r.text) clipped += 1;
+        user_messages.push(text);
+        left -= text.length;
+      }
+      return { agent, chat, updated, first, ...(user_messages.length ? { user_messages } : {}) };
+    });
   const out: Json = {
     thread: s.thread_id,
     from: hit.harness,
     chat: native,
     folder: hit.workspace,
+    ...(earlier.length ? { earlier_user_messages: earlier } : {}),
     messages: kept,
-    omitted_messages: records.length - kept.length,
+    omitted_messages: records.length - kept.length - earlier.length,
     clipped_messages: clipped,
   };
+  if (threadChats.length) {
+    out.thread_chats = threadChats;
+    out.thread_chats_next =
+      "Other chats on this thread, with what the user said in each (user_messages): their requests stand unless a later message changed them. If you need what their agent said or did, resume it too with its chat id.";
+  }
   if (!records.length && unknown) out.diagnostic = "unrecognized records";
   return out;
 }
