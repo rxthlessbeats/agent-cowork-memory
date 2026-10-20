@@ -48,6 +48,13 @@ export function backup(home: string, to?: string) {
   return { backup: dest };
 }
 
+const BANNER = ` █████╗  ██████╗███╗   ███╗
+██╔══██╗██╔════╝████╗ ████║
+███████║██║     ██╔████╔██║
+██╔══██║██║     ██║╚██╔╝██║
+██║  ██║╚██████╗██║ ╚═╝ ██║
+╚═╝  ╚═╝ ╚═════╝╚═╝     ╚═╝`;
+
 const USAGE = `acm ${VERSION}: shared memory and delegation for coding agents
 
   acm setup                     configure Codex, Cursor, OpenCode, and Claude Code to use acm
@@ -99,6 +106,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
     }
     if (command === "setup") {
       const { setup } = await import("./setup.ts");
+      console.error(`${BANNER}\n`);
       return print(setup());
     }
     console.error(USAGE);
