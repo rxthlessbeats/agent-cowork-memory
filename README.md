@@ -11,6 +11,8 @@
 
 Hit your Codex limit mid-task? Open Cursor, say **"continue from Codex"**, and keep going. ACM gives Codex, Claude Code, Cursor, and OpenCode one shared memory, so you never paste context again, and any agent can put the others to work.
 
+**Verified by [benchmark](#benchmark):** on 38 held-out tasks, a new chat continuing with ACM finished 223 of 228 runs, against 130 with a pasted summary.
+
 ![GitHub Release](https://img.shields.io/github/v/release/rxthlessbeats/agent-cowork-memory?style=flat&color=blue)
 ![npm](https://img.shields.io/npm/v/agent-cowork-memory?style=flat&color=blue)
 ![CI](https://img.shields.io/github/actions/workflow/status/rxthlessbeats/agent-cowork-memory/ci.yml?branch=main&style=flat&label=ci)
@@ -18,6 +20,7 @@ Hit your Codex limit mid-task? Open Cursor, say **"continue from Codex"**, and k
 ![M8ven Score](https://m8ven.ai/badge/mcp/rxthlessbeats-agent-cowork-memory-1jq2qu)
 ![Agents supported](https://img.shields.io/badge/agents_supported-4-orange?style=flat)
 ![Node](https://img.shields.io/badge/node-24%2B-green?style=flat)
+[![Benchmark](https://img.shields.io/badge/benchmark-verified-brightgreen?style=flat)](#benchmark)
 ![MCP supported](https://img.shields.io/badge/MCP-supported-lightgrey?style=flat)
 ![CLI supported](https://img.shields.io/badge/CLI-supported-lightgrey?style=flat)
 ![Codex icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/codex-color.svg) Codex  ·  ![Claude Code icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/claudecode-color.svg) Claude Code  ·  ![Cursor icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/cursor.svg) Cursor  ·  ![OpenCode icon](https://unpkg.com/@lobehub/icons-static-svg@1.90.0/icons/opencode.svg) OpenCode
